@@ -1,0 +1,36 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Preferisci la versione con HTTPS e dominio canonico
+Sitemap: https://scandellarigiacintosnc.it/sitemap.xml
+
+# Consenti file essenziali per PWA/SEO e asset statici
+Allow: /manifest.json
+Allow: /asset-manifest.json
+Allow: /favicon.ico
+Allow: /logo192.png
+Allow: /logo512.png
+Allow: /static/
+Allow: /pdf-worker/
+
+# Blocca l'accesso a directory non pubbliche
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+
+# Blocca file di configurazione sensibili
+Disallow: /*.env$
+
+# Blocca endpoint di ricerca interna
+Disallow: /search
+
+# Blocca pagine di debug/anteprima
+Disallow: /*?debug=*
+Disallow: /*?preview=*
+
+# Imposta un crawl rate ragionevole
+Crawl-delay: 2
+
+# Host per bot che lo supportano (es. Yandex)
+Host: scandellarigiacintosnc.it

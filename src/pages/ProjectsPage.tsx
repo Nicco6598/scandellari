@@ -1,0 +1,543 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useMobileMenu } from '../context/MobileMenuContext';
+import { Link } from 'react-router-dom';
+import Layout from '../components/layout/Layout';
+import { progettiService, categorieService } from '../supabase/services';
+import { ProgettoData } from '../types/supabaseTypes';
+import Map, { Marker, Popup, NavigationControl, Source, Layer } from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { useTheme } from '../context/ThemeContext';
+import {
+    ArrowRightIcon,
+    ListBulletIcon,
+    MapIcon,
+    FunnelIcon,
+    XMarkIcon
+} from '@heroicons/react/24/outline';
+
+interface Coordinate { lat: number; lng: number; }
+type ProjectCoordinates = { points: Coordinate[]; route?: Coordinate[]; error?: string; };
+
+// global cache for coordinates
+const geoCache: Record<string, Coordinate> = {};
+
+const ProjectsPage: React.FC = () => {
+    const { theme } = useTheme();
+    const [progetti, setProgetti] = useState<ProgettoData[]>([]);
+    const [categorie, setCategorie] = useState<string[]>(['tutti']);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [categoriaAttiva, setCategoriaAttiva] = useState<string>('tutti');
+    const [visualizzazione, setVisualizzazione] = useState<'lista' | 'mappa'>('lista');
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
+    const [projectCoordinates, setProjectCoordinates] = useState<Record<string | number, ProjectCoordinates>>({});
+    const [selectedProject, setSelectedProject] = useState<ProgettoData | null>(null);
+    const [geocodingPhase, setGeocodingPhase] = useState<{ current: number, total: number }>({ current: 0, total: 0 });
+    // State for the grouped selection (multi-project at the same point)
+    const [selectedGroup, setSelectedGroup] = useState<{ projects: ProgettoData[], coord: Coordinate } | null>(null);
+    const [activeProjectIndex, setActiveProjectIndex] = useState(0);
+    const { isMobileMenuOpen } = useMobileMenu();
+
+    const [viewState, setViewState] = useState({
+        longitude: 12.5,
+        latitude: 42.5,
+        zoom: 5
+    });
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [projData, catData] = await Promise.all([
+                    progettiService.getAllProjects(),
+                    categorieService.getAllCategorie()
+                ]);
+                setProgetti(projData);
+                setCategorie(['tutti', ...new Set(catData.map(c => c.nome?.toLowerCase()).filter(Boolean))]);
+            } catch (err) {
+                setError('Impossibile caricare i progetti.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const progettiFiltrati = useMemo(() =>
+        categoriaAttiva === 'tutti' ? progetti : progetti.filter(p => p.categoria?.toLowerCase() === categoriaAttiva.toLowerCase())
+        , [progetti, categoriaAttiva]);
+
+    // Optimized Geocoding and Routing Logic
+    useEffect(() => {
+        let isMounted = true;
+
+        if (visualizzazione === 'mappa' && progettiFiltrati.length > 0) {
+            const projectsToProcess = progettiFiltrati.filter(p => !projectCoordinates[p.id || ''] && p.localita);
+            setGeocodingPhase({ current: 0, total: projectsToProcess.length });
+
+            const processGeocoding = async () => {
+                let processedCount = 0;
+
+                for (const p of projectsToProcess) {
+                    if (!isMounted) break;
+                    const projectId = p.id || '';
+
+                    try {
+                        const parts = p.localita.split(/[-/]/).map(item => item.trim());
+                        const resolvedCoords: Coordinate[] = [];
+
+                        for (const part of parts) {
+                            if (geoCache[part]) {
+                                resolvedCoords.push(geoCache[part]);
+                                continue;
+                            }
+
+                            try {
+                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`);
+                                if (res.status === 429) {
+                                    await new Promise(r => setTimeout(r, 1000));
+                                    const retryRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`);
+                                    const data = await retryRes.json();
+                                    if (data && data.length > 0) {
+                                        const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                                        geoCache[part] = coord;
+                                        resolvedCoords.push(coord);
+                                        await new Promise(r => setTimeout(r, 800));
+                                    }
+                                } else {
+                                    const data = await res.json();
+                                    if (data && data.length > 0) {
+                                        const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                                        geoCache[part] = coord;
+                                        resolvedCoords.push(coord);
+                                        await new Promise(r => setTimeout(r, 800));
+                                    }
+                                }
+                            } catch (e) { console.error(`Failed to geocode: ${part}`, e); }
+                        }
+
+                        let finalRoute: Coordinate[] = resolvedCoords;
+
+                        if (resolvedCoords.length >= 2) {
+                            try {
+                                const osrmPath = resolvedCoords.map(c => `${c.lng},${c.lat}`).join(';');
+                                const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${osrmPath}?overview=full&geometries=geojson`);
+                                const routeData = await routeRes.json();
+                                if (routeData.routes && routeData.routes[0]) {
+                                    finalRoute = routeData.routes[0].geometry.coordinates.map((c: any) => ({
+                                        lng: c[0],
+                                        lat: c[1]
+                                    }));
+                                }
+                            } catch (e) {
+                                console.warn("OSRM error", e);
+                            }
+                        }
+
+                        if (isMounted) {
+                            setProjectCoordinates(prev => ({
+                                ...prev,
+                                [projectId]: { points: resolvedCoords, route: finalRoute }
+                            }));
+                        }
+                    } catch (e) {
+                        console.error("Geocoding error", e);
+                        if (isMounted) {
+                            setProjectCoordinates(prev => ({
+                                ...prev,
+                                [projectId]: { points: [], route: [] }
+                            }));
+                        }
+                    } finally {
+                        processedCount++;
+                        if (isMounted) setGeocodingPhase(prev => ({ ...prev, current: processedCount }));
+                    }
+                }
+            };
+
+            processGeocoding();
+        }
+
+        return () => { isMounted = false; };
+    }, [visualizzazione, progettiFiltrati]);
+
+    useEffect(() => {
+        const firstWithCoords = progettiFiltrati.find(p => {
+            const coords = projectCoordinates[p.id || ''];
+            return coords && coords.points && coords.points.length > 0;
+        });
+
+        if (firstWithCoords && visualizzazione === 'mappa' && viewState.zoom === 5) {
+            const coords = projectCoordinates[firstWithCoords.id || ''].points[0];
+            if (coords) {
+                setViewState(prev => ({
+                    ...prev,
+                    longitude: coords.lng,
+                    latitude: coords.lat,
+                    zoom: 6
+                }));
+            }
+        }
+    }, [projectCoordinates, visualizzazione, progettiFiltrati]);
+
+    const groupedMarkers = useMemo(() => {
+        const coordsMap: Record<string, { lat: number, lng: number, projects: ProgettoData[] }> = {};
+
+        progettiFiltrati.forEach(p => {
+            const coords = projectCoordinates[p.id || ''];
+            if (coords?.points) {
+                coords.points.forEach(pt => {
+                    const key = `${pt.lat.toFixed(5)},${pt.lng.toFixed(5)}`;
+                    if (!coordsMap[key]) {
+                        coordsMap[key] = { lat: pt.lat, lng: pt.lng, projects: [] };
+                    }
+                    const group = coordsMap[key];
+                    if (!group.projects.find((proj: ProgettoData) => proj.id === p.id)) {
+                        group.projects.push(p);
+                    }
+                });
+            }
+        });
+
+        return Object.values(coordsMap);
+    }, [progettiFiltrati, projectCoordinates]);
+
+    const lineGeoJSON = useMemo(() => {
+        const features = progettiFiltrati.map(p => {
+            const coords = projectCoordinates[p.id || ''];
+            if (!coords || !coords.route || coords.route.length < 2) return null;
+
+            return {
+                type: 'Feature' as const,
+                geometry: {
+                    type: 'LineString' as const,
+                    coordinates: coords.route.map(pt => [pt.lng, pt.lat])
+                },
+                properties: { id: p.id }
+            };
+        }).filter(Boolean);
+
+        return {
+            type: 'FeatureCollection' as const,
+            features: features as any[]
+        };
+    }, [progettiFiltrati, projectCoordinates]);
+
+    const isGeocodingDone = geocodingPhase.current === geocodingPhase.total && geocodingPhase.total > 0;
+
+    if (loading) return (
+        <Layout>
+            <div className="min-h-screen bg-gray-50 dark:bg-black pt-40 flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent animate-spin" />
+            </div>
+        </Layout>
+    );
+
+    return (
+        <Layout>
+            <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
+                {/* Header Section */}
+                <section className="container mx-auto max-w-7xl px-6 mb-32">
+                    <div
+                        className="flex flex-col md:flex-row md:items-end justify-between gap-12 border-b border-black/5 dark:border-white/5 pb-20"
+                        data-animate="fade-up"
+                        data-animate-distance="20"
+                    >
+                        <div className="max-w-3xl">
+                            <div className="flex items-center gap-4 mb-12">
+                                <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+                                    Portfolio Infrastrutturale
+                                </span>
+                            </div>
+                            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
+                                Grandi<br />Progetti
+                            </h1>
+                            <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+                                Un'eredità di eccellenza ingegneristica dal 1945. Esplora le opere che hanno definito l'infrastruttura ferroviaria italiana.
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-sm">
+                                <button
+                                    onClick={() => setVisualizzazione('lista')}
+                                    className={`px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${visualizzazione === 'lista' ? 'bg-black dark:bg-white text-white dark:text-black shadow-lg' : 'text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
+                                >
+                                    <ListBulletIcon className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setVisualizzazione('mappa')}
+                                    className={`px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${visualizzazione === 'mappa' ? 'bg-black dark:bg-white text-white dark:text-black shadow-lg' : 'text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
+                                >
+                                    <MapIcon className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setShowMobileFilters(true)}
+                                className="sm:hidden flex items-center justify-center gap-2 px-6 py-3 border-2 border-black dark:border-white text-[10px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-all"
+                            >
+                                <FunnelIcon className="w-4 h-4" />
+                                Filtri
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <main className="container mx-auto max-w-7xl px-6">
+                    <div className="flex gap-12">
+                        <aside className="hidden sm:block w-64 shrink-0">
+                            <div className="sticky top-32 space-y-2">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-black/60 dark:text-white/50 mb-6">Categorie</h3>
+                                {categorie.map((cat) => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setCategoriaAttiva(cat)}
+                                        className={`w-full text-left px-4 py-3 text-sm font-black uppercase tracking-tight transition-all ${categoriaAttiva === cat
+                                            ? 'bg-black dark:bg-white text-white dark:text-black'
+                                            : 'text-black/70 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+                                            }`}
+                                    >
+                                        {cat === 'tutti' ? 'Tutti i Progetti' : cat}
+                                    </button>
+                                ))}
+                            </div>
+                        </aside>
+
+                        <div className="flex-grow">
+                            {visualizzazione === 'lista' ? (
+                                <div className="space-y-12">
+                                    {progettiFiltrati.map((project, index) => (
+                                        <div
+                                            key={project.id}
+                                            className="group bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 hover:border-primary/30 transition-all duration-500 overflow-hidden"
+                                            data-animate="fade-up"
+                                            data-animate-delay={(index * 0.04).toFixed(2)}
+                                        >
+                                                <Link to={`/progetti/${project.id}`} className="flex flex-col md:flex-row">
+                                                    <div className="md:w-2/5 aspect-[4/3] md:aspect-auto bg-black/5 dark:bg-dark-elevated relative overflow-hidden">
+                                                        {project.immagini?.[0]?.url ? (
+                                                            <>
+                                                                <img
+                                                                    src={project.immagini[0].url}
+                                                                    alt={project.titolo || ''}
+                                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                                                />
+                                                                <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-primary/5 group-hover:opacity-0 transition-opacity duration-500" />
+                                                            </>
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <div className="w-16 h-16 border border-black/10 dark:border-white/10" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="md:w-3/5 p-8 md:p-12 flex flex-col justify-between">
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-8 h-[1px] bg-black/10 dark:bg-white/10" />
+                                                                <span className="text-xs font-black text-black/60 dark:text-white/50 uppercase tracking-[0.3em]">{project.localita}</span>
+                                                            </div>
+                                                            <h3 className="text-4xl lg:text-5xl font-black text-black dark:text-white tracking-tighter leading-none font-heading group-hover:text-primary transition-colors">
+                                                                {project.titolo}
+                                                            </h3>
+                                                            <p className="text-base text-black/70 dark:text-white/60 font-medium leading-relaxed line-clamp-2">
+                                                                {project.descrizione}
+                                                            </p>
+                                                            <div className="flex items-center gap-3 mt-2">
+                                                                <span className="text-xs font-black uppercase tracking-[0.3em] text-black/60 dark:text-white/50 group-hover:text-primary transition-colors">
+                                                                    Scopri
+                                                                </span>
+                                                                <ArrowRightIcon className="w-5 h-5 text-black/60 dark:text-white/50 group-hover:text-primary group-hover:translate-x-2 transition-all" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div
+                                    className="h-[70vh] bg-black/5 dark:bg-dark-surface overflow-hidden border border-black/5 dark:border-white/5 rounded-sm relative"
+                                    data-animate="fade"
+                                >
+                                        {isGeocodingDone ? (
+                                            <Map
+                                                {...viewState}
+                                                onMove={evt => setViewState(evt.viewState)}
+                                                style={{ width: '100%', height: '100%' }}
+                                                mapStyle={theme === 'dark' 
+                                                    ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+                                                    : "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+                                                }
+                                                attributionControl={false}
+                                            >
+                                                <NavigationControl position="top-right" />
+
+                                                {lineGeoJSON.features.length > 0 && (
+                                                    <Source id="routes" type="geojson" data={lineGeoJSON}>
+                                                        <Layer
+                                                            id="routes-layer"
+                                                            type="line"
+                                                            paint={{
+                                                                'line-color': theme === 'dark' ? '#3b82f6' : '#2563eb',
+                                                                'line-width': 4,
+                                                                'line-opacity': 0.8
+                                                            }}
+                                                        />
+                                                    </Source>
+                                                )}
+
+                                                {groupedMarkers.map((group, idx) => (
+                                                    <Marker
+                                                        key={`group-${idx}`}
+                                                        longitude={group.lng}
+                                                        latitude={group.lat}
+                                                        anchor="center"
+                                                        onClick={(e) => {
+                                                            e.originalEvent.stopPropagation();
+                                                            setSelectedGroup({ projects: group.projects, coord: { lat: group.lat, lng: group.lng } });
+                                                            setActiveProjectIndex(0);
+                                                        }}
+                                                    >
+                                                        <div className="relative group cursor-pointer flex items-center justify-center">
+                                                            {group.projects.length > 1 && (
+                                                                <div className="absolute -top-3 -right-3 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-[8px] font-black flex items-center justify-center z-20 shadow-glow">
+                                                                    {group.projects.length}
+                                                                </div>
+                                                            )}
+                                                            <div className="absolute w-8 h-8 border border-primary/30 scale-0 group-hover:scale-110 transition-transform duration-500" />
+                                                            <div className="w-3.5 h-3.5 bg-white dark:bg-black border-[1.5px] border-primary z-10 transition-all duration-300 group-hover:bg-primary group-hover:border-white group-hover:rotate-45" />
+                                                        </div>
+                                                    </Marker>
+                                                ))}
+
+                                                {selectedGroup && (
+                                                    <Popup
+                                                        longitude={selectedGroup.coord.lng}
+                                                        latitude={selectedGroup.coord.lat}
+                                                        anchor="top"
+                                                        offset={15}
+                                                        onClose={() => setSelectedGroup(null)}
+                                                        className="maplibre-popup-custom"
+                                                        closeButton={false}
+                                                    >
+                                                        <div className="p-6 min-w-[260px] max-w-[300px] bg-white dark:bg-dark-surface border border-black/5 dark:border-white/10 shadow-2xl">
+                                                            {selectedGroup.projects.length > 1 && (
+                                                                <div className="flex items-center justify-between mb-4 pb-4 border-b border-black/5 dark:border-white/10">
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                                                                        {activeProjectIndex + 1} / {selectedGroup.projects.length} Opere
+                                                                    </span>
+                                                                    <div className="flex gap-1">
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setActiveProjectIndex(prev => (prev > 0 ? prev - 1 : selectedGroup.projects.length - 1));
+                                                                            }}
+                                                                            className="w-6 h-6 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-sm transition-colors"
+                                                                        >
+                                                                            <ListBulletIcon className="w-3 h-3 rotate-180 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white" />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setActiveProjectIndex(prev => (prev < selectedGroup.projects.length - 1 ? prev + 1 : 0));
+                                                                            }}
+                                                                            className="w-6 h-6 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-sm transition-colors"
+                                                                        >
+                                                                            <ArrowRightIcon className="w-3 h-3 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white" />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {(() => {
+                                                                const p = selectedGroup.projects[activeProjectIndex];
+                                                                return (
+                                                                    <div className="group/pop animate-in fade-in slide-in-from-right-2 duration-300">
+                                                                        <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">
+                                                                            {p.categoria}
+                                                                        </span>
+                                                                        <h4 className="font-black uppercase text-base tracking-tighter leading-tight text-black dark:text-white mb-2">
+                                                                            {p.titolo}
+                                                                        </h4>
+                                                                        <p className="text-[10px] font-bold text-black/40 dark:text-white/30 uppercase tracking-widest mb-4">
+                                                                            {p.localita} • {p.anno}
+                                                                        </p>
+                                                                        <Link
+                                                                            to={`/progetti/${p.id}`}
+                                                                            className="flex items-center justify-between group/link pt-4 border-t border-black/5 dark:border-white/10"
+                                                                        >
+                                                                            <span className="text-[10px] font-black uppercase tracking-widest text-black dark:text-white group-hover/link:text-primary transition-colors">Vedi Dettagli</span>
+                                                                            <ArrowRightIcon className="w-4 h-4 text-black/40 dark:text-white/40 group-hover/link:text-primary group-hover/link:translate-x-1 transition-all" />
+                                                                        </Link>
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    </Popup>
+                                                )}
+                                            </Map>
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center space-y-6">
+                                                <div className="relative w-16 h-16">
+                                                    <div className="absolute inset-0 border border-black/5 dark:border-white/5 animate-ping" />
+                                                    <div className="absolute inset-0 border border-primary/20 animate-pulse delay-75" />
+                                                    <div className="absolute inset-4 border-2 border-primary/40 rotate-45" />
+                                                </div>
+                                                <div className="text-center space-y-2">
+                                                    <span className="block text-[11px] font-black uppercase tracking-[0.4em] text-black/40 dark:text-white/40 animate-pulse">
+                                                        Mappatura Infrastrutture
+                                                    </span>
+                                                    <div className="flex items-center justify-center gap-4">
+                                                        <div className="h-[2px] w-20 bg-black/5 dark:bg-white/5 overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-primary transition-all duration-500"
+                                                                style={{ width: `${(geocodingPhase.current / geocodingPhase.total) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-primary tabular-nums">
+                                                            {geocodingPhase.current} / {geocodingPhase.total}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </main>
+
+                <div
+                    className={`fixed inset-0 z-[100] bg-white dark:bg-black p-6 flex flex-col transition-opacity duration-300 ${showMobileFilters ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    aria-hidden={!showMobileFilters}
+                >
+                    <div className="flex justify-between items-center mb-12">
+                        <span className="text-xs font-black uppercase tracking-[0.4em]">Filtri</span>
+                        <button onClick={() => setShowMobileFilters(false)}>
+                            <XMarkIcon className="w-8 h-8" />
+                        </button>
+                    </div>
+                    <div className="flex-grow flex flex-col gap-8">
+                        {categorie.map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => {
+                                    setCategoriaAttiva(cat);
+                                    setShowMobileFilters(false);
+                                }}
+                                className={`text-3xl font-black tracking-tighter text-left ${categoriaAttiva === cat ? 'text-primary' : 'text-black/20 dark:text-white/10'
+                                    }`}
+                            >
+                                {cat === 'tutti' ? 'Tutti i Progetti' : cat}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </Layout>
+    );
+};
+
+export default ProjectsPage;

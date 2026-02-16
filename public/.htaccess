@@ -1,0 +1,85 @@
+# Abilita il rewrite engine
+RewriteEngine On
+
+# Forza HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Rimuovi il www
+RewriteCond %{HTTP_HOST} ^www\.scandellarigiacintosnc\.it [NC]
+RewriteRule ^(.*)$ https://scandellarigiacintosnc.it/$1 [L,R=301]
+
+# Rimuovi la barra finale
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# Gestisci le rotte di React
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+
+# Abilita la compressione GZIP
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/xml
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE application/xhtml+xml
+  AddOutputFilterByType DEFLATE application/rss+xml
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/x-javascript
+  AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# Imposta le intestazioni di cache
+<IfModule mod_headers.c>
+  # Immagini
+  <FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|webp)$">
+    Header set Cache-Control "max-age=31536000, public"
+  </FilesMatch>
+  
+  # CSS e JavaScript
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "max-age=31536000, public"
+  </FilesMatch>
+  
+  # Font
+  <FilesMatch "\.(eot|otf|ttf|woff|woff2)$">
+    Header set Cache-Control "max-age=31536000, public"
+  </FilesMatch>
+  
+  # HTML
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+  </FilesMatch>
+</IfModule>
+
+# Abilita la compressione Brotli (se disponibile)
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/plain text/css text/html text/xml text/javascript application/javascript application/x-javascript application/xml application/xml+rss application/json
+</IfModule>
+
+# Abilita la protezione clickjacking
+Header always append X-Frame-Options SAMEORIGIN
+
+# Abilita la protezione XSS
+Header set X-XSS-Protection "1; mode=block"
+
+# Abilita la protezione MIME-type sniffing
+Header set X-Content-Type-Options nosniff
+
+# Abilita la politica di riferimento stretto per la sicurezza
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Abilita la politica delle funzionalità di sicurezza
+Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+
+# Abilita la politica di sicurezza dei contenuti (CSP)
+# Nota: Personalizza queste direttive in base alle tue esigenze
+# Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://www.google-analytics.com;"
+
+# Disabilita la visualizzazione della versione di Apache
+ServerSignature Off

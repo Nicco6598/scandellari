@@ -1,0 +1,35 @@
+{
+  "short_name": "Scandellari",
+  "name": "Scandellari Giacinto s.n.c. - Impianti Ferroviari",
+  "description": "Scandellari Giacinto s.n.c. progetta, realizza e manutiene impianti di segnalamento e sicurezza per la circolazione ferroviaria in Italia dal 1945.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "categories": ["business", "productivity"],
+  "dir": "ltr",
+  "lang": "it-IT",
+  "id": "/",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "prefer_related_applications": false
+}

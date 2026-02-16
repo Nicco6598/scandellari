@@ -1,0 +1,387 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-gray-50 text-text-primary font-sans dark:bg-dark dark:text-white transition-colors duration-300 overflow-x-hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+
+  a {
+    @apply transition-colors duration-200;
+  }
+
+  .dark main a {
+    @apply text-primary-light hover:text-primary-lighter;
+  }
+
+  /* Stile per bordi e divisori in tema scuro */
+  hr,
+  .divider {
+    @apply dark:border-dark-border;
+  }
+}
+
+@layer components {
+
+  .logo-img {
+    height: 4rem;
+    /* h-16, mobile */
+  }
+
+  @media (min-width: 768px) {
+    .logo-img {
+      height: 4.8rem;
+      /* più piccolo su desktop */
+    }
+  }
+
+  .container {
+    @apply px-6 mx-auto max-w-7xl;
+  }
+
+  .section {
+    @apply py-16 md:py-24;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-medium transition-all duration-300;
+  }
+
+  .btn-primary {
+    @apply bg-primary-light text-white hover:bg-primary-medium dark:bg-primary-medium dark:hover:bg-primary;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-text-primary dark:bg-dark-surface dark:text-white hover:bg-light-gray dark:hover:bg-dark-accent;
+  }
+
+  .btn-outline {
+    @apply border-2 border-white text-white hover:bg-white/10 dark:border-primary-light dark:hover:bg-primary-dark/20;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 bg-light-gray dark:bg-dark border border-light-dark dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light dark:focus:ring-primary text-text-primary dark:text-white;
+  }
+
+  .card {
+    @apply bg-white dark:bg-dark-surface rounded-2xl shadow-card dark:shadow-dark-card overflow-hidden transition-all duration-300 hover:shadow-lg dark:hover:shadow-dark-elevation;
+  }
+
+  .badge {
+    @apply text-xs font-medium px-3 py-1 rounded-full;
+  }
+
+  .badge-primary {
+    @apply bg-primary-lighter/10 text-primary-light dark:bg-primary-dark/30 dark:text-primary-lighter;
+  }
+
+  /* Nuovi stili per il tema scuro */
+  .glass-panel {
+    @apply dark:bg-dark-elevated/80 dark:backdrop-blur-lg dark:border dark:border-primary-dark/30 dark:shadow-dark-soft;
+  }
+
+  .highlight-text {
+    @apply dark:text-primary-light;
+  }
+
+  .accent-border {
+    @apply dark:border-accent/30;
+  }
+
+  /* Custom MapLibre Popup styles */
+  .maplibre-popup-custom .maplibregl-popup-content {
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .maplibre-popup-custom .maplibregl-popup-tip {
+    border-bottom-color: white !important;
+  }
+
+  .dark .maplibre-popup-custom .maplibregl-popup-tip {
+    border-bottom-color: #0E0E1A !important; /* matches dark-surface */
+  }
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+.animate-spin-slow-scale {
+  animation: spinSlowScale 20s linear infinite;
+}
+
+.animate-spin-reverse-scale {
+  animation: spinReverseScale 15s linear infinite;
+}
+
+.animate-tilt {
+  animation: tilt 3s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 2s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes spinSlowScale {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  25% {
+    transform: rotate(90deg) scale(1.05);
+  }
+
+  50% {
+    transform: rotate(180deg) scale(1);
+  }
+
+  75% {
+    transform: rotate(270deg) scale(1.05);
+  }
+
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes spinReverseScale {
+  0% {
+    transform: rotate(360deg) scale(1);
+  }
+
+  25% {
+    transform: rotate(270deg) scale(0.95);
+  }
+
+  50% {
+    transform: rotate(180deg) scale(1);
+  }
+
+  75% {
+    transform: rotate(90deg) scale(0.95);
+  }
+
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes tilt {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(5deg);
+  }
+
+  75% {
+    transform: rotate(-5deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes pulseSoft {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Miglioramenti tema scuro */
+.dark .glow-accent {
+  box-shadow: 0 0 15px 1px rgba(30, 136, 229, 0.3);
+}
+
+.dark .hover-glow:hover {
+  box-shadow: 0 0 20px 2px rgba(30, 136, 229, 0.4);
+}
+
+.dark .text-white\/20 {
+  color: rgb(255 255 255 / 0.55) !important;
+}
+
+.dark .text-white\/30 {
+  color: rgb(255 255 255 / 0.6) !important;
+}
+
+.dark .text-white\/40 {
+  color: rgb(255 255 255 / 0.68) !important;
+}
+
+.dark .text-white\/50 {
+  color: rgb(255 255 255 / 0.74) !important;
+}
+
+.dark .text-white\/60 {
+  color: rgb(255 255 255 / 0.8) !important;
+}
+
+.dark ::selection {
+  background-color: rgba(30, 136, 229, 0.3);
+  color: white;
+}
+
+/* SOLUZIONE DEFINITIVA: Prevenire scroll multipli */
+html {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+body {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* RIMOSSO: Regole troppo ampie che causavano doppi scroll */
+
+/* Assicura che tutti i container non abbiano scroll separati */
+* {
+  box-sizing: border-box;
+}
+
+/* Prevenire overflow visibile su container principali (eccetto header) */
+main,
+.container:not(header .container),
+.relative:not(header .relative) {
+  overflow: hidden !important;
+}
+
+/* Eccezione per header e suoi elementi */
+header .container,
+header .relative {
+  overflow: visible !important;
+}
+
+/* Prevenire scroll in elementi specifici che potrebbero causare problemi */
+
+
+/* PERMETTI scroll nei modal delle candidature */
+.candidatura-scroll {
+  overflow-y: auto !important;
+  max-height: 60vh !important;
+}
+
+/* Assicura che i modal di candidatura possano scrollare */
+[role="dialog"] .overflow-y-auto {
+  overflow-y: auto !important;
+}
+
+/* PERMETTI overflow SOLO per header e suoi dropdown specifici */
+header {
+  overflow: visible !important;
+}
+
+header * {
+  overflow: visible !important;
+}
+
+/* Dropdown specifici dell'header */
+header [data-headlessui-state],
+header .dropdown-menu,
+header nav,
+header nav *,
+header .absolute,
+header .fixed,
+header [role="menu"],
+header [role="menuitem"] {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Prevenire solo scroll orizzontale nei modal (ma non nell'header) */
+[role="dialog"]:not(header):not(header *),
+.modal:not(header):not(header *),
+.fixed:not(header):not(header *) {
+  overflow-x: hidden !important;
+}
+
+/* MapLibre Popup Styling */
+.maplibre-popup-custom .maplibregl-popup-content {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.maplibre-popup-custom .popup-title {
+  color: #000000 !important;
+}
+
+.dark .maplibre-popup-custom .maplibregl-popup-content {
+  background: #111111 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .maplibre-popup-custom .popup-title {
+  color: #ffffff !important;
+}
+
+
+.maplibre-popup-custom .maplibregl-popup-tip {
+  border-top-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+}
+
+.dark .maplibre-popup-custom .maplibregl-popup-tip {
+  border-top-color: #111111 !important;
+  border-bottom-color: #111111 !important;
+}
