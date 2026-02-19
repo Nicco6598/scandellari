@@ -1,93 +1,89 @@
-# Scandellari — Sito aziendale con area Admin
+# 🏗️ Scandellari
 
-Single Page Application sviluppata in React + TypeScript per presentazione aziendale (sezione pubblica) e gestione contenuti (area Admin protetta).
+[![React](https://img.shields.io/badge/React-19.0-blue?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.3-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase)](https://supabase.com/)
+[![Vite](https://img.shields.io/badge/Vite-7.3-646CFF?logo=vite)](https://vitejs.dev/)
 
-## Cosa dimostra (per recruiter)
+> ⚠️ **PORTFOLIO SHOWCASE - PROPRIETARY CODE**  
+> Questo repository è reso pubblico esclusivamente a scopo dimostrativo e di portfolio professionale.
+> Il codice è di proprietà di **Scandellari** e non è Open Source. L'uso, la copia o la distribuzione non autorizzata sono vietati.
 
-- Struttura di un progetto moderno Vite/React con routing e lazy-loading
-- Pattern di separazione tra UI (pages/components) e data layer (services Supabase)
-- Gestione stato globale (tema + auth) via Context
-- Integrazione di mappe, PDF viewer e tracciamento Analytics in una SPA
+> **Piattaforma digitale aziendale per la gestione di progetti e certificazioni.**  
+> Una Single Page Application moderna sviluppata per presentare l'eccellenza aziendale e gestire i contenuti tramite un'area amministrativa sicura.
 
-## Funzionalità principali
+---
 
-- Sezione pubblica: home, competenze, progetti + dettaglio, chi siamo, contatti, certificazioni, carriere, pagine policy
-- Area Admin: login e CRUD per progetti/competenze/offerte, dashboard con attività recenti
-- UI: tema chiaro/scuro, animazioni on-scroll, lightbox gallerie
-- Mappe: mappa interattiva su pagine progetto
-- PDF: visualizzazione documenti/certificazioni e worker dedicato
+## ✨ Funzionalità / Highlights
 
-## Stack
+- 🏢 **Vetrina Aziendale**: Sezione pubblica completa con progetti, competenze, certificazioni e carriere.
+- 🔐 **Area Admin Protetta**: Dashboard sicura per la gestione CRUD di progetti, competenze e offerte di lavoro.
+- ⚡ **Performance Elevate**: Costruito su **Vite** e **React 19** per un caricamento istantaneo e navigazione fluida.
+- 📄 **Gestione Documentale**: Viewer PDF integrato con worker dedicato per la consultazione di certificazioni (ISO 9001, etc.).
+- 🗺️ **Mappe Interattive**: Integrazione **MapLibre** per la geolocalizzazione dei cantieri e progetti.
+- 🎨 **UI/UX Moderna**: Design responsive con **Tailwind CSS**, tema chiaro/scuro e animazioni **GSAP/Lenis**.
 
-- Frontend: React 19, TypeScript, Vite
-- Routing: react-router-dom v7 (rotte pubbliche + /admin con rotte annidate)
-- Styling: Tailwind CSS (tema chiaro/scuro tramite classi su root)
-- Forms/validazione: react-hook-form + zod
-- Backend/DB/Auth: Supabase (@supabase/supabase-js)
-- Animazioni/scroll: GSAP (ScrollTrigger) + Lenis
-- Mappe: react-map-gl (MapLibre) + maplibre-gl
-- PDF: react-pdf + pdfjs-dist
-- Media: yet-another-react-lightbox
+## 🧠 Approfondimenti Tecnici
 
-## Struttura repository
+### 🔄 Architettura & Backend (Supabase)
+Il progetto adotta un pattern di **Service Layer** per separare la logica di business dalla UI.
+- **Data Layer**: Tutte le interazioni con Supabase passano attraverso `src/supabase/services.ts`. Questo garantisce un unico punto di accesso per le operazioni CRUD (Create, Read, Update, Delete) su Progetti, Competenze e Offerte di Lavoro.
+- **Activity Logging**: Ogni operazione di modifica viene tracciata tramite `activityService`, permettendo agli amministratori di monitorare le modifiche ai contenuti in tempo reale.
+- **Type Safety**: L'integrazione è fortemente tipizzata grazie a TypeScript, con interfacce dedicate (`ProgettoData`, `OffertaLavoroData`) che specchiano lo schema del database.
 
-```
-public/                 # asset statici (PDF, worker PDF, favicon, sitemap, ecc.)
-src/
-  assets/               # immagini e asset importati da React
-  components/           # componenti riutilizzabili (layout, sezioni, utils, admin)
-  context/              # ThemeContext, AuthContext, MobileMenuContext
-  data/                 # dataset/fixture locali (contenuti statici)
-  pages/                # pagine pubbliche e admin (UI)
-  supabase/             # config e servizi per accesso dati/auth/activity
-  types/                # tipi TS (modelli e payload)
-  utils/                # helper condivisi
-```
+### 🎨 UX & Motion System (Lenis + GSAP)
+L'esperienza utente è arricchita da un sistema di animazioni fluido e performante:
+- **Smooth Scrolling**: Implementato con **Lenis**, che intercetta lo scroll nativo normalizzandolo per un'esperienza "burrosa" (buttery smooth) su tutti i device, mantenendo però l'accessibilità nativa.
+- **Scroll Animations**: Utilizzo di **GSAP ScrollTrigger** per animare gli elementi all'entrata nel viewport. Il sistema è centralizzato in un `AnimationController` che osserva attributi data (`data-animate="fade-up"`, `data-animate-stagger`) per applicare automaticamente le transizioni senza dover scrivere logica JS per ogni componente.
 
-## Avvio in locale
+### 🔐 Sicurezza & Admin
+- **Protected Routes**: L'area amministrativa (`/admin`) è protetta da un wrapper `ProtectedRoute` che verifica la sessione utente in tempo reale tramite il `AuthContext`.
+- **Row Level Security (RLS)**: Anche se il frontend filtra le azioni, la sicurezza vera è garantita a livello di database Supabase tramite policy RLS che impediscono scritture non autorizzate.
 
-Prerequisiti: Node.js 18+ e pnpm (consigliato, presente `pnpm-lock.yaml`).
+### 📄 Gestione PDF Ottimizzata
+Per la visualizzazione delle certificazioni ISO/SOA, utilizziamo **React-PDF** con un worker dedicato (`pdf.worker.min.js`) servito staticamente dalla cartella `public`. Questo sposta il pesante lavoro di parsing del PDF su un thread separato, evitando di bloccare il main thread dell'interfaccia utente.
 
-```bash
-pnpm install
-pnpm dev
-```
+## 🛠️ Tech Stack
 
-## Script disponibili
+| Categoria | Tecnologia | Versione |
+|-----------|------------|----------|
+| **Frontend** | React (Vite) | v19.2 |
+| **Linguaggio** | TypeScript | v5.9 |
+| **Styling** | Tailwind CSS | v3.3 |
+| **Routing** | React Router | v7.12 |
+| **Database/Auth** | Supabase | Latest |
+| **Animazioni** | GSAP & Lenis | - |
+| **Mappe** | MapLibre GL | v4.7 |
+| **PDF** | React PDF | v10.3 |
 
-- `pnpm dev`: avvia Vite in locale (porta 3000)
-- `pnpm build`: typecheck (`tsc`) + build di produzione (`vite build`, output `build/`)
-- `pnpm preview`: preview della build
+## 📸 Screenshots
 
-## Variabili d’ambiente
+![Anteprima Sito](./public/og-image.png)
+*Logo.*
 
-Creare un file `.env.local` (non versionato) con:
+## 🔒 Proprietà Intellettuale e Uso Consentito
 
-```bash
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-```
+Questo repository è stato reso **pubblico esclusivamente a scopo di portfolio professionale**, per dimostrare le competenze tecniche nello sviluppo Full-Stack.
 
-Opzionale:
+Il codice sorgente, il design, i loghi e i contenuti sono di proprietà esclusiva di **Scandellari** e sono protetti dalle leggi sul copyright.
+**NON** viene concessa alcuna licenza d'uso (né open source, né commerciale).
 
-```bash
-VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
-```
+### ⛔ Divieti
+È severamente vietato:
+- Copiare, clonare o scaricare il codice per scopi diversi dalla semplice consultazione.
+- Utilizzare parti di questo progetto (codice o design) in altri lavori.
+- Distribuire o rivendere il software.
 
-## Deploy
+Per i recruiter e le aziende interessate: il codice è consultabile per valutare la qualità tecnica, l'architettura e lo stile di programmazione.
 
-- Configurazione pronta per Vercel in `vercel.json` (build via `pnpm build`, output `build/`)
-- Regole di rewrite per SPA (tutte le rotte non-statiche puntano a `index.html`)
-- Header dedicati per PDF e `pdf-worker` in `public/`
+## 📄 Licenza
 
-## Punti chiave nel codice
+Copyright © 2026 Scandellari. Tutti i diritti riservati.
+L'uso non autorizzato di questo software o di parte del suo codice costituisce una violazione dei diritti di proprietà intellettuale.
 
-- Routing e lazy-loading: `src/App.tsx`
-- Protezione area Admin: `src/components/admin/ProtectedRoute.tsx` + `src/components/admin/AdminLayout.tsx`
-- Inizializzazione Supabase + env: `src/supabase/config.ts`
-- Servizi data layer: `src/supabase/services.ts`
-- Tema chiaro/scuro: `src/context/ThemeContext.tsx`
+## 📞 Contatti
 
-## Licenza
+**Marco** - Sviluppatore Full-Stack
 
-Tutti i diritti riservati.
+[LinkedIn](https://www.linkedin.com/in/marconiccolini-/) • [GitHub](https://github.com/nicco6598)
