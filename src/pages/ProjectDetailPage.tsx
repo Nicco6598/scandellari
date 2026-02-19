@@ -116,7 +116,8 @@ const ProjectDetailPage: React.FC = () => {
                 geometry: {
                     type: 'LineString' as const,
                     coordinates: routePoints.map(pt => [pt.lng, pt.lat])
-                }
+                },
+                properties: {}
             }]
         };
     }, [routePoints]);
