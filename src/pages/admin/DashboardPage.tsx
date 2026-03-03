@@ -1,6 +1,7 @@
 // src/pages/admin/DashboardPage.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { progettiService, competenzeService, offerteService } from '../../supabase/services';
 import { activityService } from '../../supabase/activityService';
@@ -47,7 +48,7 @@ const DashboardPage: React.FC = () => {
         setRecentActivities(activities);
         setLastRefreshAt(new Date());
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        logger.error('Error fetching dashboard data', error);
       } finally {
         if (reason === 'initial') setLoading(false);
         if (reason === 'refresh') setRefreshing(false);
@@ -483,7 +484,7 @@ const DashboardPage: React.FC = () => {
                         setRecentActivities(activities);
                         setLastRefreshAt(new Date());
                       } catch (error) {
-                        console.error('Error fetching dashboard data:', error);
+                        logger.error('Error fetching dashboard data', error);
                       } finally {
                         setRefreshing(false);
                       }

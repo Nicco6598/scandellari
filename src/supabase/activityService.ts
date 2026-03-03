@@ -1,5 +1,6 @@
 import { supabase } from './config';
 import { RecentActivity } from '../types/supabaseTypes';
+import { logger } from '../utils/logger';
 
 export const activityService = {
   // Registra un'attività
@@ -27,7 +28,7 @@ export const activityService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error logging activity:', error);
+      logger.error('Error logging activity', error);
       // Non blocchiamo le operazioni principali se il logging fallisce
     }
   },
@@ -53,7 +54,7 @@ export const activityService = {
         entityId: item.entity_id
       }));
     } catch (error) {
-      console.error('Error fetching activity logs:', error);
+      logger.error('Error fetching activity logs', error);
       return [];
     }
   }

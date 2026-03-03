@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useMobileMenu } from '../context/MobileMenuContext';
 import Layout from '../components/layout/Layout';
+import { logger } from '../utils/logger';
 import SEO from '../components/utils/SEO';
 import { pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -282,7 +283,7 @@ const CertificationsPage: React.FC = () => {
                                         pageNumber={pageNumber}
                                         scale={pdfScale}
                                         onLoadSuccess={({ numPages }: { numPages: number }) => setNumPages(numPages)}
-                                        onLoadError={(err) => console.error(err)}
+                                        onLoadError={(err) => logger.error("PDF load error", err)}
                                     />
                                 </Suspense>
                             </div>

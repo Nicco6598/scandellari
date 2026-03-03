@@ -1,6 +1,7 @@
 // src/supabase/auth.ts
 import { supabase } from './config';
 import { activityService } from './activityService';
+import { logger } from '../utils/logger';
 
 export const authService = {
   // Login
@@ -24,7 +25,7 @@ export const authService = {
       
       return data.user;
     } catch (error: any) {
-      console.error("Login error:", error);
+      logger.error("Login error", error);
       throw error;
     }
   },
@@ -49,7 +50,7 @@ export const authService = {
         });
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("Logout error", error);
       throw error;
     }
   },
@@ -65,7 +66,7 @@ export const authService = {
       if (error) throw error;
       return data.user;
     } catch (error) {
-      console.error("Create account error:", error);
+      logger.error("Create account error", error);
       throw error;
     }
   },
@@ -76,7 +77,7 @@ export const authService = {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
     } catch (error) {
-      console.error("Reset password error:", error);
+      logger.error("Reset password error", error);
       throw error;
     }
   },

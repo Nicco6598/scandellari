@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { progettiService } from '../../supabase/services';
 import { format } from 'date-fns';
@@ -23,7 +24,7 @@ const ProgettiPage: React.FC = () => {
         const uniqueCategories = Array.from(new Set(data.map(p => p.categoria)));
         setCategories(uniqueCategories);
       } catch (error) {
-        console.error('Error fetching projects:', error);
+        logger.error('Error fetching projects', error);
       } finally {
         setLoading(false);
       }
@@ -53,7 +54,7 @@ const ProgettiPage: React.FC = () => {
       setProgetti(progetti.filter(project => project.id !== id));
       setConfirmDelete(null);
     } catch (error) {
-      console.error("Error deleting project:", error);
+      logger.error("Error deleting project", error);
     }
   };
 
@@ -67,7 +68,7 @@ const ProgettiPage: React.FC = () => {
         return format(new Date(dateValue), 'dd/MM/yyyy', { locale: it });
       }
     } catch (error) {
-      console.error('Error formatting date:', error);
+      logger.error('Error formatting date', error);
     }
     return 'N/D';
   };

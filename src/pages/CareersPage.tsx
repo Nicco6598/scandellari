@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Layout from '../components/layout/Layout';
+import { logger } from '../utils/logger';
 import { offerteService } from '../supabase/services';
 import { OffertaLavoroData } from '../types/supabaseTypes';
 import { useForm } from 'react-hook-form';
@@ -170,7 +171,7 @@ const CareersPage: React.FC = () => {
         const data = await offerteService.getAllOfferte();
         setOfferte(data);
       } catch (err) {
-        console.error(err);
+        logger.error('Fetch error', err);
       } finally {
         setLoading(false);
       }
@@ -231,7 +232,7 @@ const CareersPage: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error sending application:', error);
+      logger.error('Error sending application:', error);
       setStatus('error');
 
       // Track failed application submission
