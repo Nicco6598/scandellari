@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import { competenzeService } from '../../supabase/services';
+import { logger } from '../../utils/logger';
 import { CompetenzaData, ImmagineInfo } from '../../types/supabaseTypes';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { PhotoIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -64,7 +65,7 @@ const CompetenzaFormPage: React.FC = () => {
           setExistingImages(data.immagini || (data.immagine ? [data.immagine] : []));
         }
       } catch (error) {
-        console.error(error);
+        logger.error("Form error", error);
         setError('Impossibile caricare la competenza.');
       } finally {
         setLoading(false);
@@ -174,7 +175,7 @@ const CompetenzaFormPage: React.FC = () => {
       }
       navigate('/admin/competenze');
     } catch (err: any) {
-      console.error(err);
+      logger.error("Form error", err);
       setError(err.message || 'Errore durante il salvataggio.');
     } finally {
       setSaving(false);

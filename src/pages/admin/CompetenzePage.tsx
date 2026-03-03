@@ -1,6 +1,7 @@
 // src/pages/admin/CompetenzePage.tsx
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { competenzeService } from '../../supabase/services';
 import { format } from 'date-fns';
@@ -24,7 +25,7 @@ const CompetenzePage: React.FC = () => {
         const uniqueCategories = Array.from(new Set(data.map(c => c.categoria)));
         setCategories(uniqueCategories);
       } catch (error) {
-        console.error('Errore nel recupero delle competenze:', error);
+        logger.error('Errore nel recupero delle competenze', error);
       } finally {
         setLoading(false);
       }
@@ -53,7 +54,7 @@ const CompetenzePage: React.FC = () => {
       setCompetenze(competenze.filter(competenza => competenza.id !== id));
       setConfirmDelete(null);
     } catch (error) {
-      console.error('Errore nell\'eliminazione della competenza:', error);
+      logger.error('Errore eliminazione competenza', error);
     }
   };
 
@@ -67,7 +68,7 @@ const CompetenzePage: React.FC = () => {
         return format(new Date(dateValue), 'dd/MM/yyyy', { locale: it });
       }
     } catch (error) {
-      console.error('Error formatting date:', error);
+      logger.error('Error formatting date', error);
     }
     return 'N/D';
   };

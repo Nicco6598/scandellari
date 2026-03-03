@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../supabase/auth';
 import { useTheme } from '../../context/ThemeContext';
+import { logger } from '../../utils/logger';
 
 const LoginPage: React.FC = () => {
   const LOGIN_ATTEMPTS_KEY = 'admin_login_attempts';
@@ -117,7 +118,7 @@ const LoginPage: React.FC = () => {
       } else {
         setError('Credenziali non valide. Riprova.');
       }
-      console.error(error);
+      logger.error("Auth error", error);
     } finally {
       setLoading(false);
     }
@@ -134,7 +135,7 @@ const LoginPage: React.FC = () => {
       setResetSent(true);
     } catch (error: any) {
       setError('Impossibile inviare l\'email di reset. Verifica l\'indirizzo inserito.');
-      console.error(error);
+      logger.error("Auth error", error);
     } finally {
       setLoading(false);
     }

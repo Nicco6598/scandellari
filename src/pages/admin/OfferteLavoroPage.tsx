@@ -1,6 +1,7 @@
 // src/pages/admin/OfferteLavoroPage.tsx
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { offerteService } from '../../supabase/services';
 import { format } from 'date-fns';
@@ -24,7 +25,7 @@ const OfferteLavoroPage: React.FC = () => {
         const uniqueTipi = Array.from(new Set(data.map(o => o.tipo)));
         setTipiOfferta(uniqueTipi);
       } catch (error) {
-        console.error('Errore nel recupero delle offerte di lavoro:', error);
+        logger.error('Errore nel recupero delle offerte di lavoro', error);
       } finally {
         setLoading(false);
       }
@@ -53,7 +54,7 @@ const OfferteLavoroPage: React.FC = () => {
       setOfferte(offerte.filter(offerta => offerta.id !== id));
       setConfirmDelete(null);
     } catch (error) {
-      console.error('Errore nell\'eliminazione dell\'offerta:', error);
+      logger.error('Errore eliminazione offerta', error);
     }
   };
 
@@ -67,7 +68,7 @@ const OfferteLavoroPage: React.FC = () => {
         return format(new Date(dateValue), 'dd/MM/yyyy', { locale: it });
       }
     } catch (error) {
-      console.error('Error formatting date:', error);
+      logger.error('Error formatting date', error);
     }
     return 'N/D';
   };

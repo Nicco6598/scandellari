@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useMobileMenu } from '../context/MobileMenuContext';
 import { Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
+import { logger } from '../utils/logger';
 import { progettiService, categorieService } from '../supabase/services';
 import { ProgettoData } from '../types/supabaseTypes';
 import Map, { Marker, Popup, NavigationControl, Source, Layer } from 'react-map-gl/maplibre';
@@ -124,7 +125,7 @@ const ProjectsPage: React.FC = () => {
                                         await new Promise(r => setTimeout(r, 800));
                                     }
                                 }
-                            } catch (e) { console.error(`Failed to geocode: ${part}`, e); }
+                            } catch (e) { logger.error(`Failed to geocode: ${part}`, e); }
                         }
 
                         let finalRoute: Coordinate[] = resolvedCoords;
@@ -152,7 +153,7 @@ const ProjectsPage: React.FC = () => {
                             }));
                         }
                     } catch (e) {
-                        console.error("Geocoding error", e);
+                        logger.error("Geocoding error", e);
                         if (isMounted) {
                             setProjectCoordinates(prev => ({
                                 ...prev,

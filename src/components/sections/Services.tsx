@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { competenzeService } from '../../supabase/services';
+import { logger } from '../../utils/logger';
 import { CompetenzaData } from '../../types/supabaseTypes';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
@@ -28,7 +29,7 @@ const Services: React.FC = () => {
 
         setServices(featured);
       } catch (err) {
-        console.error('❌ Error fetching services:', err);
+        logger.error('❌ Error fetching services:', err);
       } finally {
         setLoading(false);
       }

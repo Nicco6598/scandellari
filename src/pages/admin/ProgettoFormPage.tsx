@@ -1,6 +1,7 @@
 // src/pages/admin/ProgettoFormPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { progettiService, categorieService } from '../../supabase/services';
 import { ProgettoData, ImmagineInfo } from '../../types/supabaseTypes';
@@ -47,7 +48,7 @@ const ProgettoFormPage: React.FC = () => {
         const data = await categorieService.getAllCategorie();
         setCategories(data);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        logger.error('Error fetching categories', error);
       }
     };
     fetchCategories();
@@ -79,7 +80,7 @@ const ProgettoFormPage: React.FC = () => {
           setExistingImages(data.immagini || []);
         }
       } catch (error) {
-        console.error('Error fetching project:', error);
+        logger.error('Error fetching project', error);
         setError('Impossibile caricare il progetto.');
       } finally {
         setLoading(false);
@@ -205,7 +206,7 @@ const ProgettoFormPage: React.FC = () => {
       }
       navigate('/admin/progetti');
     } catch (err: any) {
-      console.error(err);
+      logger.error("Form error", err);
       setError(err.message || 'Errore durante il salvataggio.');
     } finally {
       setSaving(false);

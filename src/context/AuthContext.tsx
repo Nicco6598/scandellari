@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../supabase/config';
 import { User } from '@supabase/supabase-js';
+import { logger } from '../utils/logger';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -22,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUser(user);
       } catch (error) {
-        console.error('Error checking auth state:', error);
+        logger.error('Error checking auth state', error);
         setCurrentUser(null);
       } finally {
         setLoading(false);

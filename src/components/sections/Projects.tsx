@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { progettiService } from '../../supabase/services';
+import { logger } from '../../utils/logger';
 import { ProgettoData } from '../../types/supabaseTypes';
 
 const Projects: React.FC = () => {
@@ -14,7 +15,7 @@ const Projects: React.FC = () => {
         const data = await progettiService.getAllProjects();
         setProjects(data.slice(0, 4));
       } catch (err) {
-        console.error(err);
+        logger.error('Fetch error', err);
       } finally {
         setLoading(false);
       }

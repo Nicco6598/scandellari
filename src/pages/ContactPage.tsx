@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Layout from '../components/layout/Layout';
+import { logger } from '../utils/logger';
 import SEO from '../components/utils/SEO';
 import Map, { Marker, Popup, NavigationControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -86,7 +87,7 @@ const ContactPage: React.FC = () => {
                 });
             }
         } catch (error) {
-            console.error('Error sending contact form:', error);
+            logger.error('Error sending contact form:', error);
             setStatus('error');
 
             // Track failed form submission

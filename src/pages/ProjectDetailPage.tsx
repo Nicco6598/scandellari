@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
+import { logger } from '../utils/logger';
 import { progettiService } from '../supabase/services';
 import { ProgettoData } from '../types/supabaseTypes';
 import Map, { Marker, Popup, NavigationControl, Source, Layer } from 'react-map-gl/maplibre';
@@ -63,7 +64,7 @@ const ProjectDetailPage: React.FC = () => {
                             if (gData && gData.length > 0) {
                                 return { lat: parseFloat(gData[0].lat), lng: parseFloat(gData[0].lon) };
                             }
-                        } catch (e) { console.error(e); }
+                        } catch (e) { logger.error('Geocoding error', e); }
                         return null;
                     })).then(async (results) => {
                         const coords = results.filter((c): c is Coordinate => c !== null);

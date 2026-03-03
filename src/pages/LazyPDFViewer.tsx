@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { XCircleIcon } from '@heroicons/react/24/outline';
+import { logger } from '../utils/logger';
 
 // Set worker source to local static file
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf-worker/pdf.worker.min.js';
@@ -51,7 +52,7 @@ const LazyPDFViewer: React.FC<LazyPDFViewerProps> = ({
                         onLoadSuccess(data);
                     }}
                     onLoadError={(error) => {
-                        console.error('PDF Load Error:', error);
+                        logger.error('PDF Load Error:', error);
                         setLoading(false);
                         setError("Impossibile caricare il documento PDF.");
                         onLoadError(error);

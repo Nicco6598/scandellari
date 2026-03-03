@@ -1,6 +1,7 @@
 // src/pages/admin/OffertaLavoroFormPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { offerteService } from '../../supabase/services';
 import { OffertaLavoroData } from '../../types/supabaseTypes';
@@ -47,7 +48,7 @@ const OffertaLavoroFormPage: React.FC = () => {
           });
         }
       } catch (error) {
-        console.error(error);
+        logger.error("Offerta error", error);
         setError('Impossibile caricare l\'offerta.');
       } finally {
         setLoading(false);
@@ -110,7 +111,7 @@ const OffertaLavoroFormPage: React.FC = () => {
       }
       navigate('/admin/offerte-lavoro');
     } catch (error: any) {
-      console.error(error);
+      logger.error("Offerta error", error);
       setError('Errore durante il salvataggio.');
     } finally {
       setSaving(false);
