@@ -21,6 +21,7 @@ import {
     CheckCircleIcon as ListCheckIcon,
     ArrowRightIcon
 } from '@heroicons/react/24/outline';
+import PDFThumbnail from '../components/utils/PDFThumbnail';
 
 const LazyPDFViewer = React.lazy(() => import('./LazyPDFViewer'));
 
@@ -188,28 +189,56 @@ const CertificationsPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-12">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredCertifications.map((cert, index) => (
                             <div
                                 key={cert.id}
-                                className="bg-white dark:bg-dark-surface p-10 border border-black/5 dark:border-white/5 flex flex-col h-full hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-black/5 dark:hover:shadow-primary/10 group"
+                                className="bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 flex flex-col h-full hover:border-primary/40 transition-all duration-500 hover:shadow-2xl hover:shadow-black/5 dark:hover:shadow-primary/10 group overflow-hidden"
                                 data-animate="fade-up"
                                 data-animate-delay={(index * 0.03).toFixed(2)}
                             >
-                                <div className="text-xs font-black text-primary uppercase tracking-widest mb-8">{cert.category}</div>
-                                <h3 className="text-2xl font-black text-black dark:text-white mb-6 tracking-tighter leading-tight flex-grow group-hover:text-primary transition-colors">{cert.title}</h3>
-                                <div className="mt-8 pt-8 border-t border-black/5 dark:border-white/5 space-y-6">
-                                    <div className="flex justify-between items-center text-xs font-black uppercase text-black/60 dark:text-white/40">
-                                        <span>Valido fino al</span>
-                                        <span className="text-black dark:text-white">{cert.expiryDate}</span>
+                                {/* Thumbnail Preview */}
+                                <div
+                                    className="relative overflow-hidden cursor-pointer aspect-[3/2] bg-black/5 dark:bg-black/40 border-b border-black/5 dark:border-white/5"
+                                    onClick={() => openCertification(cert)}
+                                >
+                                    <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105 origin-top">
+                                        <PDFThumbnail pdfUrl={cert.pdfUrl} width={500} />
                                     </div>
-                                    <button
-                                        onClick={() => openCertification(cert)}
-                                        className="w-full flex items-center justify-between text-xs font-black uppercase tracking-widest text-black dark:text-white transition-all border border-black dark:border-white py-4 px-6 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black"
-                                    >
-                                        Vedi PDF
-                                        <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                                    </button>
+                                    {/* Overlay hover */}
+                                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-all duration-500 flex items-center justify-center z-10">
+                                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-black/80 dark:bg-white/90 text-white dark:text-black px-5 py-3 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
+                                            <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
+                                            Apri PDF
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Card Body */}
+                                <div className="p-8 flex flex-col flex-grow">
+                                    <div className="text-[9px] font-black uppercase tracking-[0.35em] text-primary mb-3">{cert.category}</div>
+                                    <h3 className="text-xl font-black text-black dark:text-white mb-3 tracking-tighter leading-tight group-hover:text-primary transition-colors duration-300">{cert.title}</h3>
+                                    <p className="text-xs text-black/50 dark:text-white/40 font-medium mb-5 leading-relaxed line-clamp-2">{cert.description}</p>
+
+                                    <div className="mt-auto pt-6 border-t border-black/5 dark:border-white/5 space-y-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <div className="text-[9px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 mb-0.5">Ente</div>
+                                                <div className="text-xs font-bold text-black/70 dark:text-white/60 leading-tight">{cert.issuer}</div>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <div className="text-[9px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 mb-0.5">Scadenza</div>
+                                                <div className="text-xs font-black text-black dark:text-white">{cert.expiryDate}</div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => openCertification(cert)}
+                                            className="w-full flex items-center justify-between text-[10px] font-black uppercase tracking-[0.3em] text-black dark:text-white transition-all border border-black/20 dark:border-white/20 py-3.5 px-5 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black hover:border-black dark:hover:border-white group/btn"
+                                        >
+                                            Vedi Certificato
+                                            <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
