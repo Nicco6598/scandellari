@@ -96,7 +96,7 @@ const LoginPage: React.FC = () => {
       await authService.login(email, password);
 
       const now = new Date().toISOString();
-      localStorage.setItem('last_login_time', now);
+      sessionStorage.setItem('last_login_time', now);
 
       setLoginAttempts(0);
       sessionStorage.removeItem(LOGIN_ATTEMPTS_KEY);

@@ -142,7 +142,7 @@ const ProjectsPage: React.FC = () => {
                                     }));
                                 }
                             } catch (e) {
-                                console.warn("OSRM error", e);
+                                logger.warn("OSRM error", e);
                             }
                         }
 
