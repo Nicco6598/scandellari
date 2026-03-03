@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Assicurati che questi tipi siano definiti correttamente, specialmente ProgettoData con 'immagini'
 import { ProgettoData, CompetenzaData, OffertaLavoroData, ImmagineInfo } from '../types/supabaseTypes';
 import { activityService } from './activityService'; // Assicurati che questo servizio sia definito e importato correttamente
+import { logger } from '../utils/logger';
 
 
 // Convertitore Timestamp (opzionale, dipende da come gestisci le date)
@@ -37,7 +38,7 @@ export const offerteService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-       console.error("Errore getAllOfferte:", error);
+       logger.error("Errore getAllOfferte:", error);
        throw error;
     }
     // Applica conversione se i tipi usano createdAt/updatedAt
@@ -54,7 +55,7 @@ export const offerteService = {
 
     if (error) {
       if (error.code === 'PGRST116') return null; // Not found
-      console.error("Errore getOffertaById:", error);
+      logger.error("Errore getOffertaById:", error);
       throw error;
     }
     return data ? convertTimestampToDate(data) as OffertaLavoroData : null;
@@ -64,7 +65,7 @@ export const offerteService = {
   createOfferta: async (offertaData: Omit<OffertaLavoroData, 'id' | 'created_at' | 'updated_at' | 'createdAt' | 'updatedAt'>): Promise<OffertaLavoroData> => {
     const { data: currentUserData, error: userError } = await supabase.auth.getUser();
      if (userError) {
-       console.error("Errore ottenimento utente in createOfferta:", userError);
+       logger.error("Errore ottenimento utente in createOfferta:", userError);
        throw userError;
      }
     const currentUser = currentUserData?.user;
@@ -83,7 +84,7 @@ export const offerteService = {
       .single();
 
     if (error) {
-        console.error("Errore createOfferta:", error);
+        logger.error("Errore createOfferta:", error);
         throw error;
     }
 
@@ -97,7 +98,7 @@ export const offerteService = {
           entityId: newId
         });
     } catch (logError) {
-        console.error("Errore durante il logging (createOfferta):", logError);
+        logger.error("Errore durante il logging (createOfferta):", logError);
     }
 
     return convertTimestampToDate(data) as OffertaLavoroData;
@@ -107,7 +108,7 @@ export const offerteService = {
   updateOfferta: async (id: string, offertaData: Partial<Omit<OffertaLavoroData, 'id' | 'created_at' | 'createdAt'>>): Promise<OffertaLavoroData> => {
     const { data: currentUserData, error: userError } = await supabase.auth.getUser();
      if (userError) {
-       console.error("Errore ottenimento utente in updateOfferta:", userError);
+       logger.error("Errore ottenimento utente in updateOfferta:", userError);
        throw userError;
      }
      const currentUser = currentUserData?.user;
@@ -133,7 +134,7 @@ export const offerteService = {
       .single();
 
     if (error) {
-        console.error("Errore updateOfferta:", error);
+        logger.error("Errore updateOfferta:", error);
         throw error;
     }
 
@@ -148,7 +149,7 @@ export const offerteService = {
           entityId: id
         });
     } catch (logError) {
-        console.error("Errore durante il logging (updateOfferta):", logError);
+        logger.error("Errore durante il logging (updateOfferta):", logError);
     }
 
     return convertTimestampToDate(data) as OffertaLavoroData;
@@ -158,7 +159,7 @@ export const offerteService = {
   deleteOfferta: async (id: string): Promise<string> => {
      const { data: currentUserData, error: userError } = await supabase.auth.getUser();
       if (userError) {
-        console.error("Errore ottenimento utente in deleteOfferta:", userError);
+        logger.error("Errore ottenimento utente in deleteOfferta:", userError);
         throw userError;
       }
       const currentUser = currentUserData?.user;
@@ -170,7 +171,7 @@ export const offerteService = {
     const { error } = await supabase.from('offerte_lavoro').delete().eq('id', id);
 
     if (error) {
-        console.error("Errore deleteOfferta:", error);
+        logger.error("Errore deleteOfferta:", error);
         throw error;
     }
 
@@ -184,7 +185,7 @@ export const offerteService = {
           entityId: id
         });
     } catch (logError) {
-         console.error("Errore durante il logging (deleteOfferta):", logError);
+         logger.error("Errore durante il logging (deleteOfferta):", logError);
     }
 
     return id;
@@ -204,7 +205,7 @@ export const progettiService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-        console.error("Errore getAllProjects:", error);
+        logger.error("Errore getAllProjects:", error);
         throw error;
     }
     return data.map(item => convertTimestampToDate(item)) as ProgettoData[];
@@ -225,7 +226,7 @@ export const progettiService = {
 
     if (error) {
       if (error.code === 'PGRST116') return null; // Not found
-      console.error(`Errore getProjectById (ID: ${id}, Numerico: ${idNumerico}):`, error);
+      logger.error(`Errore getProjectById (ID: ${id}, Numerico: ${idNumerico}):`, error);
       throw error;
     }
     return data ? convertTimestampToDate(data) as ProgettoData : null;
@@ -235,7 +236,7 @@ export const progettiService = {
   createProject: async (projectData: Omit<ProgettoData, 'id' | 'created_at' | 'updated_at' | 'id_numerico' | 'createdAt' | 'updatedAt'>): Promise<ProgettoData> => {
     const { data: currentUserData, error: userError } = await supabase.auth.getUser();
      if (userError) {
-       console.error("Errore ottenimento utente in createProject:", userError);
+       logger.error("Errore ottenimento utente in createProject:", userError);
        throw userError;
      }
     const currentUser = currentUserData?.user;
@@ -250,7 +251,7 @@ export const progettiService = {
     const { data, error } = await supabase.from('progetti').insert([insertPayload]).select().single();
 
     if (error) {
-      console.error("Errore createProject:", error);
+      logger.error("Errore createProject:", error);
       throw error;
     }
 
@@ -264,7 +265,7 @@ export const progettiService = {
           entityId: newId
         });
     } catch (logError) {
-         console.error("Errore durante il logging (createProject):", logError);
+         logger.error("Errore durante il logging (createProject):", logError);
     }
     return convertTimestampToDate(data) as ProgettoData;
   },
@@ -273,7 +274,7 @@ export const progettiService = {
   updateProject: async (id: string, projectData: Partial<Omit<ProgettoData, 'id' | 'created_at' | 'id_numerico' | 'createdAt'>>): Promise<ProgettoData> => {
      const { data: currentUserData, error: userError } = await supabase.auth.getUser();
       if (userError) {
-        console.error("Errore ottenimento utente in updateProject:", userError);
+        logger.error("Errore ottenimento utente in updateProject:", userError);
         throw userError;
       }
      const currentUser = currentUserData?.user;
@@ -294,7 +295,7 @@ export const progettiService = {
     const { data, error } = await supabase.from('progetti').update(updatePayload).eq('id', projectId).select().single();
 
     if (error) {
-        console.error("Errore updateProject (database):", error);
+        logger.error("Errore updateProject (database):", error);
         throw error;
     }
 
@@ -305,9 +306,9 @@ export const progettiService = {
         const pathsToDelete = oldPaths.filter(oldPath => !newPaths.includes(oldPath));
 
         if (pathsToDelete.length > 0) {
-            console.log("Cancellazione immagini vecchie:", pathsToDelete);
+            logger.log("Cancellazione immagini vecchie:", pathsToDelete);
             try { await progettiService.deleteMultipleImages(pathsToDelete); }
-            catch (deleteError) { console.error("Errore non bloccante cancellazione vecchie immagini:", deleteError); }
+            catch (deleteError) { logger.error("Errore non bloccante cancellazione vecchie immagini:", deleteError); }
         }
     }
 
@@ -322,7 +323,7 @@ export const progettiService = {
           entityId: projectId
         });
     } catch (logError) {
-        console.error("Errore durante il logging (updateProject):", logError);
+        logger.error("Errore durante il logging (updateProject):", logError);
     }
     return convertTimestampToDate(data) as ProgettoData;
   },
@@ -331,7 +332,7 @@ export const progettiService = {
   deleteProject: async (id: string): Promise<string> => {
     const { data: currentUserData, error: userError } = await supabase.auth.getUser();
      if (userError) {
-       console.error("Errore ottenimento utente in deleteProject:", userError);
+       logger.error("Errore ottenimento utente in deleteProject:", userError);
        throw userError;
      }
      const currentUser = currentUserData?.user;
@@ -346,9 +347,9 @@ export const progettiService = {
     if (existingProject.immagini && existingProject.immagini.length > 0) {
       const pathsToDelete = existingProject.immagini.map(img => img.path).filter(p => p);
       if (pathsToDelete.length > 0) {
-          console.log("Cancellazione immagini del progetto:", pathsToDelete);
+          logger.log("Cancellazione immagini del progetto:", pathsToDelete);
           try { await progettiService.deleteMultipleImages(pathsToDelete); }
-          catch (deleteError) { console.error("Errore non bloccante cancellazione immagini associate:", deleteError); }
+          catch (deleteError) { logger.error("Errore non bloccante cancellazione immagini associate:", deleteError); }
       }
     }
 
@@ -356,7 +357,7 @@ export const progettiService = {
     const { error } = await supabase.from('progetti').delete().eq('id', projectId);
 
     if (error) {
-      console.error("Errore deleteProject (database):", error);
+      logger.error("Errore deleteProject (database):", error);
       throw error;
     }
 
@@ -370,7 +371,7 @@ export const progettiService = {
           entityId: projectId
         });
      } catch (logError) {
-          console.error("Errore durante il logging (deleteProject):", logError);
+          logger.error("Errore durante il logging (deleteProject):", logError);
      }
     return projectId;
   },
@@ -380,23 +381,23 @@ export const progettiService = {
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const filename = `${folder}/${uuidv4()}-${cleanFileName}`;
 
-    console.log(`Tentativo upload: ${filename}`);
+    logger.log(`Tentativo upload: ${filename}`);
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('images')
       .upload(filename, file, { cacheControl: '3600', upsert: false });
 
     if (uploadError) {
-        console.error(`Errore uploadImage (Upload - ${filename}):`, uploadError);
+        logger.error(`Errore uploadImage (Upload - ${filename}):`, uploadError);
         throw new Error(`Errore durante il caricamento del file: ${uploadError.message}`);
     }
      if (!uploadData?.path) {
-         console.error(`Errore uploadImage (Path mancante dopo upload - ${filename})`);
+         logger.error(`Errore uploadImage (Path mancante dopo upload - ${filename})`);
          throw new Error('Caricamento completato ma path non restituito da Supabase.');
      }
      const imagePath = uploadData.path;
 
-     console.log(`Upload completato, path: ${imagePath}. Ottenimento URL pubblico...`);
+     logger.log(`Upload completato, path: ${imagePath}. Ottenimento URL pubblico...`);
 
     // ULTIMO TENTATIVO: Cast esplicito a 'any' per bypassare il controllo TS sull'oggetto risultato
     const publicUrlResult: any = await supabase
@@ -410,23 +411,23 @@ export const progettiService = {
 
      if (urlError) {
         // L'errore esiste e viene loggato
-        console.error(`Errore uploadImage (GetPublicUrl - ${imagePath}):`, urlError);
-        console.warn(`Tentativo di rimozione del file ${imagePath} a causa di errore URL.`);
+        logger.error(`Errore uploadImage (GetPublicUrl - ${imagePath}):`, urlError);
+        logger.warn(`Tentativo di rimozione del file ${imagePath} a causa di errore URL.`);
         try { await supabase.storage.from('images').remove([imagePath]); }
-        catch (removeError) { console.error(`Errore durante rimozione file ${imagePath}:`, removeError); }
+        catch (removeError) { logger.error(`Errore durante rimozione file ${imagePath}:`, removeError); }
         // Assicurati che urlError abbia una proprietà message o fornisci un fallback
         const errorMessage = (urlError as Error)?.message || 'Errore sconosciuto nell\'ottenere l\'URL pubblico';
         throw new Error(`Errore nell'ottenere l'URL pubblico: ${errorMessage}`);
 
      } else if (!urlData?.publicUrl) {
          // Non c'è errore, ma mancano i dati o l'URL specifico
-         console.error(`Errore uploadImage (URL pubblico mancante o data assente - ${imagePath})`);
+         logger.error(`Errore uploadImage (URL pubblico mancante o data assente - ${imagePath})`);
          try { await supabase.storage.from('images').remove([imagePath]); } catch (e) {}
          throw new Error('URL pubblico non restituito o dati mancanti da Supabase dopo il caricamento.');
      } else {
          // Successo: non c'è errore e publicUrl esiste
          const imageUrl = urlData.publicUrl;
-         console.log(`URL Pubblico ottenuto: ${imageUrl}`);
+         logger.log(`URL Pubblico ottenuto: ${imageUrl}`);
          return { url: imageUrl, path: imagePath };
      }
   },
@@ -434,27 +435,27 @@ export const progettiService = {
   // Delete a *single* image by path
   deleteImage: async (path: string): Promise<void> => {
     if (!path || typeof path !== 'string' || path.trim() === '') {
-        console.warn("Tentativo di cancellare un path non valido:", path); return; }
-    console.log("Tentativo cancellazione immagine singola:", path);
+        logger.warn("Tentativo di cancellare un path non valido:", path); return; }
+    logger.log("Tentativo cancellazione immagine singola:", path);
     const { data, error } = await supabase.storage.from('images').remove([path]);
-    if (error) { console.error(`Errore deleteImage (path: ${path}):`, error); throw new Error(`Errore cancellazione immagine ${path}: ${error.message}`); }
-     console.log("Immagine singola cancellata con successo:", path, data);
+    if (error) { logger.error(`Errore deleteImage (path: ${path}):`, error); throw new Error(`Errore cancellazione immagine ${path}: ${error.message}`); }
+     logger.log(`Immagine singola cancellata con successo: ${path}`, data);
   },
 
    // Helper function to delete multiple images by their paths
    deleteMultipleImages: async (paths: string[]): Promise<void> => {
     const validPaths = paths.filter(p => p && typeof p === 'string' && p.trim() !== '');
-    if (validPaths.length === 0) { console.log("Nessun path valido fornito per deleteMultipleImages."); return; }
+    if (validPaths.length === 0) { logger.log("Nessun path valido fornito per deleteMultipleImages."); return; }
 
-    console.log("Tentativo cancellazione multiple immagini:", validPaths);
+    logger.log("Tentativo cancellazione multiple immagini:", validPaths);
     const { data, error } = await supabase.storage.from('images').remove(validPaths);
 
     if (error) {
-        console.error("Errore deleteMultipleImages:", error);
+        logger.error("Errore deleteMultipleImages:", error);
         // Rimosso controllo su 'data' dentro if(error)
         throw new Error(`Errore durante la cancellazione di una o più immagini: ${error.message}`);
     }
-     console.log("Immagini multiple cancellate con successo:", data);
+     logger.log("Immagini multiple cancellate con successo:", data);
    }
 };
 
@@ -471,7 +472,7 @@ export const competenzeService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-        console.error("Errore getAllCompetenze:", error);
+        logger.error("Errore getAllCompetenze:", error);
         throw error;
     }
     return data.map(item => convertTimestampToDate(item)) as CompetenzaData[];
@@ -487,7 +488,7 @@ export const competenzeService = {
 
     if (error) {
       if (error.code === 'PGRST116') return null; // Not found
-      console.error("Errore getCompetenzaById:", error);
+      logger.error("Errore getCompetenzaById:", error);
       throw error;
     }
     return data ? convertTimestampToDate(data) as CompetenzaData : null;
@@ -497,7 +498,7 @@ export const competenzeService = {
   createCompetenza: async (competenzaData: Omit<CompetenzaData, 'id' | 'created_at' | 'updated_at' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<CompetenzaData> => {
     const { data: currentUserData, error: userError } = await supabase.auth.getUser();
      if (userError) {
-       console.error("Errore ottenimento utente in createCompetenza:", userError);
+       logger.error("Errore ottenimento utente in createCompetenza:", userError);
        throw userError;
      }
      const currentUser = currentUserData?.user;
@@ -510,7 +511,7 @@ export const competenzeService = {
     const { data, error } = await supabase.from('competenze').insert([dataToInsert]).select().single();
 
     if (error) {
-        console.error("Errore createCompetenza:", error);
+        logger.error("Errore createCompetenza:", error);
         throw error;
     }
 
@@ -524,7 +525,7 @@ export const competenzeService = {
           entityId: newId
         });
     } catch (logError) {
-        console.error("Errore durante il logging (createCompetenza):", logError);
+        logger.error("Errore durante il logging (createCompetenza):", logError);
     }
     return convertTimestampToDate(data) as CompetenzaData;
   },
@@ -533,7 +534,7 @@ export const competenzeService = {
   updateCompetenza: async (id: string, competenzaData: Partial<Omit<CompetenzaData, 'id' | 'created_at' | 'createdAt'>>): Promise<CompetenzaData> => {
     const { data: currentUserData, error: userError } = await supabase.auth.getUser();
      if (userError) {
-       console.error("Errore ottenimento utente in updateCompetenza:", userError);
+       logger.error("Errore ottenimento utente in updateCompetenza:", userError);
        throw userError;
      }
      const currentUser = currentUserData?.user;
@@ -546,7 +547,7 @@ export const competenzeService = {
       .single();
 
     if (existingError) {
-      console.error("Errore verifica esistenza competenza:", existingError);
+      logger.error("Errore verifica esistenza competenza:", existingError);
       throw new Error(`Competenza con ID ${id} non trovata per l'aggiornamento.`);
     }
 
@@ -567,7 +568,7 @@ export const competenzeService = {
       .single();
 
     if (updateError) {
-      console.error("Errore updateCompetenza:", updateError);
+      logger.error("Errore updateCompetenza:", updateError);
       throw updateError;
     }
 
@@ -586,7 +587,7 @@ export const competenzeService = {
         entityId: id
       });
     } catch (logError) {
-      console.error("Errore durante il logging (updateCompetenza):", logError);
+      logger.error("Errore durante il logging (updateCompetenza):", logError);
     }
 
     return convertTimestampToDate(updatedData) as CompetenzaData;
@@ -596,7 +597,7 @@ export const competenzeService = {
   deleteCompetenza: async (id: string): Promise<string> => {
      const { data: currentUserData, error: userError } = await supabase.auth.getUser();
       if (userError) {
-        console.error("Errore ottenimento utente in deleteCompetenza:", userError);
+        logger.error("Errore ottenimento utente in deleteCompetenza:", userError);
         throw userError;
       }
       const currentUser = currentUserData?.user;
@@ -608,7 +609,7 @@ export const competenzeService = {
     const { error } = await supabase.from('competenze').delete().eq('id', id);
 
     if (error) {
-        console.error("Errore deleteCompetenza:", error);
+        logger.error("Errore deleteCompetenza:", error);
         throw error;
     }
 
@@ -622,7 +623,7 @@ export const competenzeService = {
           entityId: id
         });
      } catch (logError) {
-         console.error("Errore durante il logging (deleteCompetenza):", logError);
+         logger.error("Errore durante il logging (deleteCompetenza):", logError);
      }
 
     return id;
@@ -633,23 +634,23 @@ export const competenzeService = {
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const filename = `${folder}/${uuidv4()}-${cleanFileName}`;
 
-    console.log(`Tentativo upload: ${filename}`);
+    logger.log(`Tentativo upload: ${filename}`);
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('images')
       .upload(filename, file, { cacheControl: '3600', upsert: false });
 
     if (uploadError) {
-        console.error(`Errore uploadImage (Upload - ${filename}):`, uploadError);
+        logger.error(`Errore uploadImage (Upload - ${filename}):`, uploadError);
         throw new Error(`Errore durante il caricamento del file: ${uploadError.message}`);
     }
      if (!uploadData?.path) {
-         console.error(`Errore uploadImage (Path mancante dopo upload - ${filename})`);
+         logger.error(`Errore uploadImage (Path mancante dopo upload - ${filename})`);
          throw new Error('Caricamento completato ma path non restituito da Supabase.');
      }
      const imagePath = uploadData.path;
 
-     console.log(`Upload completato, path: ${imagePath}. Ottenimento URL pubblico...`);
+     logger.log(`Upload completato, path: ${imagePath}. Ottenimento URL pubblico...`);
 
     // ULTIMO TENTATIVO: Cast esplicito a 'any' per bypassare il controllo TS sull'oggetto risultato
     const publicUrlResult: any = await supabase
@@ -663,23 +664,23 @@ export const competenzeService = {
 
      if (urlError) {
         // L'errore esiste e viene loggato
-        console.error(`Errore uploadImage (GetPublicUrl - ${imagePath}):`, urlError);
-        console.warn(`Tentativo di rimozione del file ${imagePath} a causa di errore URL.`);
+        logger.error(`Errore uploadImage (GetPublicUrl - ${imagePath}):`, urlError);
+        logger.warn(`Tentativo di rimozione del file ${imagePath} a causa di errore URL.`);
         try { await supabase.storage.from('images').remove([imagePath]); }
-        catch (removeError) { console.error(`Errore durante rimozione file ${imagePath}:`, removeError); }
+        catch (removeError) { logger.error(`Errore durante rimozione file ${imagePath}:`, removeError); }
         // Assicurati che urlError abbia una proprietà message o fornisci un fallback
         const errorMessage = (urlError as Error)?.message || 'Errore sconosciuto nell\'ottenere l\'URL pubblico';
         throw new Error(`Errore nell'ottenere l'URL pubblico: ${errorMessage}`);
 
      } else if (!urlData?.publicUrl) {
          // Non c'è errore, ma mancano i dati o l'URL specifico
-         console.error(`Errore uploadImage (URL pubblico mancante o data assente - ${imagePath})`);
+         logger.error(`Errore uploadImage (URL pubblico mancante o data assente - ${imagePath})`);
          try { await supabase.storage.from('images').remove([imagePath]); } catch (e) {}
          throw new Error('URL pubblico non restituito o dati mancanti da Supabase dopo il caricamento.');
      } else {
          // Successo: non c'è errore e publicUrl esiste
          const imageUrl = urlData.publicUrl;
-         console.log(`URL Pubblico ottenuto: ${imageUrl}`);
+         logger.log(`URL Pubblico ottenuto: ${imageUrl}`);
          return { url: imageUrl, path: imagePath };
      }
   },
@@ -687,27 +688,27 @@ export const competenzeService = {
   // Delete a *single* image by path
   deleteImage: async (path: string): Promise<void> => {
     if (!path || typeof path !== 'string' || path.trim() === '') {
-        console.warn("Tentativo di cancellare un path non valido:", path); return; }
-    console.log("Tentativo cancellazione immagine singola:", path);
+        logger.warn("Tentativo di cancellare un path non valido:", path); return; }
+    logger.log("Tentativo cancellazione immagine singola:", path);
     const { data, error } = await supabase.storage.from('images').remove([path]);
-    if (error) { console.error(`Errore deleteImage (path: ${path}):`, error); throw new Error(`Errore cancellazione immagine ${path}: ${error.message}`); }
-     console.log("Immagine singola cancellata con successo:", path, data);
+    if (error) { logger.error(`Errore deleteImage (path: ${path}):`, error); throw new Error(`Errore cancellazione immagine ${path}: ${error.message}`); }
+     logger.log(`Immagine singola cancellata con successo: ${path}`, data);
   },
 
    // Helper function to delete multiple images by their paths
    deleteMultipleImages: async (paths: string[]): Promise<void> => {
     const validPaths = paths.filter(p => p && typeof p === 'string' && p.trim() !== '');
-    if (validPaths.length === 0) { console.log("Nessun path valido fornito per deleteMultipleImages."); return; }
+    if (validPaths.length === 0) { logger.log("Nessun path valido fornito per deleteMultipleImages."); return; }
 
-    console.log("Tentativo cancellazione multiple immagini:", validPaths);
+    logger.log("Tentativo cancellazione multiple immagini:", validPaths);
     const { data, error } = await supabase.storage.from('images').remove(validPaths);
 
     if (error) {
-        console.error("Errore deleteMultipleImages:", error);
+        logger.error("Errore deleteMultipleImages:", error);
         // Rimosso controllo su 'data' dentro if(error)
         throw new Error(`Errore durante la cancellazione di una o più immagini: ${error.message}`);
     }
-     console.log("Immagini multiple cancellate con successo:", data);
+     logger.log("Immagini multiple cancellate con successo:", data);
    }
 };
 
@@ -721,7 +722,7 @@ export const categorieService = {
     const { data, error } = await supabase.from('categorie').select('*');
 
     if (error) {
-        console.error("Errore getAllCategorie:", error);
+        logger.error("Errore getAllCategorie:", error);
         throw error;
     }
     return data.map(item => convertTimestampToDate(item));

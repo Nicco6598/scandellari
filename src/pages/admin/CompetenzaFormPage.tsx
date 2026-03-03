@@ -7,6 +7,7 @@ import { logger } from '../../utils/logger';
 import { CompetenzaData, ImmagineInfo } from '../../types/supabaseTypes';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { PhotoIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import DOMPurify from 'dompurify';
 
 const MAX_IMAGES = 6;
 
@@ -251,7 +252,7 @@ const CompetenzaFormPage: React.FC = () => {
                     </select>
                   </div>
                   <div className="flex items-end pb-1 overflow-hidden opacity-40">
-                    <div dangerouslySetInnerHTML={{ __html: formData.icona }} className="w-8 h-8" />
+                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formData.icona) }} className="w-8 h-8" />
                     <span className="ml-3 text-[10px] font-black uppercase tracking-widest">Anteprima Icona</span>
                   </div>
                 </div>

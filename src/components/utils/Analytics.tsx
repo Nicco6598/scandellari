@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { logger } from '../../utils/logger';
 
 // Google Analytics 4 Measurement ID
 // Replace with your actual GA4 Measurement ID (format: G-XXXXXXXXXX)
@@ -8,7 +9,7 @@ const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || '';
 // Initialize Google Analytics
 export const initGA = () => {
     if (!GA_MEASUREMENT_ID) {
-        console.warn('Google Analytics Measurement ID not found. Analytics will not be tracked.');
+        logger.warn('Google Analytics Measurement ID not found. Analytics will not be tracked.');
         return;
     }
 

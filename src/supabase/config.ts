@@ -1,13 +1,12 @@
 // src/supabase/config.ts
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '../utils/logger';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  // Logga l'errore sulla console per debugging
-  console.error('ERRORE CRITICO: Variabili d\'ambiente Supabase mancanti! Controlla il file .env.local o le variabili d\'ambiente del server.');
-  // Lancia un errore per bloccare l'inizializzazione dell'app con configurazione invalida
+  logger.error('ERRORE CRITICO: Variabili d\'ambiente Supabase mancanti! Controlla il file .env.local o le variabili d\'ambiente del server.');
   throw new Error('Variabili d\'ambiente Supabase mancanti. Impossibile inizializzare Supabase.');
 }
 
