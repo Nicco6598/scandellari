@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { progettiService } from '../supabase/services';
@@ -264,7 +265,7 @@ const ProjectDetailPage: React.FC = () => {
                                 <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 mb-8 font-heading">Panoramica</h2>
                                 <div
                                     className="text-lg text-black/80 dark:text-white/70 leading-relaxed font-medium prose dark:prose-invert max-w-none prose-p:mb-6"
-                                    dangerouslySetInnerHTML={{ __html: progetto.descrizioneLunga || progetto.descrizione || '' }}
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(progetto.descrizioneLunga || progetto.descrizione || '') }}
                                 />
                             </div>
 

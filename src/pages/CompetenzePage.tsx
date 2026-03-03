@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import Layout from '../components/layout/Layout';
 import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
 import { competenzeService, progettiService } from '../supabase/services';
@@ -178,7 +179,7 @@ const CompetenzePage: React.FC = () => {
                                                 </h2>
                                                 <div
                                                     className="text-sm md:text-lg text-black/80 dark:text-white/70 leading-relaxed font-medium prose dark:prose-invert max-w-none"
-                                                    dangerouslySetInnerHTML={{ __html: activeCompetenza.descrizioneLunga || activeCompetenza.descrizioneBreve || '' }}
+                                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(activeCompetenza.descrizioneLunga || activeCompetenza.descrizioneBreve || '') }}
                                                 />
                                             </div>
                                         </div>

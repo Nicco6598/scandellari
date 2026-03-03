@@ -12,6 +12,12 @@ export default defineConfig({
     server: {
         port: 3000,
         open: true,
+        headers: {
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+        },
     },
     build: {
         outDir: 'build',

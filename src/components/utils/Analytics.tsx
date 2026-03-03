@@ -12,10 +12,11 @@ export const initGA = () => {
         return;
     }
 
-    // Load gtag.js script
+    // Load gtag.js script after critical render
     const script = document.createElement('script');
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
     script.async = true;
+    script.defer = true;
     document.head.appendChild(script);
 
     // Initialize dataLayer
