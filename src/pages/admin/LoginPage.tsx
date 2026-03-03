@@ -38,15 +38,15 @@ const LoginPage: React.FC = () => {
       setRememberMe(true);
     }
 
-    const savedAttempts = Number(localStorage.getItem(LOGIN_ATTEMPTS_KEY) ?? '0');
+    const savedAttempts = Number(sessionStorage.getItem(LOGIN_ATTEMPTS_KEY) ?? '0');
     if (Number.isFinite(savedAttempts) && savedAttempts > 0) {
       setLoginAttempts(savedAttempts);
     }
-    const savedBlockedUntil = Number(localStorage.getItem(LOGIN_BLOCKED_UNTIL_KEY) ?? '0');
+    const savedBlockedUntil = Number(sessionStorage.getItem(LOGIN_BLOCKED_UNTIL_KEY) ?? '0');
     if (Number.isFinite(savedBlockedUntil) && savedBlockedUntil > Date.now()) {
       setBlockedUntilMs(savedBlockedUntil);
     } else {
-      localStorage.removeItem(LOGIN_BLOCKED_UNTIL_KEY);
+      sessionStorage.removeItem(LOGIN_BLOCKED_UNTIL_KEY);
     }
   }, [navigate]);
 
@@ -54,14 +54,14 @@ const LoginPage: React.FC = () => {
     if (blockedUntilMs === null) return;
     if (Date.now() >= blockedUntilMs) {
       setBlockedUntilMs(null);
-      localStorage.removeItem(LOGIN_BLOCKED_UNTIL_KEY);
+      sessionStorage.removeItem(LOGIN_BLOCKED_UNTIL_KEY);
       return;
     }
 
     const intervalId = window.setInterval(() => setNowMs(Date.now()), 250);
     const timeoutId = window.setTimeout(() => {
       setBlockedUntilMs(null);
-      localStorage.removeItem(LOGIN_BLOCKED_UNTIL_KEY);
+      sessionStorage.removeItem(LOGIN_BLOCKED_UNTIL_KEY);
     }, blockedUntilMs - Date.now());
 
     return () => {
@@ -98,21 +98,21 @@ const LoginPage: React.FC = () => {
       localStorage.setItem('last_login_time', now);
 
       setLoginAttempts(0);
-      localStorage.removeItem(LOGIN_ATTEMPTS_KEY);
+      sessionStorage.removeItem(LOGIN_ATTEMPTS_KEY);
       setBlockedUntilMs(null);
-      localStorage.removeItem(LOGIN_BLOCKED_UNTIL_KEY);
+      sessionStorage.removeItem(LOGIN_BLOCKED_UNTIL_KEY);
 
       navigate('/admin/dashboard');
     } catch (error: any) {
       const nextAttempts = loginAttempts + 1;
       setLoginAttempts(nextAttempts);
-      localStorage.setItem(LOGIN_ATTEMPTS_KEY, String(nextAttempts));
+      sessionStorage.setItem(LOGIN_ATTEMPTS_KEY, String(nextAttempts));
 
       if (nextAttempts >= 3) {
         const delayMs = Math.min(15 * 60 * 1000, 30 * 1000 * Math.pow(2, nextAttempts - 3));
         const untilMs = Date.now() + delayMs;
         setBlockedUntilMs(untilMs);
-        localStorage.setItem(LOGIN_BLOCKED_UNTIL_KEY, String(untilMs));
+        sessionStorage.setItem(LOGIN_BLOCKED_UNTIL_KEY, String(untilMs));
         setError(`Troppi tentativi falliti. Riprova tra ${Math.ceil(delayMs / 1000)}s o reimposta la password.`);
       } else {
         setError('Credenziali non valide. Riprova.');
