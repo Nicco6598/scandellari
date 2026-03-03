@@ -322,48 +322,50 @@ const CareersPage: React.FC = () => {
 
         {/* Job Openings */}
         <section className="container mx-auto max-w-7xl px-6 mb-40">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
-            <div>
-              <h2 className="text-4xl font-black text-black dark:text-white tracking-tighter font-heading mb-4">Posizioni Aperte</h2>
-              <div className="w-20 h-[1px] bg-black/10 dark:bg-white/10" />
+          <div className="flex flex-col gap-10 mb-16">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <h2 className="text-4xl font-black text-black dark:text-white tracking-tighter font-heading mb-4">Posizioni Aperte</h2>
+                <div className="w-20 h-[1px] bg-black/10 dark:bg-white/10" />
+              </div>
+              {(filterDipartimento || filterTipo || filterSede) && (
+                <button
+                  onClick={() => { setFilterDipartimento(''); setFilterTipo(''); setFilterSede(''); }}
+                  className="text-[10px] font-black uppercase tracking-widest text-black/40 dark:text-white/30 hover:text-primary transition-colors self-start md:self-auto"
+                >
+                  Rimuovi filtri ×
+                </button>
+              )}
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4">
+            {/* Filtri pill */}
+            <div className="flex flex-col gap-4">
               {[
-                { label: 'Dipartimento', value: filterDipartimento, setter: setFilterDipartimento, options: Array.from(new Set(offerte.map(o => o.dipartimento))).sort() },
-                { label: 'Contratto', value: filterTipo, setter: setFilterTipo, options: Array.from(new Set(offerte.map(o => o.tipo))).sort() },
-                { label: 'Sede', value: filterSede, setter: setFilterSede, options: Array.from(new Set(offerte.map(o => o.sede))).sort() }
-              ].map((filter, i) => (
-                <div key={i} className="relative group">
-                  <select
-                    value={filter.value}
-                    onChange={(e) => filter.setter(e.target.value)}
-                    className="appearance-none bg-white dark:bg-dark-surface border border-black/10 dark:border-white/10 px-6 py-3 pr-10 text-xs font-black uppercase tracking-widest text-black/60 dark:text-white/60 focus:border-primary focus:ring-0 cursor-pointer min-w-[160px]"
-                  >
-                    <option value="">{filter.label}</option>
+                { label: 'Dipartimento', value: filterDipartimento, setter: setFilterDipartimento, options: Array.from(new Set(offerte.map(o => o.dipartimento).filter(Boolean))).sort() },
+                { label: 'Contratto', value: filterTipo, setter: setFilterTipo, options: Array.from(new Set(offerte.map(o => o.tipo).filter(Boolean))).sort() },
+                { label: 'Sede', value: filterSede, setter: setFilterSede, options: Array.from(new Set(offerte.map(o => o.sede).filter(Boolean))).sort() }
+              ].filter(f => f.options.length > 0).map((filter, i) => (
+                <div key={i} className="flex items-center gap-3 flex-wrap">
+                  <span className="text-[9px] font-black uppercase tracking-[0.35em] text-black/30 dark:text-white/30 w-24 shrink-0">{filter.label}</span>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => filter.setter('')}
+                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${!filter.value ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/50 dark:text-white/40 hover:text-black dark:hover:text-white border border-black/10 dark:border-white/10'}`}
+                    >
+                      Tutti
+                    </button>
                     {filter.options.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
+                      <button
+                        key={opt}
+                        onClick={() => filter.setter(opt === filter.value ? '' : opt)}
+                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${filter.value === opt ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/50 dark:text-white/40 hover:text-black dark:hover:text-white border border-black/10 dark:border-white/10'}`}
+                      >
+                        {opt}
+                      </button>
                     ))}
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-3 h-3 text-black/40 dark:text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </div>
               ))}
-
-              {(filterDipartimento || filterTipo || filterSede) && (
-                <button
-                  onClick={() => {
-                    setFilterDipartimento('');
-                    setFilterTipo('');
-                    setFilterSede('');
-                  }}
-                  className="px-6 py-3 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-900/30"
-                >
-                  Reset
-                </button>
-              )}
             </div>
           </div>
 
@@ -379,7 +381,7 @@ const CareersPage: React.FC = () => {
                   data-animate-delay={(index * 0.04).toFixed(2)}
                 >
                   <div className="md:col-span-8 flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-                    <div className="w-12 h-12 bg-black/5 dark:bg-dark-elevated border border-black/5 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:border-primary group-hover:bg-primary/10 transition-all rounded-lg md:rounded-none">
+                    <div className="w-12 h-12 bg-black/5 dark:bg-dark-elevated border border-black/5 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:border-primary group-hover:bg-primary/10 transition-all">
                       <BriefcaseIcon className="w-6 h-6 opacity-30 group-hover:opacity-100 group-hover:text-primary transition-all" />
                     </div>
                     <div className="flex-1">
@@ -425,18 +427,21 @@ const CareersPage: React.FC = () => {
               })}
             </div>
           ) : (
-            <div className="text-center py-20 border border-black/5 dark:border-white/5">
-              <SparklesIcon className="w-12 h-12 mx-auto text-black/20 dark:text-white/20 mb-6" />
-              <p className="text-black/40 dark:text-white/40 font-medium italic mb-6">Nessuna posizione corrisponde ai filtri selezionati.</p>
+            <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
+              <BriefcaseIcon className="w-10 h-10 text-black/15 dark:text-white/15" />
+              <div>
+                <p className="text-sm font-black uppercase tracking-widest text-black/30 dark:text-white/30 mb-2">
+                  Nessuna posizione trovata
+                </p>
+                <p className="text-xs text-black/20 dark:text-white/20 font-medium">
+                  Nessuna offerta corrisponde ai filtri selezionati.
+                </p>
+              </div>
               <button
-                onClick={() => {
-                  setFilterDipartimento('');
-                  setFilterTipo('');
-                  setFilterSede('');
-                }}
-                className="text-primary text-xs font-black uppercase tracking-widest hover:underline"
+                onClick={() => { setFilterDipartimento(''); setFilterTipo(''); setFilterSede(''); }}
+                className="text-[10px] font-black uppercase tracking-widest text-primary border border-primary/30 px-6 py-3 hover:bg-primary hover:text-white transition-all"
               >
-                Rimuovi Filtri
+                Vedi tutte le posizioni
               </button>
             </div>
           )}

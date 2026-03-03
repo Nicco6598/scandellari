@@ -13,6 +13,13 @@
     @apply bg-gray-50 text-text-primary font-sans dark:bg-dark dark:text-white transition-colors duration-300 overflow-x-hidden;
   }
 
+  /* Cursore nativo nascosto su dispositivi pointer:fine (mouse), lasciato su touch */
+  @media (pointer: fine) {
+    *, *::before, *::after {
+      cursor: none !important;
+    }
+  }
+
   h1,
   h2,
   h3,

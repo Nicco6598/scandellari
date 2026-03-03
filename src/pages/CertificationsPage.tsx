@@ -203,7 +203,7 @@ const CertificationsPage: React.FC = () => {
                                     onClick={() => openCertification(cert)}
                                 >
                                     <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105 origin-top">
-                                        <PDFThumbnail pdfUrl={cert.pdfUrl} width={500} />
+                                        <PDFThumbnail pdfUrl={cert.pdfUrl} />
                                     </div>
                                     {/* Overlay hover */}
                                     <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-all duration-500 flex items-center justify-center z-10">
