@@ -10,9 +10,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 // Componenti utili - SPOSTATI IN ALTO PER ESLINT
 import ScrollToTop from './components/utils/ScrollToTop';
-import PageLoader from './components/utils/PageLoader'; // Assicurati che PageLoader possa gestire l'assenza di children o usa un fallback diverso
+import PageLoader from './components/utils/PageLoader';
 import ErrorBoundary from './components/utils/ErrorBoundary';
 import Analytics from './components/utils/Analytics';
+import ScrollProgress from './components/utils/ScrollProgress';
+import CustomCursor from './components/utils/CustomCursor';
+import PageTransition from './components/utils/PageTransition';
 
 // Rimuovo l'import di ProtectedRoute qui, verrà usato in AdminLayout
 // import ProtectedRoute from './components/admin/ProtectedRoute'; 
@@ -168,6 +171,9 @@ const App: React.FC = () => {
               <Analytics />
               <ScrollToTop />
               <AnimationController />
+              <ScrollProgress />
+              <CustomCursor />
+              <PageTransition />
               {/* 
                 Opzione 1: Modifica PageLoader per rendere 'children' opzionale.
                 Opzione 2: Usa un fallback più semplice se PageLoader richiede 'children'.
