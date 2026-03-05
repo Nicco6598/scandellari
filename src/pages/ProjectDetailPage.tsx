@@ -212,8 +212,8 @@ const ProjectDetailPage: React.FC = () => {
                                 onMove={evt => setViewState(evt.viewState)}
                                 style={{ width: '100%', height: '100%' }}
                                 mapStyle={theme === 'dark'
-                                    ? `https://api.maptiler.com/maps/dataviz-dark/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`
-                                    : `https://api.maptiler.com/maps/dataviz/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`
+                                    ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+                                    : "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
                                 }
                                 attributionControl={false}
                             >

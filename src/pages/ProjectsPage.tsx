@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useMobileMenu } from '../context/MobileMenuContext';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
@@ -98,16 +97,13 @@ const ProjectsPage: React.FC = () => {
     const [progetti, setProgetti] = useState<ProgettoData[]>([]);
     const [categorie, setCategorie] = useState<string[]>(['tutti']);
     const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
     const [categoriaAttiva, setCategoriaAttiva] = useState<string>('tutti');
     const [visualizzazione, setVisualizzazione] = useState<'lista' | 'mappa'>('lista');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [projectCoordinates, setProjectCoordinates] = useState<Record<string | number, ProjectCoordinates>>({});
-    const [selectedProject, setSelectedProject] = useState<ProgettoData | null>(null);
     const [geocodingPhase, setGeocodingPhase] = useState<{ current: number, total: number }>({ current: 0, total: 0 });
     const [selectedGroup, setSelectedGroup] = useState<{ projects: ProgettoData[], coord: Coordinate } | null>(null);
     const [activeProjectIndex, setActiveProjectIndex] = useState(0);
-    const { isMobileMenuOpen } = useMobileMenu();
     const mapContainerRef = useRef<HTMLDivElement>(null);
 
     const [viewState, setViewState] = useState({
@@ -139,7 +135,7 @@ const ProjectsPage: React.FC = () => {
                 setProgetti(projData);
                 setCategorie(['tutti', ...new Set(catData.map(c => c.nome?.toLowerCase()).filter(Boolean) as string[])]);
             } catch (err) {
-                setError('Impossibile caricare i progetti.');
+                logger.error('Impossibile caricare i progetti.');
             } finally {
                 setLoading(false);
             }
@@ -466,8 +462,8 @@ const ProjectsPage: React.FC = () => {
                                         onMove={evt => setViewState(evt.viewState)}
                                         style={{ width: '100%', height: '100%' }}
                                         mapStyle={theme === 'dark'
-                                            ? `https://api.maptiler.com/maps/dataviz-dark/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`
-                                            : `https://api.maptiler.com/maps/dataviz/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`
+                                            ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+                                            : "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
                                         }
                                         attributionControl={false}
                                     >
