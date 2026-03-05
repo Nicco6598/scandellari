@@ -5,49 +5,55 @@
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
     <url>
         <loc>https://scandellarigiacintosnc.it/</loc>
-        <lastmod>2025-05-16</lastmod>
+        <lastmod>2026-03-05</lastmod>
         <changefreq>daily</changefreq>
         <priority>1.0</priority>
     </url>
     <url>
         <loc>https://scandellarigiacintosnc.it/chi-siamo</loc>
-        <lastmod>2025-05-16</lastmod>
+        <lastmod>2026-03-05</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://scandellarigiacintosnc.it/competenze</loc>
-        <lastmod>2025-05-16</lastmod>
+        <lastmod>2026-03-05</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://scandellarigiacintosnc.it/progetti</loc>
-        <lastmod>2025-05-16</lastmod>
+        <lastmod>2026-03-05</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
         <loc>https://scandellarigiacintosnc.it/contatti</loc>
-        <lastmod>2025-05-16</lastmod>
+        <lastmod>2026-03-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
     <url>
         <loc>https://scandellarigiacintosnc.it/lavora-con-noi</loc>
-        <lastmod>2025-05-16</lastmod>
+        <lastmod>2026-03-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
     <url>
+        <loc>https://scandellarigiacintosnc.it/certificazioni</loc>
+        <lastmod>2026-03-05</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
         <loc>https://scandellarigiacintosnc.it/privacy-policy</loc>
-        <lastmod>2025-05-16</lastmod>
+        <lastmod>2026-03-05</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.3</priority>
     </url>
     <url>
         <loc>https://scandellarigiacintosnc.it/cookie-policy</loc>
-        <lastmod>2025-05-16</lastmod>
+        <lastmod>2026-03-05</lastmod>
         <changefreq>yearly</changefreq>
         <priority>0.3</priority>
     </url>
