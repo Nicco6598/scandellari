@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
@@ -18,6 +18,26 @@ import {
 
 interface Coordinate { lat: number; lng: number; }
 
+const detailGeoCache: Record<string, Coordinate> = {};
+
+async function geocodePartDetail(part: string): Promise<Coordinate | null> {
+    if (detailGeoCache[part]) return detailGeoCache[part];
+    try {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`
+        );
+        const data = await res.json();
+        if (data?.length > 0) {
+            const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+            detailGeoCache[part] = coord;
+            return coord;
+        }
+    } catch (e) {
+        logger.error('Geocoding error', e);
+    }
+    return null;
+}
+
 const ProjectDetailPage: React.FC = () => {
     const { theme } = useTheme();
     const { id } = useParams<{ id: string }>();
@@ -29,12 +49,25 @@ const ProjectDetailPage: React.FC = () => {
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [mapPoints, setMapPoints] = useState<Coordinate[]>([]);
     const [routePoints, setRoutePoints] = useState<Coordinate[]>([]);
+    const mapContainerRef = useRef<HTMLDivElement>(null);
 
     const [viewState, setViewState] = useState({
         longitude: 12.5,
         latitude: 42.5,
         zoom: 10
     });
+
+    // Scroll lock sulla mappa
+    useEffect(() => {
+        const el = mapContainerRef.current;
+        if (!el || mapPoints.length === 0) return;
+        const handler = (e: WheelEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        el.addEventListener('wheel', handler, { passive: false });
+        return () => el.removeEventListener('wheel', handler);
+    }, [mapPoints]);
 
     useEffect(() => {
         const fetchProject = async () => {
@@ -57,49 +90,42 @@ const ProjectDetailPage: React.FC = () => {
                 if (data?.localita) {
                     const parts = data.localita.split(/[-/]/).map(item => item.trim());
 
-                    Promise.all(parts.map(async (part) => {
-                        try {
-                            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`);
-                            const gData = await res.json();
-                            if (gData && gData.length > 0) {
-                                return { lat: parseFloat(gData[0].lat), lng: parseFloat(gData[0].lon) };
-                            }
-                        } catch (e) { logger.error('Geocoding error', e); }
-                        return null;
-                    })).then(async (results) => {
-                        const coords = results.filter((c): c is Coordinate => c !== null);
-                        if (coords.length > 0) {
-                            setMapPoints(coords);
-                            setViewState(prev => ({
-                                ...prev,
-                                longitude: coords[0].lng,
-                                latitude: coords[0].lat,
-                                zoom: 10
-                            }));
+                    // Tutte le parti in parallelo — nessun delay artificiale
+                    const results = await Promise.allSettled(parts.map(part => geocodePartDetail(part)));
+                    const coords = results
+                        .filter((r): r is PromiseFulfilledResult<Coordinate> => r.status === 'fulfilled' && r.value !== null)
+                        .map(r => r.value);
 
-                            // Realize routing using OSRM
-                            if (coords.length >= 2) {
-                                try {
-                                    const osrmPath = coords.map(c => `${c.lng},${c.lat}`).join(';');
-                                    const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${osrmPath}?overview=full&geometries=geojson`);
-                                    const routeData = await routeRes.json();
-                                    if (routeData.routes && routeData.routes[0]) {
-                                        const route = routeData.routes[0].geometry.coordinates.map((c: any) => ({
-                                            lng: c[0],
-                                            lat: c[1]
-                                        }));
-                                        setRoutePoints(route);
-                                    } else {
-                                        setRoutePoints(coords);
-                                    }
-                                } catch (e) {
+                    if (coords.length > 0) {
+                        setMapPoints(coords);
+                        setViewState(prev => ({
+                            ...prev,
+                            longitude: coords[0].lng,
+                            latitude: coords[0].lat,
+                            zoom: coords.length > 1 ? 7 : 10
+                        }));
+
+                        if (coords.length >= 2) {
+                            try {
+                                const osrmPath = coords.map(c => `${c.lng},${c.lat}`).join(';');
+                                const routeRes = await fetch(
+                                    `https://router.project-osrm.org/route/v1/driving/${osrmPath}?overview=full&geometries=geojson`
+                                );
+                                const routeData = await routeRes.json();
+                                if (routeData.routes?.[0]) {
+                                    setRoutePoints(routeData.routes[0].geometry.coordinates.map((c: any) => ({
+                                        lng: c[0], lat: c[1]
+                                    })));
+                                } else {
                                     setRoutePoints(coords);
                                 }
-                            } else {
+                            } catch (e) {
                                 setRoutePoints(coords);
                             }
+                        } else {
+                            setRoutePoints(coords);
                         }
-                    });
+                    }
                 }
             } catch (err) {
                 setError('Impossibile caricare il progetto.');
@@ -175,16 +201,19 @@ const ProjectDetailPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Map Integration with Skeleton */}
-                    <div className="mt-12 w-full h-80 bg-black/5 dark:bg-dark-surface border border-black/5 dark:border-white/5 overflow-hidden relative">
+                    {/* Map Integration */}
+                    <div
+                        ref={mapContainerRef}
+                        className="mt-12 w-full h-80 bg-black/5 dark:bg-dark-surface border border-black/5 dark:border-white/5 overflow-hidden relative"
+                    >
                         {mapPoints.length > 0 ? (
                             <Map
                                 {...viewState}
                                 onMove={evt => setViewState(evt.viewState)}
                                 style={{ width: '100%', height: '100%' }}
-                                mapStyle={theme === 'dark' 
-                                    ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-                                    : "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+                                mapStyle={theme === 'dark'
+                                    ? `https://api.maptiler.com/maps/dataviz-dark/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`
+                                    : `https://api.maptiler.com/maps/dataviz/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`
                                 }
                                 attributionControl={false}
                             >
@@ -223,7 +252,9 @@ const ProjectDetailPage: React.FC = () => {
                                             className="maplibre-popup-custom"
                                         >
                                             <div className="p-3 min-w-[120px] bg-white dark:bg-dark-surface border border-black/5 dark:border-white/10 shadow-xl">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">Località {i + 1}</span>
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">
+                                                    Località {i + 1}
+                                                </span>
                                                 <h4 className="font-black uppercase text-[10px] tracking-tight text-black dark:text-white leading-tight">
                                                     {progetto.localita.split(/[-/]/)[i]?.trim() || progetto.localita}
                                                 </h4>
@@ -294,7 +325,7 @@ const ProjectDetailPage: React.FC = () => {
                             <div className="grid md:grid-cols-2 gap-12 border-t border-black/5 dark:border-white/5 pt-16">
                                 {progetto.sfide?.length ? (
                                     <div className="space-y-8">
-                                        <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 ">Sfide e Soluzioni</h3>
+                                        <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40">Sfide e Soluzioni</h3>
                                         <ul className="space-y-4">
                                             {progetto.sfide.map((item, i) => (
                                                 <li key={i} className="flex gap-4 text-sm font-bold text-black dark:text-white">
