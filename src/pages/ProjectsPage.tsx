@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useMobileMenu } from '../context/MobileMenuContext';
 import { Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
@@ -21,8 +21,77 @@ import AnimatedCounter from '../components/utils/AnimatedCounter';
 interface Coordinate { lat: number; lng: number; }
 type ProjectCoordinates = { points: Coordinate[]; route?: Coordinate[]; error?: string; };
 
-// global cache for coordinates
 const geoCache: Record<string, Coordinate> = {};
+const CONCURRENCY = 3;
+
+async function geocodePart(part: string): Promise<Coordinate | null> {
+    if (geoCache[part]) return geoCache[part];
+    try {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`
+        );
+        if (res.status === 429) {
+            await new Promise(r => setTimeout(r, 1200));
+            const retry = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`
+            );
+            const data = await retry.json();
+            if (data?.length > 0) {
+                const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                geoCache[part] = coord;
+                return coord;
+            }
+            return null;
+        }
+        const data = await res.json();
+        if (data?.length > 0) {
+            const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+            geoCache[part] = coord;
+            return coord;
+        }
+    } catch (e) {
+        logger.error(`Failed to geocode: ${part}`, e);
+    }
+    return null;
+}
+
+async function fetchRoute(coords: Coordinate[]): Promise<Coordinate[]> {
+    try {
+        const osrmPath = coords.map(c => `${c.lng},${c.lat}`).join(';');
+        const res = await fetch(
+            `https://router.project-osrm.org/route/v1/driving/${osrmPath}?overview=full&geometries=geojson`
+        );
+        const data = await res.json();
+        if (data.routes?.[0]) {
+            return data.routes[0].geometry.coordinates.map((c: any) => ({ lng: c[0], lat: c[1] }));
+        }
+    } catch (e) {
+        logger.warn('OSRM error', e);
+    }
+    return coords;
+}
+
+async function geocodeProject(p: ProgettoData): Promise<{ id: string; result: ProjectCoordinates }> {
+    const projectId = p.id || '';
+    const parts = p.localita.split(/[-/]/).map(item => item.trim());
+    const coordResults = await Promise.allSettled(parts.map(part => geocodePart(part)));
+    const resolvedCoords = coordResults
+        .filter((r): r is PromiseFulfilledResult<Coordinate> => r.status === 'fulfilled' && r.value !== null)
+        .map(r => r.value);
+
+    let finalRoute: Coordinate[] = resolvedCoords;
+    if (resolvedCoords.length >= 2) {
+        finalRoute = await fetchRoute(resolvedCoords);
+    }
+
+    return { id: projectId, result: { points: resolvedCoords, route: finalRoute } };
+}
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
+    return chunks;
+}
 
 const ProjectsPage: React.FC = () => {
     const { theme } = useTheme();
@@ -39,12 +108,25 @@ const ProjectsPage: React.FC = () => {
     const [selectedGroup, setSelectedGroup] = useState<{ projects: ProgettoData[], coord: Coordinate } | null>(null);
     const [activeProjectIndex, setActiveProjectIndex] = useState(0);
     const { isMobileMenuOpen } = useMobileMenu();
+    const mapContainerRef = useRef<HTMLDivElement>(null);
 
     const [viewState, setViewState] = useState({
         longitude: 12.5,
         latitude: 42.5,
         zoom: 5
     });
+
+    // Scroll lock sulla mappa
+    useEffect(() => {
+        const el = mapContainerRef.current;
+        if (!el) return;
+        const handler = (e: WheelEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        el.addEventListener('wheel', handler, { passive: false });
+        return () => el.removeEventListener('wheel', handler);
+    }, [visualizzazione]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -55,7 +137,7 @@ const ProjectsPage: React.FC = () => {
                     categorieService.getAllCategorie()
                 ]);
                 setProgetti(projData);
-                setCategorie(['tutti', ...new Set(catData.map(c => c.nome?.toLowerCase()).filter(Boolean))]);
+                setCategorie(['tutti', ...new Set(catData.map(c => c.nome?.toLowerCase()).filter(Boolean) as string[])]);
             } catch (err) {
                 setError('Impossibile caricare i progetti.');
             } finally {
@@ -69,7 +151,6 @@ const ProjectsPage: React.FC = () => {
         categoriaAttiva === 'tutti' ? progetti : progetti.filter(p => p.categoria?.toLowerCase() === categoriaAttiva.toLowerCase())
         , [progetti, categoriaAttiva]);
 
-    // Contatori per categoria
     const contatoriCategoria = useMemo(() => {
         const counts: Record<string, number> = { tutti: progetti.length };
         progetti.forEach(p => {
@@ -79,91 +160,36 @@ const ProjectsPage: React.FC = () => {
         return counts;
     }, [progetti]);
 
-    // Optimized Geocoding and Routing Logic
+    // Geocoding parallelo con concurrency = 3
     useEffect(() => {
         let isMounted = true;
 
         if (visualizzazione === 'mappa' && progettiFiltrati.length > 0) {
             const projectsToProcess = progettiFiltrati.filter(p => !projectCoordinates[p.id || ''] && p.localita);
+            if (projectsToProcess.length === 0) return;
+
             setGeocodingPhase({ current: 0, total: projectsToProcess.length });
 
             const processGeocoding = async () => {
                 let processedCount = 0;
+                const chunks = chunkArray(projectsToProcess, CONCURRENCY);
 
-                for (const p of projectsToProcess) {
+                for (const chunk of chunks) {
                     if (!isMounted) break;
-                    const projectId = p.id || '';
+                    const results = await Promise.allSettled(chunk.map(p => geocodeProject(p)));
 
-                    try {
-                        const parts = p.localita.split(/[-/]/).map(item => item.trim());
-                        const resolvedCoords: Coordinate[] = [];
-
-                        for (const part of parts) {
-                            if (geoCache[part]) {
-                                resolvedCoords.push(geoCache[part]);
-                                continue;
-                            }
-
-                            try {
-                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`);
-                                if (res.status === 429) {
-                                    await new Promise(r => setTimeout(r, 1000));
-                                    const retryRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`);
-                                    const data = await retryRes.json();
-                                    if (data && data.length > 0) {
-                                        const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-                                        geoCache[part] = coord;
-                                        resolvedCoords.push(coord);
-                                        await new Promise(r => setTimeout(r, 800));
-                                    }
-                                } else {
-                                    const data = await res.json();
-                                    if (data && data.length > 0) {
-                                        const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-                                        geoCache[part] = coord;
-                                        resolvedCoords.push(coord);
-                                        await new Promise(r => setTimeout(r, 800));
-                                    }
-                                }
-                            } catch (e) { logger.error(`Failed to geocode: ${part}`, e); }
+                    results.forEach((result) => {
+                        if (!isMounted) return;
+                        if (result.status === 'fulfilled') {
+                            const { id, result: coords } = result.value;
+                            setProjectCoordinates(prev => ({ ...prev, [id]: coords }));
                         }
-
-                        let finalRoute: Coordinate[] = resolvedCoords;
-
-                        if (resolvedCoords.length >= 2) {
-                            try {
-                                const osrmPath = resolvedCoords.map(c => `${c.lng},${c.lat}`).join(';');
-                                const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${osrmPath}?overview=full&geometries=geojson`);
-                                const routeData = await routeRes.json();
-                                if (routeData.routes && routeData.routes[0]) {
-                                    finalRoute = routeData.routes[0].geometry.coordinates.map((c: any) => ({
-                                        lng: c[0],
-                                        lat: c[1]
-                                    }));
-                                }
-                            } catch (e) {
-                                logger.warn("OSRM error", e);
-                            }
-                        }
-
-                        if (isMounted) {
-                            setProjectCoordinates(prev => ({
-                                ...prev,
-                                [projectId]: { points: resolvedCoords, route: finalRoute }
-                            }));
-                        }
-                    } catch (e) {
-                        logger.error("Geocoding error", e);
-                        if (isMounted) {
-                            setProjectCoordinates(prev => ({
-                                ...prev,
-                                [projectId]: { points: [], route: [] }
-                            }));
-                        }
-                    } finally {
                         processedCount++;
-                        if (isMounted) setGeocodingPhase(prev => ({ ...prev, current: processedCount }));
-                    }
+                        setGeocodingPhase(prev => ({ ...prev, current: processedCount }));
+                    });
+
+                    // Piccolo delay tra i batch per rispettare rate limit Nominatim
+                    if (isMounted) await new Promise(r => setTimeout(r, 300));
                 }
             };
 
@@ -178,64 +204,46 @@ const ProjectsPage: React.FC = () => {
             const coords = projectCoordinates[p.id || ''];
             return coords && coords.points && coords.points.length > 0;
         });
-
         if (firstWithCoords && visualizzazione === 'mappa' && viewState.zoom === 5) {
             const coords = projectCoordinates[firstWithCoords.id || ''].points[0];
             if (coords) {
-                setViewState(prev => ({
-                    ...prev,
-                    longitude: coords.lng,
-                    latitude: coords.lat,
-                    zoom: 6
-                }));
+                setViewState(prev => ({ ...prev, longitude: coords.lng, latitude: coords.lat, zoom: 6 }));
             }
         }
     }, [projectCoordinates, visualizzazione, progettiFiltrati]);
 
     const groupedMarkers = useMemo(() => {
         const coordsMap: Record<string, { lat: number, lng: number, projects: ProgettoData[] }> = {};
-
         progettiFiltrati.forEach(p => {
             const coords = projectCoordinates[p.id || ''];
             if (coords?.points) {
                 coords.points.forEach(pt => {
                     const key = `${pt.lat.toFixed(5)},${pt.lng.toFixed(5)}`;
-                    if (!coordsMap[key]) {
-                        coordsMap[key] = { lat: pt.lat, lng: pt.lng, projects: [] };
-                    }
+                    if (!coordsMap[key]) coordsMap[key] = { lat: pt.lat, lng: pt.lng, projects: [] };
                     const group = coordsMap[key];
-                    if (!group.projects.find((proj: ProgettoData) => proj.id === p.id)) {
-                        group.projects.push(p);
-                    }
+                    if (!group.projects.find((proj: ProgettoData) => proj.id === p.id)) group.projects.push(p);
                 });
             }
         });
-
         return Object.values(coordsMap);
     }, [progettiFiltrati, projectCoordinates]);
 
     const lineGeoJSON = useMemo(() => {
         const features = progettiFiltrati.map(p => {
             const coords = projectCoordinates[p.id || ''];
-            if (!coords || !coords.route || coords.route.length < 2) return null;
-
+            if (!coords?.route || coords.route.length < 2) return null;
             return {
                 type: 'Feature' as const,
-                geometry: {
-                    type: 'LineString' as const,
-                    coordinates: coords.route.map(pt => [pt.lng, pt.lat])
-                },
+                geometry: { type: 'LineString' as const, coordinates: coords.route.map(pt => [pt.lng, pt.lat]) },
                 properties: { id: p.id }
             };
         }).filter(Boolean);
-
-        return {
-            type: 'FeatureCollection' as const,
-            features: features as any[]
-        };
+        return { type: 'FeatureCollection' as const, features: features as any[] };
     }, [progettiFiltrati, projectCoordinates]);
 
     const isGeocodingDone = geocodingPhase.current === geocodingPhase.total && geocodingPhase.total > 0;
+    // Mostra mappa appena almeno un marker è disponibile, anche se il geocoding non è finito
+    const hasAnyCoords = groupedMarkers.length > 0;
 
     if (loading) return (
         <Layout>
@@ -271,7 +279,6 @@ const ProjectsPage: React.FC = () => {
                                     Un'eredità di eccellenza ingegneristica dal 1945. Esplora le opere che hanno definito l'infrastruttura ferroviaria italiana.
                                 </p>
                             </div>
-                            {/* Contatore totale progetti */}
                             <div className="shrink-0 text-right">
                                 <div className="text-7xl md:text-8xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums select-none">
                                     <AnimatedCounter to={progetti.length} duration={1200} />
@@ -348,7 +355,6 @@ const ProjectsPage: React.FC = () => {
                     {visualizzazione === 'lista' ? (
                         <div key="lista" className="space-y-6">
                             {progettiFiltrati.length === 0 ? (
-                                /* Stato vuoto */
                                 <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
                                     <MagnifyingGlassIcon className="w-10 h-10 text-black/15 dark:text-white/15" />
                                     <div>
@@ -374,13 +380,10 @@ const ProjectsPage: React.FC = () => {
                                         data-animate="fade-up"
                                         data-animate-delay={(index * 0.04).toFixed(2)}
                                     >
-                                        {/* Numero progressivo decorativo */}
                                         <span className="absolute top-4 right-6 text-7xl font-black text-black/[0.04] dark:text-white/[0.04] leading-none select-none pointer-events-none font-heading tabular-nums z-0">
                                             {String(index + 1).padStart(2, '0')}
                                         </span>
-
                                         <Link to={`/progetti/${project.id}`} className="flex flex-col md:flex-row relative z-10">
-                                            {/* Immagine */}
                                             <div className="md:w-2/5 aspect-[4/3] md:aspect-auto bg-black/5 dark:bg-dark-elevated relative overflow-hidden">
                                                 {project.immagini?.[0]?.url ? (
                                                     <>
@@ -397,11 +400,8 @@ const ProjectsPage: React.FC = () => {
                                                     </div>
                                                 )}
                                             </div>
-
-                                            {/* Contenuto */}
                                             <div className="md:w-3/5 p-8 md:p-12 flex flex-col justify-between">
                                                 <div className="space-y-5">
-                                                    {/* Metadati: categoria + anno + location */}
                                                     <div className="flex items-center gap-3 flex-wrap">
                                                         {project.categoria && (
                                                             <span className="text-[9px] font-black uppercase tracking-[0.35em] text-primary">
@@ -421,16 +421,12 @@ const ProjectsPage: React.FC = () => {
                                                             {project.localita}
                                                         </span>
                                                     </div>
-
                                                     <h3 className="text-3xl lg:text-4xl font-black text-black dark:text-white tracking-tighter leading-none font-heading group-hover:text-primary transition-colors duration-300">
                                                         {project.titolo}
                                                     </h3>
-
                                                     <p className="text-sm text-black/60 dark:text-white/50 font-medium leading-relaxed line-clamp-2">
                                                         {project.descrizione}
                                                     </p>
-
-                                                    {/* Tag tecnologie */}
                                                     {project.tecnologie && project.tecnologie.length > 0 && (
                                                         <div className="flex flex-wrap gap-2">
                                                             {project.tecnologie.slice(0, 3).map((tec, i) => (
@@ -444,7 +440,6 @@ const ProjectsPage: React.FC = () => {
                                                         </div>
                                                     )}
                                                 </div>
-
                                                 <div className="flex items-center gap-3 mt-8 pt-6 border-t border-black/5 dark:border-white/5">
                                                     <span className="text-xs font-black uppercase tracking-[0.3em] text-black/40 dark:text-white/30 group-hover:text-primary transition-colors">
                                                         Scopri il progetto
@@ -460,126 +455,141 @@ const ProjectsPage: React.FC = () => {
                     ) : (
                         <div
                             key="mappa"
+                            ref={mapContainerRef}
                             className="h-[70vh] bg-black/5 dark:bg-dark-surface overflow-hidden border border-black/5 dark:border-white/5 rounded-sm relative"
                             data-animate="fade"
                         >
-                            {isGeocodingDone ? (
-                                <Map
-                                    {...viewState}
-                                    onMove={evt => setViewState(evt.viewState)}
-                                    style={{ width: '100%', height: '100%' }}
-                                    mapStyle={theme === 'dark'
-                                        ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-                                        : "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-                                    }
-                                    attributionControl={false}
-                                >
-                                    <NavigationControl position="top-right" />
+                            {hasAnyCoords ? (
+                                <>
+                                    <Map
+                                        {...viewState}
+                                        onMove={evt => setViewState(evt.viewState)}
+                                        style={{ width: '100%', height: '100%' }}
+                                        mapStyle={theme === 'dark'
+                                            ? `https://api.maptiler.com/maps/dataviz-dark/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`
+                                            : `https://api.maptiler.com/maps/dataviz/style.json?key=${import.meta.env.VITE_MAPTILER_API_KEY}`
+                                        }
+                                        attributionControl={false}
+                                    >
+                                        <NavigationControl position="top-right" />
 
-                                    {lineGeoJSON.features.length > 0 && (
-                                        <Source id="routes" type="geojson" data={lineGeoJSON}>
-                                            <Layer
-                                                id="routes-layer"
-                                                type="line"
-                                                paint={{
-                                                    'line-color': theme === 'dark' ? '#3b82f6' : '#2563eb',
-                                                    'line-width': 4,
-                                                    'line-opacity': 0.8
+                                        {lineGeoJSON.features.length > 0 && (
+                                            <Source id="routes" type="geojson" data={lineGeoJSON}>
+                                                <Layer
+                                                    id="routes-layer"
+                                                    type="line"
+                                                    paint={{
+                                                        'line-color': theme === 'dark' ? '#3b82f6' : '#2563eb',
+                                                        'line-width': 4,
+                                                        'line-opacity': 0.8
+                                                    }}
+                                                />
+                                            </Source>
+                                        )}
+
+                                        {groupedMarkers.map((group, idx) => (
+                                            <Marker
+                                                key={`group-${idx}`}
+                                                longitude={group.lng}
+                                                latitude={group.lat}
+                                                anchor="center"
+                                                onClick={(e) => {
+                                                    e.originalEvent.stopPropagation();
+                                                    setSelectedGroup({ projects: group.projects, coord: { lat: group.lat, lng: group.lng } });
+                                                    setActiveProjectIndex(0);
                                                 }}
-                                            />
-                                        </Source>
-                                    )}
-
-                                    {groupedMarkers.map((group, idx) => (
-                                        <Marker
-                                            key={`group-${idx}`}
-                                            longitude={group.lng}
-                                            latitude={group.lat}
-                                            anchor="center"
-                                            onClick={(e) => {
-                                                e.originalEvent.stopPropagation();
-                                                setSelectedGroup({ projects: group.projects, coord: { lat: group.lat, lng: group.lng } });
-                                                setActiveProjectIndex(0);
-                                            }}
-                                        >
-                                            <div className="relative group cursor-pointer flex items-center justify-center">
-                                                {group.projects.length > 1 && (
-                                                    <div className="absolute -top-3 -right-3 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-[8px] font-black flex items-center justify-center z-20 shadow-glow">
-                                                        {group.projects.length}
-                                                    </div>
-                                                )}
-                                                <div className="absolute w-8 h-8 border border-primary/30 scale-0 group-hover:scale-110 transition-transform duration-500" />
-                                                <div className="w-3.5 h-3.5 bg-white dark:bg-black border-[1.5px] border-primary z-10 transition-all duration-300 group-hover:bg-primary group-hover:border-white group-hover:rotate-45" />
-                                            </div>
-                                        </Marker>
-                                    ))}
-
-                                    {selectedGroup && (
-                                        <Popup
-                                            longitude={selectedGroup.coord.lng}
-                                            latitude={selectedGroup.coord.lat}
-                                            anchor="top"
-                                            offset={15}
-                                            onClose={() => setSelectedGroup(null)}
-                                            className="maplibre-popup-custom"
-                                            closeButton={false}
-                                        >
-                                            <div className="p-6 min-w-[260px] max-w-[300px] bg-white dark:bg-dark-surface border border-black/5 dark:border-white/10 shadow-2xl">
-                                                {selectedGroup.projects.length > 1 && (
-                                                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-black/5 dark:border-white/10">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                                                            {activeProjectIndex + 1} / {selectedGroup.projects.length} Opere
-                                                        </span>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setActiveProjectIndex(prev => (prev > 0 ? prev - 1 : selectedGroup.projects.length - 1));
-                                                                }}
-                                                                className="w-6 h-6 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-sm transition-colors"
-                                                            >
-                                                                <ListBulletIcon className="w-3 h-3 rotate-180 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white" />
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setActiveProjectIndex(prev => (prev < selectedGroup.projects.length - 1 ? prev + 1 : 0));
-                                                                }}
-                                                                className="w-6 h-6 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-sm transition-colors"
-                                                            >
-                                                                <ArrowRightIcon className="w-3 h-3 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white" />
-                                                            </button>
+                                            >
+                                                <div className="relative group cursor-pointer flex items-center justify-center">
+                                                    {group.projects.length > 1 && (
+                                                        <div className="absolute -top-3 -right-3 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-[8px] font-black flex items-center justify-center z-20 shadow-glow">
+                                                            {group.projects.length}
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                    <div className="absolute w-8 h-8 border border-primary/30 scale-0 group-hover:scale-110 transition-transform duration-500" />
+                                                    <div className="w-3.5 h-3.5 bg-white dark:bg-black border-[1.5px] border-primary z-10 transition-all duration-300 group-hover:bg-primary group-hover:border-white group-hover:rotate-45" />
+                                                </div>
+                                            </Marker>
+                                        ))}
 
-                                                {(() => {
-                                                    const p = selectedGroup.projects[activeProjectIndex];
-                                                    return (
-                                                        <div className="group/pop animate-in fade-in slide-in-from-right-2 duration-300">
-                                                            <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">
-                                                                {p.categoria}
+                                        {selectedGroup && (
+                                            <Popup
+                                                longitude={selectedGroup.coord.lng}
+                                                latitude={selectedGroup.coord.lat}
+                                                anchor="top"
+                                                offset={15}
+                                                onClose={() => setSelectedGroup(null)}
+                                                className="maplibre-popup-custom"
+                                                closeButton={false}
+                                            >
+                                                <div className="p-6 min-w-[260px] max-w-[300px] bg-white dark:bg-dark-surface border border-black/5 dark:border-white/10 shadow-2xl">
+                                                    {selectedGroup.projects.length > 1 && (
+                                                        <div className="flex items-center justify-between mb-4 pb-4 border-b border-black/5 dark:border-white/10">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                                                                {activeProjectIndex + 1} / {selectedGroup.projects.length} Opere
                                                             </span>
-                                                            <h4 className="font-black uppercase text-base tracking-tighter leading-tight text-black dark:text-white mb-2">
-                                                                {p.titolo}
-                                                            </h4>
-                                                            <p className="text-[10px] font-bold text-black/40 dark:text-white/30 uppercase tracking-widest mb-4">
-                                                                {p.localita} • {p.anno}
-                                                            </p>
-                                                            <Link
-                                                                to={`/progetti/${p.id}`}
-                                                                className="flex items-center justify-between group/link pt-4 border-t border-black/5 dark:border-white/10"
-                                                            >
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-black dark:text-white group-hover/link:text-primary transition-colors">Vedi Dettagli</span>
-                                                                <ArrowRightIcon className="w-4 h-4 text-black/40 dark:text-white/40 group-hover/link:text-primary group-hover/link:translate-x-1 transition-all" />
-                                                            </Link>
+                                                            <div className="flex gap-1">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setActiveProjectIndex(prev => (prev > 0 ? prev - 1 : selectedGroup.projects.length - 1));
+                                                                    }}
+                                                                    className="w-6 h-6 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-sm transition-colors"
+                                                                >
+                                                                    <ListBulletIcon className="w-3 h-3 rotate-180 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setActiveProjectIndex(prev => (prev < selectedGroup.projects.length - 1 ? prev + 1 : 0));
+                                                                    }}
+                                                                    className="w-6 h-6 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-sm transition-colors"
+                                                                >
+                                                                    <ArrowRightIcon className="w-3 h-3 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white" />
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    );
-                                                })()}
-                                            </div>
-                                        </Popup>
+                                                    )}
+                                                    {(() => {
+                                                        const p = selectedGroup.projects[activeProjectIndex];
+                                                        return (
+                                                            <div className="group/pop animate-in fade-in slide-in-from-right-2 duration-300">
+                                                                <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">
+                                                                    {p.categoria}
+                                                                </span>
+                                                                <h4 className="font-black uppercase text-base tracking-tighter leading-tight text-black dark:text-white mb-2">
+                                                                    {p.titolo}
+                                                                </h4>
+                                                                <p className="text-[10px] font-bold text-black/40 dark:text-white/30 uppercase tracking-widest mb-4">
+                                                                    {p.localita} • {p.anno}
+                                                                </p>
+                                                                <Link
+                                                                    to={`/progetti/${p.id}`}
+                                                                    className="flex items-center justify-between group/link pt-4 border-t border-black/5 dark:border-white/10"
+                                                                >
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-black dark:text-white group-hover/link:text-primary transition-colors">Vedi Dettagli</span>
+                                                                    <ArrowRightIcon className="w-4 h-4 text-black/40 dark:text-white/40 group-hover/link:text-primary group-hover/link:translate-x-1 transition-all" />
+                                                                </Link>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </Popup>
+                                        )}
+                                    </Map>
+
+                                    {/* Progress overlay mentre finisce il geocoding */}
+                                    {!isGeocodingDone && (
+                                        <div className="absolute bottom-4 left-4 bg-white/90 dark:bg-black/90 backdrop-blur-sm px-4 py-2 flex items-center gap-3 border border-black/5 dark:border-white/10">
+                                            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/40">
+                                                Mappatura in corso
+                                            </span>
+                                            <span className="text-[9px] font-black text-primary tabular-nums">
+                                                {geocodingPhase.current}/{geocodingPhase.total}
+                                            </span>
+                                        </div>
                                     )}
-                                </Map>
+                                </>
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center space-y-6">
                                     <div className="relative w-16 h-16">
@@ -595,7 +605,7 @@ const ProjectsPage: React.FC = () => {
                                             <div className="h-[2px] w-20 bg-black/5 dark:bg-white/5 overflow-hidden">
                                                 <div
                                                     className="h-full bg-primary transition-all duration-500"
-                                                    style={{ width: `${(geocodingPhase.current / geocodingPhase.total) * 100}%` }}
+                                                    style={{ width: `${geocodingPhase.total > 0 ? (geocodingPhase.current / geocodingPhase.total) * 100 : 0}%` }}
                                                 />
                                             </div>
                                             <span className="text-[10px] font-black text-primary tabular-nums">
@@ -624,10 +634,7 @@ const ProjectsPage: React.FC = () => {
                         {categorie.map((cat) => (
                             <button
                                 key={cat}
-                                onClick={() => {
-                                    setCategoriaAttiva(cat);
-                                    setShowMobileFilters(false);
-                                }}
+                                onClick={() => { setCategoriaAttiva(cat); setShowMobileFilters(false); }}
                                 className={`text-3xl font-black tracking-tighter text-left flex items-center gap-4 ${categoriaAttiva === cat ? 'text-primary' : 'text-black/20 dark:text-white/10'}`}
                             >
                                 {cat === 'tutti' ? 'Tutti i Progetti' : cat}

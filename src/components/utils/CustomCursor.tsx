@@ -8,8 +8,6 @@ const CustomCursor: React.FC = () => {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
-        // Only activate on true fine-pointer (mouse) devices.
-        // Also listen for touchstart: if a touch is detected at any point, hide permanently.
         if (!window.matchMedia('(pointer: fine)').matches) return;
 
         const dot = dotRef.current;
@@ -31,7 +29,6 @@ const CustomCursor: React.FC = () => {
         };
 
         const hideForever = () => {
-            // Touch detected on a "fine pointer" device (hybrid/tablet) — hide and stop
             active = false;
             dot.style.opacity = '0';
             ring.style.opacity = '0';
@@ -50,10 +47,8 @@ const CustomCursor: React.FC = () => {
             if ((e.target as Element)?.closest(INTERACTIVE)) {
                 dot.style.width = '8px';
                 dot.style.height = '8px';
-                dot.style.backgroundColor = 'var(--color-primary, #2563eb)';
                 ring.style.width = '44px';
                 ring.style.height = '44px';
-                ring.style.borderColor = 'var(--color-primary, #2563eb)';
                 ring.style.opacity = '0.6';
             }
         };
@@ -63,10 +58,8 @@ const CustomCursor: React.FC = () => {
             if ((e.target as Element)?.closest(INTERACTIVE)) {
                 dot.style.width = '6px';
                 dot.style.height = '6px';
-                dot.style.backgroundColor = '';
                 ring.style.width = '28px';
                 ring.style.height = '28px';
-                ring.style.borderColor = '';
                 ring.style.opacity = '1';
             }
         };
@@ -100,15 +93,31 @@ const CustomCursor: React.FC = () => {
 
     return (
         <>
+            {/* 
+                Dot: bg-white + mix-blend-difference
+                → su sfondo chiaro: bianco XOR bianco = nero ✓
+                → su sfondo scuro:  bianco XOR nero  = bianco ✓
+                → su sfondo primary/blue: si inverte al complementare ✓
+            */}
             <div
                 ref={dotRef}
-                className="fixed top-0 left-0 w-1.5 h-1.5 bg-black dark:bg-white rounded-full pointer-events-none z-[9999] mix-blend-difference transition-[width,height,background-color] duration-150"
+                className="fixed top-0 left-0 w-1.5 h-1.5 bg-white rounded-full pointer-events-none z-[9999] mix-blend-difference transition-[width,height] duration-150"
                 style={{ willChange: 'transform', opacity: 0 }}
             />
+            {/*
+                Ring: niente mix-blend per non creare artefatti visivi col bordo,
+                usa currentColor con opacità adattiva — visibile su entrambi i temi
+                grazie al bordo semi-trasparente su colore neutro
+            */}
             <div
                 ref={ringRef}
-                className="fixed top-0 left-0 w-7 h-7 border border-black/50 dark:border-white/50 rounded-full pointer-events-none z-[9998] transition-[width,height,opacity,border-color] duration-200"
-                style={{ willChange: 'transform', opacity: 0 }}
+                className="fixed top-0 left-0 w-7 h-7 rounded-full pointer-events-none z-[9998] transition-[width,height,opacity,border-color] duration-200"
+                style={{
+                    willChange: 'transform',
+                    opacity: 0,
+                    border: '1px solid rgba(128,128,128,0.5)',
+                    mixBlendMode: 'exclusion',
+                }}
             />
         </>
     );
