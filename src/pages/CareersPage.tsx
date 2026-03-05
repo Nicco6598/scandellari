@@ -16,6 +16,7 @@ import {
   CheckCircleIcon,
   BriefcaseIcon
 } from '@heroicons/react/24/outline';
+import AnimatedCounter from '../components/utils/AnimatedCounter';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = [
@@ -192,7 +193,6 @@ const CareersPage: React.FC = () => {
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
-      // Create FormData for file upload
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('email', data.email);
@@ -203,14 +203,13 @@ const CareersPage: React.FC = () => {
         : 'Candidatura spontanea per posizioni future'
       );
 
-      // Append CV file
       if (data.cv && data.cv[0]) {
         formData.append('cv', data.cv[0]);
       }
 
       const response = await fetch(`${backendUrl}/api/applications`, {
         method: 'POST',
-        body: formData, // Don't set Content-Type header, browser will set it with boundary
+        body: formData,
       });
 
       if (!response.ok) {
@@ -218,10 +217,8 @@ const CareersPage: React.FC = () => {
         throw new Error(errorData.message || 'Errore durante l\'invio della candidatura');
       }
 
-      // Success
       setStatus('success');
 
-      // Track successful application submission (if Analytics is configured)
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'form_submit', {
           category: 'engagement',
@@ -235,7 +232,6 @@ const CareersPage: React.FC = () => {
       logger.error('Error sending application:', error);
       setStatus('error');
 
-      // Track failed application submission
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'form_submit', {
           category: 'engagement',
@@ -282,6 +278,7 @@ const CareersPage: React.FC = () => {
   return (
     <Layout>
       <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
+
         {/* Hero Section */}
         <section className="container mx-auto max-w-7xl px-6 mb-32">
           <div
@@ -295,27 +292,46 @@ const CareersPage: React.FC = () => {
                 Careers & Growth
               </span>
             </div>
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
-              Unisciti al<br />Team
-            </h1>
-            <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
-              Cerchiamo professionisti pronti a costruire l'infrastruttura ferroviaria del domani. Innovazione, sicurezza e competenza tecnica sono i nostri pilastri.
-            </p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
+              <div>
+                <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
+                  Unisciti al<br />Team
+                </h1>
+                <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+                  Cerchiamo professionisti pronti a costruire l'infrastruttura ferroviaria del domani. Innovazione, sicurezza e competenza tecnica sono i nostri pilastri.
+                </p>
+              </div>
+              {offerte.length > 0 && (
+                <div className="shrink-0 text-right">
+                  <div className="text-7xl md:text-8xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums select-none">
+                    <AnimatedCounter to={offerte.length} duration={1200} />
+                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30 dark:text-white/30 mt-1">
+                    Posizioni aperte
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
         {/* Culture & Benefits */}
-        <section className="container mx-auto max-w-7xl px-6 mb-24">
+        <section className="container mx-auto max-w-7xl px-6 mb-40">
           <div className="grid md:grid-cols-3 gap-px bg-gradient-to-br from-black/5 via-black/5 to-primary/5 dark:from-white/5 dark:via-white/5 dark:to-primary/10 border border-black/5 dark:border-white/5">
             {[
-              { icon: SparklesIcon, title: "Innovazione", desc: "Accesso a tecnologie all'avanguardia nel settore segnalamento." },
-              { icon: UserGroupIcon, title: "Formazione", desc: "Percorsi di crescita continua e tutoraggio specialistico." },
-              { icon: ShieldCheckIcon, title: "Sicurezza", desc: "Ambiente di lavoro protetto con standard oltre la norma." }
-            ].map((item, i) => (
-              <div key={i} className="bg-white dark:bg-black p-8 space-y-4 group hover:bg-gray-50 dark:hover:bg-dark-surface transition-all duration-300">
+              { icon: SparklesIcon, num: '01', title: 'Innovazione', desc: "Accesso a tecnologie all'avanguardia nel settore segnalamento." },
+              { icon: UserGroupIcon, num: '02', title: 'Formazione', desc: 'Percorsi di crescita continua e tutoraggio specialistico.' },
+              { icon: ShieldCheckIcon, num: '03', title: 'Sicurezza', desc: 'Ambiente di lavoro protetto con standard oltre la norma.' }
+            ].map((item) => (
+              <div key={item.num} className="bg-white dark:bg-black p-8 space-y-6 group hover:bg-gray-50 dark:hover:bg-dark-surface transition-all duration-300 relative overflow-hidden">
+                <span className="absolute top-4 right-6 text-6xl font-black text-black/[0.04] dark:text-white/[0.04] leading-none select-none pointer-events-none font-heading">
+                  {item.num}
+                </span>
                 <item.icon className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-black uppercase tracking-widest font-heading">{item.title}</h3>
-                <p className="text-xs text-black/70 dark:text-white/60 font-medium leading-relaxed">{item.desc}</p>
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-widest font-heading mb-2">{item.title}</h3>
+                  <p className="text-xs text-black/70 dark:text-white/60 font-medium leading-relaxed">{item.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -348,10 +364,10 @@ const CareersPage: React.FC = () => {
               ].filter(f => f.options.length > 0).map((filter, i) => (
                 <div key={i} className="flex items-center gap-3 flex-wrap">
                   <span className="text-[9px] font-black uppercase tracking-[0.35em] text-black/30 dark:text-white/30 w-24 shrink-0">{filter.label}</span>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex bg-black/5 dark:bg-white/5 p-1 flex-wrap gap-1">
                     <button
                       onClick={() => filter.setter('')}
-                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${!filter.value ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/50 dark:text-white/40 hover:text-black dark:hover:text-white border border-black/10 dark:border-white/10'}`}
+                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${!filter.value ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/50 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
                     >
                       Tutti
                     </button>
@@ -359,7 +375,7 @@ const CareersPage: React.FC = () => {
                       <button
                         key={opt}
                         onClick={() => filter.setter(opt === filter.value ? '' : opt)}
-                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${filter.value === opt ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/50 dark:text-white/40 hover:text-black dark:hover:text-white border border-black/10 dark:border-white/10'}`}
+                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${filter.value === opt ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/50 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
                       >
                         {opt}
                       </button>
@@ -371,59 +387,73 @@ const CareersPage: React.FC = () => {
           </div>
 
           {filteredOfferte.length > 0 ? (
-            <div className="space-y-12">
+            <div className="space-y-6">
               {filteredOfferte.map((job, index) => {
                 const jobKey = job.id ?? `job-${index}`;
                 return (
-                <div
-                  key={jobKey}
-                  className="bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 hover:border-primary/30 p-8 md:p-12 group transition-all duration-500 flex flex-col md:grid md:grid-cols-12 gap-8 md:items-center"
-                  data-animate="fade-up"
-                  data-animate-delay={(index * 0.04).toFixed(2)}
-                >
-                  <div className="md:col-span-8 flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-                    <div className="w-12 h-12 bg-black/5 dark:bg-dark-elevated border border-black/5 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:border-primary group-hover:bg-primary/10 transition-all">
-                      <BriefcaseIcon className="w-6 h-6 opacity-30 group-hover:opacity-100 group-hover:text-primary transition-all" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-3 mb-3">
-                        <span className="text-xs font-black uppercase tracking-widest text-primary bg-primary/5 px-2 py-1 rounded md:bg-transparent md:p-0">{job.tipo}</span>
-                        <span className="hidden md:block w-1 h-1 bg-black/10 dark:bg-white/10 rounded-full" />
-                        <span className="text-xs font-black uppercase tracking-widest text-black/60 dark:text-white/40 flex items-center gap-2">
-                          <MapPinIcon className="w-3 h-3" />
-                          {job.sede}
-                        </span>
+                  <div
+                    key={jobKey}
+                    className="group bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 hover:border-primary/30 transition-all duration-500 overflow-hidden relative"
+                    data-animate="fade-up"
+                    data-animate-delay={(index * 0.04).toFixed(2)}
+                  >
+                    {/* Numero progressivo decorativo */}
+                    <span className="absolute top-4 right-6 text-7xl font-black text-black/[0.04] dark:text-white/[0.04] leading-none select-none pointer-events-none font-heading tabular-nums z-0">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+
+                    <div className="p-8 md:p-12 flex flex-col md:grid md:grid-cols-12 gap-8 md:items-center relative z-10">
+                      <div className="md:col-span-8 flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+                        <div className="w-12 h-12 bg-black/5 dark:bg-dark-elevated border border-black/5 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:border-primary group-hover:bg-primary/10 transition-all">
+                          <BriefcaseIcon className="w-6 h-6 opacity-30 group-hover:opacity-100 group-hover:text-primary transition-all" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-3 mb-3">
+                            {job.dipartimento && (
+                              <span className="text-[9px] font-black uppercase tracking-[0.35em] text-primary">
+                                {job.dipartimento}
+                              </span>
+                            )}
+                            {job.dipartimento && <span className="text-black/15 dark:text-white/15 text-[9px]">·</span>}
+                            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-black/40 dark:text-white/30">{job.tipo}</span>
+                            <span className="text-black/15 dark:text-white/15 text-[9px]">·</span>
+                            <span className="text-[9px] font-black text-black/40 dark:text-white/30 uppercase tracking-[0.3em] flex items-center gap-1">
+                              <MapPinIcon className="w-3 h-3" />
+                              {job.sede}
+                            </span>
+                          </div>
+                          <h3 className="text-2xl md:text-3xl font-black text-black dark:text-white mb-4 tracking-tight font-heading group-hover:text-primary transition-colors">{job.titolo}</h3>
+                          <p
+                            ref={(el) => {
+                              jobDescriptionRefs.current[jobKey] = el;
+                            }}
+                            className={`text-sm text-black/60 dark:text-white/50 font-medium max-w-2xl leading-relaxed ${expandedJobId === jobKey ? '' : 'line-clamp-2'}`}
+                          >
+                            {job.descrizione}
+                          </p>
+                          {isJobDescriptionTruncated[jobKey] && (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedJobId((prev) => (prev === jobKey ? null : jobKey))}
+                              className="mt-3 inline-flex text-primary text-[10px] font-black uppercase tracking-widest hover:underline"
+                              aria-expanded={expandedJobId === jobKey}
+                            >
+                              {expandedJobId === jobKey ? 'Mostra meno' : 'Leggi tutto'}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <h3 className="text-2xl md:text-3xl font-black text-black dark:text-white mb-4 tracking-tight font-heading group-hover:text-primary transition-colors">{job.titolo}</h3>
-                      <p
-                        ref={(el) => {
-                          jobDescriptionRefs.current[jobKey] = el;
-                        }}
-                        className={`text-sm text-black/70 dark:text-white/60 font-medium max-w-2xl leading-relaxed ${expandedJobId === jobKey ? '' : 'line-clamp-3 md:line-clamp-2'}`}
-                      >
-                        {job.descrizione}
-                      </p>
-                      {isJobDescriptionTruncated[jobKey] && (
+                      <div className="md:col-span-4 flex justify-start md:justify-end mt-4 md:mt-0">
                         <button
-                          type="button"
-                          onClick={() => setExpandedJobId((prev) => (prev === jobKey ? null : jobKey))}
-                          className="mt-3 inline-flex text-primary text-xs font-black uppercase tracking-widest hover:underline"
-                          aria-expanded={expandedJobId === jobKey}
+                          onClick={() => openApplication(job)}
+                          className="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] group/btn border-b-2 border-black dark:border-white hover:border-primary hover:text-primary pb-2 transition-all"
                         >
-                          {expandedJobId === jobKey ? 'Mostra meno' : 'Leggi tutto'}
+                          Candidati Ora
+                          <ArrowRightIcon className="w-4 h-4 transition-transform group-hover/btn:translate-x-2" />
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
-                  <div className="md:col-span-4 flex justify-start md:justify-end mt-4 md:mt-0">
-                    <button
-                      onClick={() => openApplication(job)}
-                      className="w-full md:w-auto px-8 py-4 border-2 border-black dark:border-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-all text-center"
-                    >
-                      Candidati Ora
-                    </button>
-                  </div>
-                </div>
                 );
               })}
             </div>
@@ -450,22 +480,23 @@ const CareersPage: React.FC = () => {
 
         {/* Spontaneous Application */}
         <section className="container mx-auto max-w-7xl px-6">
-          <div className="bg-black dark:bg-dark-surface text-white dark:text-white p-12 md:p-24 text-center space-y-10 border border-black/5 dark:border-white/5 relative overflow-hidden">
-            {/* Subtle gradient overlay */}
+          <div
+            className="bg-black dark:bg-dark-surface text-white dark:text-white p-12 md:p-24 text-center space-y-10 border border-black/5 dark:border-white/5 relative overflow-hidden group cursor-pointer"
+            onClick={() => openApplication(null)}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/10 dark:to-accent/10 pointer-events-none" />
-            <div className="relative z-10">
-              <h2 className="text-4xl md:text-6xl font-black font-heading leading-tight tracking-tighter uppercase">Candidatura Spontanea</h2>
-              <p className="text-base md:text-xl opacity-80 font-medium max-w-2xl mx-auto leading-relaxed">
-                Non trovi la posizione giusta? Inviaci comunque il tuo profilo. Cerchiamo sempre talenti motivati per far crescere il nostro dipartimento tecnico.
-              </p>
-              <div className="pt-6">
-                <button
-                  onClick={() => openApplication(null)}
-                  className="inline-flex items-center gap-6 text-xs font-black uppercase tracking-[0.4em] group border-b-2 border-primary pb-2 hover:text-primary transition-all"
-                >
+            <div className="relative z-10 space-y-8">
+              <div className="space-y-4">
+                <h2 className="text-4xl md:text-6xl font-black font-heading leading-tight tracking-tighter uppercase">Candidatura Spontanea</h2>
+                <p className="text-base md:text-xl opacity-80 font-medium max-w-2xl mx-auto leading-relaxed">
+                  Non trovi la posizione giusta? Inviaci comunque il tuo profilo. Cerchiamo sempre talenti motivati per far crescere il nostro dipartimento tecnico.
+                </p>
+              </div>
+              <div className="flex justify-center">
+                <span className="inline-flex items-center gap-6 text-xs font-black uppercase tracking-[0.4em] border-b-2 border-primary pb-2 group-hover:text-primary transition-all">
                   Invia Profilo
                   <ArrowRightIcon className="w-6 h-6 transition-transform group-hover:translate-x-2" />
-                </button>
+                </span>
               </div>
             </div>
           </div>
@@ -519,7 +550,7 @@ const CareersPage: React.FC = () => {
                       onClick={() => setIsModalOpen(false)}
                       className="mt-12 px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-xs font-black uppercase tracking-[0.2em] hover:opacity-80 transition-opacity"
                     >
-                      Torna alla Home
+                      Torna alla Pagina
                     </button>
                   </div>
                 ) : status === 'error' ? (
@@ -564,7 +595,7 @@ const CareersPage: React.FC = () => {
                           id={f.id}
                           type={f.type}
                           {...register(f.id as keyof ApplicationFormData)}
-                          className={`w-full bg-transparent border-b pb-2 text-lg md:text-xl focus:ring-0 font-bold text-black dark:text-white transition-colors placeholder:text-black/60 placeholder:font-medium dark:placeholder:text-white/50 ${errors[f.id as keyof ApplicationFormData] ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
+                          className={`w-full bg-transparent border-b pb-2 text-lg md:text-xl focus:ring-0 font-bold text-black dark:text-white transition-colors placeholder:text-black/30 placeholder:font-medium dark:placeholder:text-white/30 ${errors[f.id as keyof ApplicationFormData] ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
                           placeholder={`Inserisci ${f.label.toLowerCase()}...`}
                         />
                         {errors[f.id as keyof ApplicationFormData] && (
@@ -581,7 +612,7 @@ const CareersPage: React.FC = () => {
                         <span className="text-sm font-black uppercase tracking-widest transition-opacity block mb-2 text-black/80 dark:text-white/70 opacity-80 group-hover:opacity-100">
                           {selectedFile?.length > 0 ? 'Cambia File' : 'Seleziona File'}
                         </span>
-                        <span className="text-xs font-bold text-black/70 dark:text-white/40 block">Max 5MB (PDF, DOCX)</span>
+                        <span className="text-xs font-bold text-black/40 dark:text-white/30 block">Max 5MB · PDF, DOCX</span>
                         <input
                           type="file"
                           accept=".pdf,.doc,.docx"
@@ -630,7 +661,7 @@ const CareersPage: React.FC = () => {
 
             {(status === 'idle' || status === 'submitting') && (
               <div className="p-6 md:p-8 bg-white dark:bg-black border-t border-black/5 dark:border-white/5 flex flex-col md:flex-row gap-6 md:items-center justify-between shrink-0 mb-safe">
-                <p className="hidden md:block text-xs font-black uppercase tracking-widest text-black/70 dark:text-white/40">Invio candidatura conforme alla privacy</p>
+                <p className="hidden md:block text-xs font-black uppercase tracking-widest text-black/40 dark:text-white/30">Invio candidatura conforme alla privacy</p>
                 <button
                   type="submit"
                   form="application-form"
@@ -643,8 +674,8 @@ const CareersPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div >
-    </Layout >
+      </div>
+    </Layout>
   );
 };
 
