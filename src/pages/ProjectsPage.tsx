@@ -16,6 +16,7 @@ import {
     MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
+import SEO from '../components/utils/SEO';
 
 interface Coordinate { lat: number; lng: number; }
 type ProjectCoordinates = { points: Coordinate[]; route?: Coordinate[]; error?: string; };
@@ -251,6 +252,12 @@ const ProjectsPage: React.FC = () => {
 
     return (
         <Layout>
+            <SEO
+                title="Progetti Realizzati | Scandellari"
+                description="Portfolio dei progetti ferroviari realizzati da Scandellari Giacinto s.n.c. Installazioni di segnalamento, alta velocità e infrastrutture ferroviarie in tutta Italia."
+                keywords="progetti ferroviari, cantieri ferroviari, alta velocità, RFI, installazioni segnalamento, portfolio"
+                url="/progetti"
+            />
             <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
 
                 {/* Hero Section */}

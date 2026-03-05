@@ -7,12 +7,14 @@ import { ProgettoData } from '../../types/supabaseTypes';
 
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<ProgettoData[]>([]);
+  const [totalProjects, setTotalProjects] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const data = await progettiService.getAllProjects();
+        setTotalProjects(data.length);
         setProjects(data.slice(0, 4));
       } catch (err) {
         logger.error('Fetch error', err);
@@ -47,7 +49,7 @@ const Projects: React.FC = () => {
             to="/progetti"
             className="text-[10px] font-black uppercase tracking-[0.3em] text-black/70 dark:text-white/60 hover:text-black dark:hover:text-white transition-colors group flex items-center gap-4"
           >
-            Tutti i Progetti
+            Tutti i Progetti{totalProjects > 0 ? ` (${totalProjects})` : ''}
             <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-2 text-primary" />
           </Link>
         </div>

@@ -188,7 +188,7 @@ const AboutPage: React.FC = () => {
         <Layout>
             <SEO
                 title="Chi Siamo - Storia e Valori | Scandellari"
-                description="79 anni di esperienza nel settore ferroviario. Scopri la storia di Scandellari Giacinto s.n.c., leader nell'installazione di sistemi di segnalamento dal 1945."
+                description={`${new Date().getFullYear() - 1945} anni di esperienza nel settore ferroviario. Scopri la storia di Scandellari Giacinto s.n.c., leader nell'installazione di sistemi di segnalamento dal 1945.`}
                 keywords="storia scandellari, azienda ferroviaria, esperienza ferroviaria, Treviglio, segnalamento ferroviario"
                 url="/chi-siamo"
             />
@@ -225,10 +225,10 @@ const AboutPage: React.FC = () => {
                 {/* ── Stats Row ────────────────────────────────────────────── */}
                 <section className="container mx-auto max-w-7xl px-6 mb-40">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
-                        <StatCard icon={ClockIcon}          label="Anni di attività"   value={79}  suffix="+" delay={0}    />
+                        <StatCard icon={ClockIcon}          label="Anni di attività"   value={new Date().getFullYear() - 1945}  suffix="+" delay={0}    />
                         <StatCard icon={MapPinIcon}          label="Grandi opere"       value={50}  suffix="+" delay={0.08} />
                         <StatCard icon={UserGroupIcon}       label="Partner strategici" value={13}  suffix=""  delay={0.16} />
-                        <StatCard icon={ShieldCheckIcon}     label="Anni di sicurezza"  value={79}  suffix=""  delay={0.24} />
+                        <StatCard icon={ShieldCheckIcon}     label="Anni di sicurezza"  value={new Date().getFullYear() - 1945}  suffix=""  delay={0.24} />
                     </div>
                 </section>
 
@@ -314,7 +314,7 @@ const AboutPage: React.FC = () => {
                                 </span>
                             </div>
                             <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tighter font-heading mb-20">
-                                79 anni di<br />eccellenza
+                                {new Date().getFullYear() - 1945} anni di<br />eccellenza
                             </h2>
                         </FadeIn>
 

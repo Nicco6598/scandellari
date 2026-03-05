@@ -6,6 +6,7 @@ import { competenzeService, progettiService } from '../supabase/services';
 import { CompetenzaData, ProgettoData } from '../types/supabaseTypes';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
+import SEO from '../components/utils/SEO';
 import {
     WrenchScrewdriverIcon,
     ChevronRightIcon,
@@ -72,6 +73,12 @@ const CompetenzePage: React.FC = () => {
 
     return (
         <Layout>
+            <SEO
+                title="Soluzioni e Competenze Tecniche | Scandellari"
+                description="Segnalamento ferroviario, sistemi oleodinamici, realizzazioni e manutenzione. Scopri le competenze tecniche di Scandellari Giacinto s.n.c. al servizio dell'infrastruttura ferroviaria italiana."
+                keywords="segnalamento ferroviario, sistemi oleodinamici, manutenzione ferroviaria, competenze tecniche, impianti ferroviari, RFI"
+                url="/competenze"
+            />
             <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
                 {/* Header Section */}
                 <section className="container mx-auto max-w-7xl px-6 mb-32">

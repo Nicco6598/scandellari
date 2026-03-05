@@ -114,9 +114,11 @@ const Hero: React.FC = () => {
             <div className="flex flex-col gap-6">
               <div className="flex gap-4">
                 {heroImages.map((_, i) => (
-                  <div
+                  <button
                     key={i}
-                    className={`h-[2px] transition-all duration-700 ${i === currentImageIndex ? 'w-12 bg-primary shadow-[0_0_6px_rgba(37,99,235,0.6)]' : 'w-4 bg-white/20'}`}
+                    onClick={() => setCurrentImageIndex(i)}
+                    aria-label={`Immagine ${i + 1}`}
+                    className={`h-[2px] transition-all duration-700 ${i === currentImageIndex ? 'w-12 bg-primary shadow-[0_0_6px_rgba(37,99,235,0.6)]' : 'w-4 bg-white/20 hover:bg-white/40'}`}
                   />
                 ))}
               </div>

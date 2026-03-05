@@ -146,7 +146,7 @@ const App: React.FC = () => {
     });
 
     // Rendi lenis accessibile globalmente per ScrollToTop
-    (window as any).lenis = lenis;
+    (window as Window & { lenis?: typeof lenis }).lenis = lenis;
 
     let rafId = 0;
     const raf = (time: number) => {

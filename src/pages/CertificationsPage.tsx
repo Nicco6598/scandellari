@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
-import { useMobileMenu } from '../context/MobileMenuContext';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
 import SEO from '../components/utils/SEO';
@@ -22,6 +21,7 @@ import {
     ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import PDFThumbnail from '../components/utils/PDFThumbnail';
+import AnimatedCounter from '../components/utils/AnimatedCounter';
 
 const LazyPDFViewer = React.lazy(() => import('./LazyPDFViewer'));
 
@@ -131,12 +131,24 @@ const CertificationsPage: React.FC = () => {
                                 Standard & Conformità
                             </span>
                         </div>
-                        <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
-                            Qualità<br />Certificata
-                        </h1>
-                        <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
-                            Operiamo secondo i più alti parametri di sicurezza e sostenibilità, garantiti da processi certificati e monitorati costantemente.
-                        </p>
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
+                            <div>
+                                <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
+                                    Qualità<br />Certificata
+                                </h1>
+                                <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+                                    Operiamo secondo i più alti parametri di sicurezza e sostenibilità, garantiti da processi certificati e monitorati costantemente.
+                                </p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                                <div className="text-7xl md:text-8xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums select-none">
+                                    <AnimatedCounter to={certifications.length} duration={1200} />
+                                </div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30 dark:text-white/30 mt-1">
+                                    Certificazioni
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -189,7 +201,7 @@ const CertificationsPage: React.FC = () => {
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-20">
                         <h2 className="text-4xl font-black text-black dark:text-white tracking-tighter font-heading">Documentazione</h2>
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="hidden sm:flex bg-black/5 dark:bg-white/5 p-1 rounded-sm overflow-x-auto no-scrollbar">
+                            <div className="hidden sm:flex bg-black/5 dark:bg-white/5 p-1 overflow-x-auto no-scrollbar">
                                 {categories.map((cat) => (
                                     <button
                                         key={cat}
@@ -214,7 +226,7 @@ const CertificationsPage: React.FC = () => {
                         {filteredCertifications.map((cert, index) => (
                             <div
                                 key={cert.id}
-                                className="bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 flex flex-col h-full hover:border-primary/40 transition-all duration-500 hover:shadow-2xl hover:shadow-black/5 dark:hover:shadow-primary/10 group overflow-hidden"
+                                className="bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 flex flex-col h-full hover:border-primary/30 transition-all duration-500 group overflow-hidden relative"
                                 data-animate="fade-up"
                                 data-animate-delay={(index * 0.03).toFixed(2)}
                             >
@@ -233,7 +245,10 @@ const CertificationsPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="p-8 flex flex-col flex-grow">
+                                <div className="p-8 flex flex-col flex-grow relative">
+                                    <span className="absolute top-4 right-6 text-6xl font-black text-black/[0.04] dark:text-white/[0.04] leading-none select-none pointer-events-none font-heading tabular-nums">
+                                        {String(index + 1).padStart(2, '0')}
+                                    </span>
                                     <div className="text-[9px] font-black uppercase tracking-[0.35em] text-primary mb-3">{cert.category}</div>
                                     <h3 className="text-xl font-black text-black dark:text-white mb-3 tracking-tighter leading-tight group-hover:text-primary transition-colors duration-300">{cert.title}</h3>
                                     <p className="text-xs text-black/50 dark:text-white/40 font-medium mb-5 leading-relaxed line-clamp-2">{cert.description}</p>
@@ -250,7 +265,7 @@ const CertificationsPage: React.FC = () => {
                                         </div>
                                         <button
                                             onClick={() => openCertification(cert)}
-                                            className="w-full flex items-center justify-between text-[10px] font-black uppercase tracking-[0.3em] text-black dark:text-white transition-all border border-black/20 dark:border-white/20 py-3.5 px-5 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black hover:border-black dark:hover:border-white group/btn"
+                                            className="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] group/btn border-b-2 border-black dark:border-white hover:border-primary hover:text-primary pb-2 transition-all"
                                         >
                                             Vedi Certificato
                                             <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
