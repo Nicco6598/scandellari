@@ -7,10 +7,10 @@ import logoBlu from '../../assets/images/LogoBlu.svg';
 import logoBianco from '../../assets/images/LogoBianco.svg';
 
 // Importa loghi certificazione
-import logoAccredia from '../../assets/images/accredia.png';
-import logoIso14001 from '../../assets/images/aid-iso-14001.png';
-import logoIso9001 from '../../assets/images/aid-iso-9001.png';
-import logoIso45001 from '../../assets/images/aid-iso-45001.png';
+import logoAccredia from '../../assets/images/accredia.webp';
+import logoIso14001 from '../../assets/images/aid-iso-14001.webp';
+import logoIso9001 from '../../assets/images/aid-iso-9001.webp';
+import logoIso45001 from '../../assets/images/aid-iso-45001.webp';
 
 // Importa Icone Heroicons necessarie
 import { MapPinIcon, EnvelopeIcon, PhoneIcon, ArrowRightIcon, MapIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
@@ -64,7 +64,7 @@ const Footer: React.FC = () => {
                             Progettiamo l'eccellenza per il futuro del trasporto ferroviario. Segnalamento e infrastrutture ad alte prestazioni dal 1945.
                         </p>
                         <div className="pt-4">
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Qualità Certificata</span>
+                            <span className="text-xs font-black uppercase tracking-[0.3em] text-primary-dark dark:text-primary-medium">Qualità Certificata</span>
                             <div className="flex flex-wrap gap-8 mt-6 grayscale opacity-30">
                                 {certificationLogos.map((logo, i) => (
                                     <img key={i} src={logo.src} alt={logo.alt} width="80" height="24" className="h-6 w-auto object-contain" loading="lazy" decoding="async" />
@@ -75,7 +75,7 @@ const Footer: React.FC = () => {
 
                     {/* Navigation Column */}
                     <div className="lg:col-span-3 space-y-8">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/50 dark:text-white/40">Navigazione</h4>
+                        <h4 className="text-xs font-black uppercase tracking-[0.3em] text-black/70 dark:text-white/60">Navigazione</h4>
                         <ul className="space-y-4" data-animate-stagger>
                             {footerLinks.map((link) => (
                                 <li key={link.name}>
@@ -94,14 +94,14 @@ const Footer: React.FC = () => {
                     {/* Contact Column */}
                     <div className="lg:col-span-4 space-y-10">
                         <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/50 dark:text-white/40">Contatti</h4>
+                            <h4 className="text-xs font-black uppercase tracking-[0.3em] text-black/70 dark:text-white/60">Contatti</h4>
                             <p className="text-xl font-bold text-black dark:text-white font-heading tracking-tight">
                                 Via Roggia Vignola, 9<br />
                                 24047 Treviglio (BG), Italia
                             </p>
                             <a
                                 href="mailto:info@scandellarigiacintosnc.it"
-                                className="block text-sm font-bold text-primary hover:underline underline-offset-4"
+                                className="block text-sm font-bold text-primary-dark dark:text-primary-medium hover:underline underline-offset-4"
                             >
                                 info@scandellarigiacintosnc.it
                             </a>
@@ -109,11 +109,11 @@ const Footer: React.FC = () => {
 
                         <div className="flex items-center gap-12 pt-4">
                             <div className="space-y-1">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/50">Telefono</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-black/60 dark:text-white/50">Telefono</p>
                                 <p className="text-sm font-black text-black dark:text-white">+39 0363303506</p>
                             </div>
                             <div className="space-y-1">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/50">Dati Fiscali</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-black/60 dark:text-white/50">Dati Fiscali</p>
                                 <p className="text-sm font-black text-black dark:text-white">P.IVA IT01803170164</p>
                             </div>
                         </div>
@@ -122,7 +122,7 @@ const Footer: React.FC = () => {
 
                 {/* Bottom Bar */}
                 <div className="pt-12 border-t border-gray-100 dark:border-gray-900 flex flex-col md:flex-row justify-between items-center gap-8">
-                    <p className="text-[10px] font-bold text-black/50 dark:text-white/40 uppercase tracking-widest">
+                    <p className="text-xs font-bold text-black/70 dark:text-white/60 uppercase tracking-widest">
                         © {currentYear} Scandellari Giacinto s.n.c. Tutti i diritti riservati.
                     </p>
                     <div className="flex gap-8">
@@ -130,7 +130,7 @@ const Footer: React.FC = () => {
                             <Link
                                 key={link.name}
                                 to={link.path}
-                                className="text-[10px] font-bold text-black/70 dark:text-white/60 uppercase tracking-widest hover:text-primary transition-colors group inline-flex items-center gap-1.5"
+                                className="text-xs font-bold text-black/70 dark:text-white/60 uppercase tracking-widest hover:text-primary transition-colors group inline-flex items-center gap-1.5"
                             >
                                 {link.name}
                                 <ArrowTopRightOnSquareIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

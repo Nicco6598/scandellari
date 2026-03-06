@@ -10,10 +10,10 @@ import heroImg5 from '../../assets/images/Prima-pagina-foto-5.webp';
 import heroImg6 from '../../assets/images/Prima-pagina-foto-6.webp';
 
 // Import logos for the bottom section
-import logoAccredia from '../../assets/images/accredia.png';
-import logoIso14001 from '../../assets/images/aid-iso-14001.png';
-import logoIso9001 from '../../assets/images/aid-iso-9001.png';
-import logoIso45001 from '../../assets/images/aid-iso-45001.png';
+import logoAccredia from '../../assets/images/accredia.webp';
+import logoIso14001 from '../../assets/images/aid-iso-14001.webp';
+import logoIso9001 from '../../assets/images/aid-iso-9001.webp';
+import logoIso45001 from '../../assets/images/aid-iso-45001.webp';
 
 const heroImages = [heroImg2, heroImg3, heroImg4, heroImg5, heroImg6];
 
@@ -27,6 +27,17 @@ const Hero: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Preload first hero image for faster LCP
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.type = 'image/webp';
+    link.href = heroImg2;
+    document.head.prepend(link);
+    return () => { document.head.removeChild(link); };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {

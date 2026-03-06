@@ -6,10 +6,10 @@ import { logger } from '../utils/logger';
 import { progettiService } from '../supabase/services';
 import { ProgettoData } from '../types/supabaseTypes';
 import Map, { Marker, Popup, NavigationControl, Source, Layer } from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
 import { useTheme } from '../context/ThemeContext';
 import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
+import lightboxCss from "yet-another-react-lightbox/styles.css?inline";
 import {
     ArrowLeftIcon,
     ArrowRightIcon,
@@ -41,6 +41,14 @@ async function geocodePartDetail(part: string): Promise<Coordinate | null> {
 const ProjectDetailPage: React.FC = () => {
     const { theme } = useTheme();
     const { id } = useParams<{ id: string }>();
+
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = maplibreCss + lightboxCss;
+        document.head.appendChild(style);
+        return () => { document.head.removeChild(style); };
+    }, []);
+
     const [progetto, setProgetto] = useState<ProgettoData | null>(null);
     const [progettiCorrelati, setProgettiCorrelati] = useState<ProgettoData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);

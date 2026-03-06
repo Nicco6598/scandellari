@@ -5,7 +5,7 @@ import { logger } from '../utils/logger';
 import { progettiService, categorieService } from '../supabase/services';
 import { ProgettoData } from '../types/supabaseTypes';
 import Map, { Marker, Popup, NavigationControl, Source, Layer } from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
 import { useTheme } from '../context/ThemeContext';
 import {
     ArrowRightIcon,
@@ -95,6 +95,14 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 
 const ProjectsPage: React.FC = () => {
     const { theme } = useTheme();
+
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = maplibreCss;
+        document.head.appendChild(style);
+        return () => { document.head.removeChild(style); };
+    }, []);
+
     const [progetti, setProgetti] = useState<ProgettoData[]>([]);
     const [categorie, setCategorie] = useState<string[]>(['tutti']);
     const [loading, setLoading] = useState<boolean>(true);

@@ -95,13 +95,13 @@ const Services: React.FC = () => {
                   {/* Special badge for core specializations */}
                   {isSpecialization && (
                     <div className="absolute top-6 right-6">
-                      <span className="text-[8px] font-black uppercase tracking-[0.3em] text-primary bg-primary/10 dark:bg-primary/20 px-3 py-1.5 border border-primary/30">
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white bg-primary dark:bg-primary-dark px-3 py-1.5 border border-primary/30">
                         Competenze
                       </span>
                     </div>
                   )}
 
-                  <div className="text-xs font-black text-black/50 dark:text-white/40 uppercase tracking-[0.4em]">0{index + 1} /</div>
+                  <div className="text-xs font-black text-black/70 dark:text-white/60 uppercase tracking-[0.4em]">0{index + 1} /</div>
 
                   <div className="space-y-6">
                     <h3 className="text-3xl font-black text-black dark:text-white tracking-tight leading-none font-heading group-hover:text-primary transition-colors">

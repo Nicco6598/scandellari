@@ -1,9 +1,38 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
+// Plugin that injects preload for the first hero image and defers non-critical CSS
+function buildOptimizationPlugin(): Plugin {
+    let heroImagePath = '';
+    return {
+        name: 'build-optimization',
+        generateBundle(_options, bundle) {
+            for (const fileName of Object.keys(bundle)) {
+                if (fileName.includes('Prima-pagina-foto-2') && fileName.endsWith('.webp')) {
+                    heroImagePath = '/' + fileName;
+                    break;
+                }
+            }
+        },
+        transformIndexHtml(html) {
+            // Inject hero image preload
+            if (heroImagePath) {
+                const preloadTag = `<link rel="preload" as="image" type="image/webp" href="${heroImagePath}" fetchpriority="high">`;
+                html = html.replace('</head>', `  ${preloadTag}\n</head>`);
+            }
+            // Make non-critical CSS (lightbox) non-blocking using media="print" trick
+            html = html.replace(
+                /(<link rel="stylesheet" crossorigin href="([^"]*lightbox[^"]*\.css)">)/g,
+                '<link rel="stylesheet" crossorigin href="$2" media="print" onload="this.media=\'all\'">'
+            );
+            return html;
+        },
+    };
+}
+
 export default defineConfig({
-    plugins: [react(), tsconfigPaths()],
+    plugins: [react(), tsconfigPaths(), buildOptimizationPlugin()],
     define: {
         'process.env': {},
         'global': 'window',
@@ -36,6 +65,9 @@ export default defineConfig({
                     if (id.includes('pdfjs-dist')) return 'pdfjs';
                     if (id.includes('maplibre-gl') || id.includes('react-map-gl')) return 'maplibre';
                     if (id.includes('@supabase')) return 'supabase';
+                    if (id.includes('yet-another-react-lightbox')) return 'lightbox';
+                    if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) return 'forms';
+                    if (id.includes('react-phone-number-input')) return 'phone-input';
                 },
             },
         },

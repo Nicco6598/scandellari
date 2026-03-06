@@ -332,7 +332,7 @@ header {
   overflow: visible !important;
 }
 
-header * {
+header *:not(img):not(video):not(canvas) {
   overflow: visible !important;
 }
 
@@ -340,7 +340,7 @@ header * {
 header [data-headlessui-state],
 header .dropdown-menu,
 header nav,
-header nav *,
+header nav *:not(img):not(video):not(canvas),
 header .absolute,
 header .fixed,
 header [role="menu"],

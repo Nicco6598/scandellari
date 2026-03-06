@@ -85,7 +85,7 @@ const Projects: React.FC = () => {
 
                 <div className="flex flex-col gap-6">
                   <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">{project.anno}</span>
+                    <span className="text-xs font-black text-primary-dark dark:text-primary-medium uppercase tracking-[0.3em]">{project.anno}</span>
                     <div className="w-8 h-[1px] bg-black/10 dark:bg-white/10" />
                     <span className="text-[10px] font-black text-black/60 dark:text-white/50 uppercase tracking-[0.3em]">{project.localita}</span>
                   </div>

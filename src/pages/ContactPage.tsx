@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
 import SEO from '../components/utils/SEO';
 import Map, { Marker, Popup, NavigationControl } from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
 import { useForm } from 'react-hook-form';
 import { useTheme } from '../context/ThemeContext';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,6 +35,13 @@ type ContactFormData = z.infer<typeof contactSchema>;
 const ContactPage: React.FC = () => {
     const { theme } = useTheme();
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = maplibreCss;
+        document.head.appendChild(style);
+        return () => { document.head.removeChild(style); };
+    }, []);
     const [viewState, setViewState] = useState({
         ...companyCoords,
         zoom: 13
