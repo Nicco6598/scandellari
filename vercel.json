@@ -112,7 +112,7 @@
     ],
     "rewrites": [
         {
-            "source": "/((?!certificazioni/|pdf-worker|assets|favicon.ico|manifest.json|robots.txt|sitemap.xml|.*\\.pdf|.*\\.js|.*\\.webp|.*\\.png|.*\\.svg).*)",
+            "source": "/((?!certificazioni/|pdf-worker|assets|favicon.ico|manifest.json|robots.txt|sitemap.xml|.*\\.pdf|.*\\.js).*)",
             "destination": "/index.html"
         }
     ]
