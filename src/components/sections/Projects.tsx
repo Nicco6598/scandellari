@@ -70,6 +70,10 @@ const Projects: React.FC = () => {
                     <img
                       src={project.immagini[0].url}
                       alt={project.titolo ?? ''}
+                      width="800"
+                      height="500"
+                      loading="lazy"
+                      decoding="async"
                       data-parallax="0.1"
                       className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110"
                     />

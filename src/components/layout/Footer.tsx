@@ -49,11 +49,15 @@ const Footer: React.FC = () => {
 
                     {/* Brand Column */}
                     <div className="lg:col-span-5 space-y-12" data-animate="fade-up">
-                        <Link to="/">
+                        <Link to="/" aria-label="Torna alla home - Scandellari Giacinto s.n.c.">
                             <img
                                 src={theme === 'dark' ? logoBianco : logoBlu}
-                                alt="Scandellari"
-                                className="h-10 md:h-12"
+                                alt="Scandellari Giacinto s.n.c."
+                                width="200"
+                                height="48"
+                                className="h-10 md:h-12 w-auto"
+                                loading="lazy"
+                                decoding="async"
                             />
                         </Link>
                         <p className="text-sm md:text-base text-black/70 dark:text-white/60 max-w-sm leading-relaxed font-medium">
@@ -63,7 +67,7 @@ const Footer: React.FC = () => {
                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Qualità Certificata</span>
                             <div className="flex flex-wrap gap-8 mt-6 grayscale opacity-30">
                                 {certificationLogos.map((logo, i) => (
-                                    <img key={i} src={logo.src} alt={logo.alt} className="h-6 object-contain" />
+                                    <img key={i} src={logo.src} alt={logo.alt} width="80" height="24" className="h-6 w-auto object-contain" loading="lazy" decoding="async" />
                                 ))}
                             </div>
                         </div>

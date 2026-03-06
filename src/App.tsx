@@ -52,85 +52,104 @@ const AnimationController: React.FC = () => {
 
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
+    // Pulizia immediata (sincrona) dei trigger della route precedente
     ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     ScrollTrigger.clearMatchMedia();
-    ScrollTrigger.refresh();
 
-    const elements = gsap.utils.toArray<HTMLElement>('[data-animate]');
-    elements.forEach((element) => {
-      const type = element.dataset.animate ?? 'fade-up';
-      const delay = Number(element.dataset.animateDelay ?? 0);
-      const distance = Number(element.dataset.animateDistance ?? 24);
-      const fromVars: gsap.TweenVars = { opacity: 0, x: 0, y: 0, scale: 1 };
+    let idleHandle: number | undefined;
 
-      if (type === 'fade-left') fromVars.x = -distance;
-      if (type === 'fade-right') fromVars.x = distance;
-      if (type === 'fade-up') fromVars.y = distance;
-      if (type === 'fade-down') fromVars.y = -distance;
-      if (type === 'scale') fromVars.scale = 0.95;
+    const setupAnimations = () => {
+      ScrollTrigger.refresh();
 
-      gsap.fromTo(
-        element,
-        fromVars,
-        {
-          opacity: 1,
-          x: 0,
-          y: 0,
-          scale: 1,
-          duration: 0.8,
-          ease: 'power2.out',
-          delay,
-          scrollTrigger: {
-            trigger: element,
-            start: 'top 92%',
-            toggleActions: 'play none none none',
-            once: true,
-          },
-        }
-      );
-    });
+      const elements = gsap.utils.toArray<HTMLElement>('[data-animate]');
+      elements.forEach((element) => {
+        const type = element.dataset.animate ?? 'fade-up';
+        const delay = Number(element.dataset.animateDelay ?? 0);
+        const distance = Number(element.dataset.animateDistance ?? 24);
+        const fromVars: gsap.TweenVars = { opacity: 0, x: 0, y: 0, scale: 1 };
 
-    // Stagger animation for children of [data-animate-stagger]
-    const staggerContainers = gsap.utils.toArray<HTMLElement>('[data-animate-stagger]');
-    staggerContainers.forEach((container) => {
-      const children = container.children;
-      if (children.length === 0) return;
+        if (type === 'fade-left') fromVars.x = -distance;
+        if (type === 'fade-right') fromVars.x = distance;
+        if (type === 'fade-up') fromVars.y = distance;
+        if (type === 'fade-down') fromVars.y = -distance;
+        if (type === 'scale') fromVars.scale = 0.95;
 
-      gsap.fromTo(
-        children,
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power2.out',
-          stagger: 0.08,
-          scrollTrigger: {
-            trigger: container,
-            start: 'top 90%',
-            once: true,
-          },
-        }
-      );
-    });
-
-    // Parallax effect for [data-parallax]
-    const parallaxElements = gsap.utils.toArray<HTMLElement>('[data-parallax]');
-    parallaxElements.forEach((el) => {
-      const speed = Number(el.dataset.parallax ?? 0.1);
-      gsap.to(el, {
-        yPercent: speed * 50,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: el,
-          start: 'top bottom',
-          end: 'bottom top',
-          scrub: true,
-        },
+        gsap.fromTo(
+          element,
+          fromVars,
+          {
+            opacity: 1,
+            x: 0,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: 'power2.out',
+            delay,
+            scrollTrigger: {
+              trigger: element,
+              start: 'top 92%',
+              toggleActions: 'play none none none',
+              once: true,
+            },
+          }
+        );
       });
-    });
+
+      // Stagger animation for children of [data-animate-stagger]
+      const staggerContainers = gsap.utils.toArray<HTMLElement>('[data-animate-stagger]');
+      staggerContainers.forEach((container) => {
+        const children = container.children;
+        if (children.length === 0) return;
+
+        gsap.fromTo(
+          children,
+          { opacity: 0, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power2.out',
+            stagger: 0.08,
+            scrollTrigger: {
+              trigger: container,
+              start: 'top 90%',
+              once: true,
+            },
+          }
+        );
+      });
+
+      // Parallax effect for [data-parallax]
+      const parallaxElements = gsap.utils.toArray<HTMLElement>('[data-parallax]');
+      parallaxElements.forEach((el) => {
+        const speed = Number(el.dataset.parallax ?? 0.1);
+        gsap.to(el, {
+          yPercent: speed * 50,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        });
+      });
+    };
+
+    // Defer heavy GSAP setup to idle time so it doesn't block the main thread (TBT)
+    if (typeof window.requestIdleCallback === 'function') {
+      idleHandle = window.requestIdleCallback(setupAnimations, { timeout: 300 });
+    } else {
+      // Fallback: defer by one frame to allow paint first
+      const raf = requestAnimationFrame(() => { requestAnimationFrame(setupAnimations); });
+      return () => {
+        cancelAnimationFrame(raf);
+        ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      };
+    }
 
     return () => {
+      if (idleHandle !== undefined) window.cancelIdleCallback(idleHandle);
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, [location.pathname]);

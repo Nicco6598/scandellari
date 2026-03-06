@@ -64,7 +64,13 @@ const Hero: React.FC = () => {
             <img
               key={i}
               src={src}
-              alt="Scandellari Railway Innovation"
+              alt=""
+              aria-hidden="true"
+              width="1920"
+              height="1080"
+              loading={i === 0 ? 'eager' : 'lazy'}
+              fetchPriority={i === 0 ? 'high' : 'low'}
+              decoding={i === 0 ? 'sync' : 'async'}
               className={`absolute inset-0 w-full h-full object-cover grayscale brightness-[0.4] transition-opacity duration-[2000ms] ease-linear ${i === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
             />
           ))}
@@ -138,10 +144,10 @@ const Hero: React.FC = () => {
         {/* Bottom Bar: Certifications and Minimal Info */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-12 border-t border-white/10 pt-12">
           <div className="flex flex-wrap gap-8 md:gap-16 opacity-30 grayscale invert">
-            <img src={logoAccredia} alt="Accredia" className="h-4 md:h-5 object-contain" />
-            <img src={logoIso9001} alt="ISO 9001" className="h-6 md:h-8 object-contain" />
-            <img src={logoIso14001} alt="ISO 14001" className="h-6 md:h-8 object-contain" />
-            <img src={logoIso45001} alt="ISO 45001" className="h-6 md:h-8 object-contain" />
+            <img src={logoAccredia} alt="Accredia" width="80" height="20" className="h-4 md:h-5 object-contain" loading="lazy" decoding="async" />
+            <img src={logoIso9001} alt="ISO 9001" width="80" height="30" className="h-6 md:h-8 object-contain" loading="lazy" decoding="async" />
+            <img src={logoIso14001} alt="ISO 14001" width="80" height="30" className="h-6 md:h-8 object-contain" loading="lazy" decoding="async" />
+            <img src={logoIso45001} alt="ISO 45001" width="80" height="30" className="h-6 md:h-8 object-contain" loading="lazy" decoding="async" />
           </div>
 
           <div className="hidden lg:flex gap-16 text-xs font-bold text-white/40 uppercase tracking-[0.3em]">

@@ -21,5 +21,32 @@ export default defineConfig({
     },
     build: {
         outDir: 'build',
+        // Target modern browsers for smaller output
+        target: 'es2020',
+        // Enable CSS code splitting
+        cssCodeSplit: true,
+        // Increase chunk warning limit (maplibre-gl is intentionally large)
+        chunkSizeWarningLimit: 1100,
+        rollupOptions: {
+            output: {
+                // Manual chunk splitting to separate heavy vendor libs
+                manualChunks: (id) => {
+                    // PDF.js is very heavy — isolate to its own chunk
+                    if (id.includes('pdfjs-dist')) return 'pdfjs';
+                    // MapLibre GL is large — isolate
+                    if (id.includes('maplibre-gl') || id.includes('react-map-gl')) return 'maplibre';
+                    // Supabase client
+                    if (id.includes('@supabase')) return 'supabase';
+                    // GSAP animation library
+                    if (id.includes('gsap')) return 'gsap';
+                    // Form & validation libs (no react-dom dependency — keep separate)
+                    if (id.includes('react-hook-form') || id.includes('zod') || id.includes('@hookform')) return 'forms';
+                    // React ecosystem core (react, react-dom, react-router together to avoid circular)
+                    if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('react-router') || id.includes('react-helmet') || id.includes('scheduler')) return 'react-vendor';
+                    // Other node_modules
+                    if (id.includes('node_modules')) return 'vendor';
+                },
+            },
+        },
     },
 });

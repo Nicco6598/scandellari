@@ -101,8 +101,10 @@ const MobileMenuPanel: React.FC<{
         <div className="p-6 flex items-center justify-between shrink-0">
           <img
             src={theme === 'dark' ? logoBianco : logoBlu}
-            alt="Scandellari"
-            className="h-10 sm:h-11"
+            alt="Scandellari Giacinto s.n.c."
+            width="160"
+            height="44"
+            className="h-10 sm:h-11 w-auto"
           />
           <button
             onClick={onClose}
@@ -268,11 +270,13 @@ const Header: React.FC = () => {
       }`}>
         <div className="container mx-auto max-w-7xl px-6 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/" aria-label="Home - Scandellari Giacinto s.n.c." className="flex items-center">
             <img
               src={(theme === 'dark' || forceLightText) ? logoBianco : logoBlu}
-              alt="Scandellari"
-              className="h-8 md:h-10 transition-all"
+              alt="Scandellari Giacinto s.n.c."
+              width="160"
+              height="40"
+              className="h-8 md:h-10 w-auto transition-all"
             />
           </Link>
 
