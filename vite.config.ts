@@ -2,29 +2,45 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-// Plugin that injects preload for the first hero image and defers non-critical CSS
+// Plugin that injects preload for the first hero image, defers non-critical CSS,
+// and removes modulepreload for heavy lazy chunks (maplibre, supabase, pdfjs)
 function buildOptimizationPlugin(): Plugin {
-    let heroImagePath = '';
+    let heroImageDesktop = '';
+    let heroImageMobile = '';
     return {
         name: 'build-optimization',
         generateBundle(_options, bundle) {
             for (const fileName of Object.keys(bundle)) {
-                if (fileName.includes('Prima-pagina-foto-2') && fileName.endsWith('.webp')) {
-                    heroImagePath = '/' + fileName;
-                    break;
+                if (fileName.includes('Prima-pagina-foto-2-mobile') && fileName.endsWith('.webp')) {
+                    heroImageMobile = '/assets/' + fileName.replace('assets/', '');
+                }
+                if (fileName.includes('Prima-pagina-foto-2') && !fileName.includes('mobile') && fileName.endsWith('.webp')) {
+                    heroImageDesktop = '/assets/' + fileName.replace('assets/', '');
                 }
             }
         },
         transformIndexHtml(html) {
-            // Inject hero image preload
-            if (heroImagePath) {
-                const preloadTag = `<link rel="preload" as="image" type="image/webp" href="${heroImagePath}" fetchpriority="high">`;
-                html = html.replace('</head>', `  ${preloadTag}\n</head>`);
+            // Inject responsive hero image preload (mobile gets smaller file)
+            const preloads: string[] = [];
+            if (heroImageMobile) {
+                preloads.push(`<link rel="preload" as="image" type="image/webp" href="${heroImageMobile}" media="(max-width: 767px)" fetchpriority="high">`);
             }
-            // Make non-critical CSS (lightbox) non-blocking using media="print" trick
+            if (heroImageDesktop) {
+                preloads.push(`<link rel="preload" as="image" type="image/webp" href="${heroImageDesktop}" media="(min-width: 768px)" fetchpriority="high">`);
+            }
+            if (preloads.length > 0) {
+                html = html.replace('</head>', `  ${preloads.join('\n  ')}\n</head>`);
+            }
+            // Make non-critical CSS non-blocking using media="print" trick
             html = html.replace(
-                /(<link rel="stylesheet" crossorigin href="([^"]*lightbox[^"]*\.css)">)/g,
+                /(<link rel="stylesheet" crossorigin href="([^"]*(?:lightbox|CertificationsPage)[^"]*\.css)">)/g,
                 '<link rel="stylesheet" crossorigin href="$2" media="print" onload="this.media=\'all\'">'
+            );
+            // Remove modulepreload for heavy lazy chunks — browser will load them on demand
+            // This saves ~400 KiB of unnecessary downloads on initial page load
+            html = html.replace(
+                /<link rel="modulepreload" crossorigin href="[^"]*(?:maplibre|supabase|pdfjs)[^"]*\.js">\n?/g,
+                ''
             );
             return html;
         },

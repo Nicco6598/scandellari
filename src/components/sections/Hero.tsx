@@ -4,10 +4,15 @@ import gsap from 'gsap';
 
 // Import photos for the background slideshow
 import heroImg2 from '../../assets/images/Prima-pagina-foto-2.webp';
+import heroImg2Mobile from '../../assets/images/Prima-pagina-foto-2-mobile.webp';
 import heroImg3 from '../../assets/images/Prima-pagina-foto-3.webp';
+import heroImg3Mobile from '../../assets/images/Prima-pagina-foto-3-mobile.webp';
 import heroImg4 from '../../assets/images/Prima-pagina-foto-4.webp';
+import heroImg4Mobile from '../../assets/images/Prima-pagina-foto-4-mobile.webp';
 import heroImg5 from '../../assets/images/Prima-pagina-foto-5.webp';
+import heroImg5Mobile from '../../assets/images/Prima-pagina-foto-5-mobile.webp';
 import heroImg6 from '../../assets/images/Prima-pagina-foto-6.webp';
+import heroImg6Mobile from '../../assets/images/Prima-pagina-foto-6-mobile.webp';
 
 // Import logos for the bottom section
 import logoAccredia from '../../assets/images/accredia.webp';
@@ -15,7 +20,13 @@ import logoIso14001 from '../../assets/images/aid-iso-14001.webp';
 import logoIso9001 from '../../assets/images/aid-iso-9001.webp';
 import logoIso45001 from '../../assets/images/aid-iso-45001.webp';
 
-const heroImages = [heroImg2, heroImg3, heroImg4, heroImg5, heroImg6];
+const heroImages = [
+  { src: heroImg2, mobileSrc: heroImg2Mobile },
+  { src: heroImg3, mobileSrc: heroImg3Mobile },
+  { src: heroImg4, mobileSrc: heroImg4Mobile },
+  { src: heroImg5, mobileSrc: heroImg5Mobile },
+  { src: heroImg6, mobileSrc: heroImg6Mobile },
+];
 
 const tabs = [
   { id: 'signals', label: 'Segnalamento', path: '/competenze/segnalamento' },
@@ -28,13 +39,14 @@ const Hero: React.FC = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Preload first hero image for faster LCP
+  // Preload first hero image for faster LCP (mobile-aware)
   useEffect(() => {
+    const isMobile = window.innerWidth < 768;
     const link = document.createElement('link');
     link.rel = 'preload';
     link.as = 'image';
     link.type = 'image/webp';
-    link.href = heroImg2;
+    link.href = isMobile ? heroImg2Mobile : heroImg2;
     document.head.prepend(link);
     return () => { document.head.removeChild(link); };
   }, []);
@@ -71,14 +83,16 @@ const Hero: React.FC = () => {
       {/* Background Slideshow - Full Screen for impact */}
       <div className="absolute inset-0 z-0 bg-black">
         <div className="absolute inset-0">
-          {heroImages.map((src, i) => (
+          {heroImages.map(({ src, mobileSrc }, i) => (
             <img
               key={i}
               src={src}
+              srcSet={`${mobileSrc} 640w, ${src} 1280w`}
+              sizes="(max-width: 767px) 100vw, 100vw"
               alt=""
               aria-hidden="true"
-              width="1920"
-              height="1080"
+              width="1280"
+              height="854"
               loading={i === 0 ? 'eager' : 'lazy'}
               fetchPriority={i === 0 ? 'high' : 'low'}
               decoding={i === 0 ? 'sync' : 'async'}
