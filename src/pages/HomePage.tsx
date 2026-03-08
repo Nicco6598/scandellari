@@ -14,7 +14,7 @@ const HomePage: React.FC = () => {
         keywords="segnalamento ferroviario, sicurezza ferroviaria, impianti ferroviari, RFI, Trenitalia, SCMT, ACEI, alta velocità, manutenzione ferroviaria, Scandellari, Treviglio"
         url="/"
       />
-      <div className="relative min-h-screen bg-gray-50 dark:bg-dark">
+      <div className="relative min-h-screen bg-stone-50 dark:bg-dark">
         <div className="relative z-10">
           <Hero />
           <Services />

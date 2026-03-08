@@ -267,22 +267,16 @@ const CareersPage: React.FC = () => {
     setExpandedJobId(null);
   }, [filterDipartimento, filterTipo, filterSede]);
 
-  if (loading) return (
-    <Layout>
-      <div className="min-h-screen bg-gray-50 dark:bg-black pt-40 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent animate-spin" />
-      </div>
-    </Layout>
-  );
+  if (loading) return null;
 
   return (
     <Layout>
-      <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
+      <div className="bg-stone-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
 
         {/* Hero Section */}
         <section className="container mx-auto max-w-7xl px-6 mb-32">
           <div
-            className="border-b border-black/5 dark:border-white/5 pb-20"
+            className="border-b border-black/10 dark:border-white/5 pb-20"
             data-animate="fade-up"
             data-animate-distance="20"
           >
@@ -306,7 +300,7 @@ const CareersPage: React.FC = () => {
                   <div className="text-7xl md:text-8xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums select-none">
                     <AnimatedCounter to={offerte.length} duration={1200} />
                   </div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30 dark:text-white/30 mt-1">
+                  <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/50 dark:text-white/30 mt-1">
                     Posizioni aperte
                   </div>
                 </div>
@@ -317,13 +311,13 @@ const CareersPage: React.FC = () => {
 
         {/* Culture & Benefits */}
         <section className="container mx-auto max-w-7xl px-6 mb-40">
-          <div className="grid md:grid-cols-3 gap-px bg-gradient-to-br from-black/5 via-black/5 to-primary/5 dark:from-white/5 dark:via-white/5 dark:to-primary/10 border border-black/5 dark:border-white/5">
+          <div className="grid md:grid-cols-3 gap-px bg-gradient-to-br from-black/8 via-black/8 to-primary/5 dark:from-white/5 dark:via-white/5 dark:to-primary/10 border border-black/10 dark:border-white/5">
             {[
               { icon: SparklesIcon, num: '01', title: 'Innovazione', desc: "Accesso a tecnologie all'avanguardia nel settore segnalamento." },
               { icon: UserGroupIcon, num: '02', title: 'Formazione', desc: 'Percorsi di crescita continua e tutoraggio specialistico.' },
               { icon: ShieldCheckIcon, num: '03', title: 'Sicurezza', desc: 'Ambiente di lavoro protetto con standard oltre la norma.' }
             ].map((item) => (
-              <div key={item.num} className="bg-white dark:bg-black p-8 space-y-6 group hover:bg-gray-50 dark:hover:bg-dark-surface transition-all duration-300 relative overflow-hidden">
+              <div key={item.num} className="bg-white dark:bg-black p-8 space-y-6 group hover:bg-stone-50 dark:hover:bg-dark-surface transition-all duration-300 relative overflow-hidden">
                 <span className="absolute top-4 right-6 text-6xl font-black text-black/[0.04] dark:text-white/[0.04] leading-none select-none pointer-events-none font-heading">
                   {item.num}
                 </span>
@@ -343,12 +337,12 @@ const CareersPage: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <h2 className="text-4xl font-black text-black dark:text-white tracking-tighter font-heading mb-4">Posizioni Aperte</h2>
-                <div className="w-20 h-[1px] bg-black/10 dark:bg-white/10" />
+                <div className="w-20 h-[1px] bg-black/15 dark:bg-white/10" />
               </div>
               {(filterDipartimento || filterTipo || filterSede) && (
                 <button
                   onClick={() => { setFilterDipartimento(''); setFilterTipo(''); setFilterSede(''); }}
-                  className="text-[10px] font-black uppercase tracking-widest text-black/40 dark:text-white/30 hover:text-primary transition-colors self-start md:self-auto"
+                  className="text-[10px] font-black uppercase tracking-widest text-black/60 dark:text-white/30 hover:text-primary transition-colors self-start md:self-auto"
                 >
                   Rimuovi filtri ×
                 </button>
@@ -363,11 +357,11 @@ const CareersPage: React.FC = () => {
                 { label: 'Sede', value: filterSede, setter: setFilterSede, options: Array.from(new Set(offerte.map(o => o.sede).filter(Boolean))).sort() }
               ].filter(f => f.options.length > 0).map((filter, i) => (
                 <div key={i} className="flex items-center gap-3 flex-wrap">
-                  <span className="text-[9px] font-black uppercase tracking-[0.35em] text-black/30 dark:text-white/30 w-24 shrink-0">{filter.label}</span>
-                  <div className="flex bg-black/5 dark:bg-white/5 p-1 flex-wrap gap-1">
+                  <span className="text-[9px] font-black uppercase tracking-[0.35em] text-black/50 dark:text-white/30 w-24 shrink-0">{filter.label}</span>
+                  <div className="flex bg-black/8 dark:bg-white/5 p-1 flex-wrap gap-1">
                     <button
                       onClick={() => filter.setter('')}
-                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${!filter.value ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/50 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
+                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${!filter.value ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/70 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
                     >
                       Tutti
                     </button>
@@ -375,7 +369,7 @@ const CareersPage: React.FC = () => {
                       <button
                         key={opt}
                         onClick={() => filter.setter(opt === filter.value ? '' : opt)}
-                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${filter.value === opt ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/50 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
+                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${filter.value === opt ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/70 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
                       >
                         {opt}
                       </button>
@@ -393,7 +387,7 @@ const CareersPage: React.FC = () => {
                 return (
                   <div
                     key={jobKey}
-                    className="group bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 hover:border-primary/30 transition-all duration-500 overflow-hidden relative"
+                    className="group bg-white dark:bg-dark-surface border border-black/10 dark:border-white/5 hover:border-primary/30 transition-all duration-500 overflow-hidden relative"
                     data-animate="fade-up"
                     data-animate-delay={(index * 0.04).toFixed(2)}
                   >
@@ -404,7 +398,7 @@ const CareersPage: React.FC = () => {
 
                     <div className="p-8 md:p-12 flex flex-col md:grid md:grid-cols-12 gap-8 md:items-center relative z-10">
                       <div className="md:col-span-8 flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-                        <div className="w-12 h-12 bg-black/5 dark:bg-dark-elevated border border-black/5 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:border-primary group-hover:bg-primary/10 transition-all">
+                        <div className="w-12 h-12 bg-black/8 dark:bg-dark-elevated border border-black/10 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:border-primary group-hover:bg-primary/10 transition-all">
                           <BriefcaseIcon className="w-6 h-6 opacity-30 group-hover:opacity-100 group-hover:text-primary transition-all" />
                         </div>
                         <div className="flex-1">
@@ -414,10 +408,10 @@ const CareersPage: React.FC = () => {
                                 {job.dipartimento}
                               </span>
                             )}
-                            {job.dipartimento && <span className="text-black/15 dark:text-white/15 text-[9px]">·</span>}
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-black/40 dark:text-white/30">{job.tipo}</span>
-                            <span className="text-black/15 dark:text-white/15 text-[9px]">·</span>
-                            <span className="text-[9px] font-black text-black/40 dark:text-white/30 uppercase tracking-[0.3em] flex items-center gap-1">
+                            {job.dipartimento && <span className="text-black/30 dark:text-white/15 text-[9px]">·</span>}
+                            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-black/60 dark:text-white/30">{job.tipo}</span>
+                            <span className="text-black/30 dark:text-white/15 text-[9px]">·</span>
+                            <span className="text-[9px] font-black text-black/60 dark:text-white/30 uppercase tracking-[0.3em] flex items-center gap-1">
                               <MapPinIcon className="w-3 h-3" />
                               {job.sede}
                             </span>
@@ -427,7 +421,7 @@ const CareersPage: React.FC = () => {
                             ref={(el) => {
                               jobDescriptionRefs.current[jobKey] = el;
                             }}
-                            className={`text-sm text-black/60 dark:text-white/50 font-medium max-w-2xl leading-relaxed ${expandedJobId === jobKey ? '' : 'line-clamp-2'}`}
+                            className={`text-sm text-black/65 dark:text-white/50 font-medium max-w-2xl leading-relaxed ${expandedJobId === jobKey ? '' : 'line-clamp-2'}`}
                           >
                             {job.descrizione}
                           </p>
@@ -459,12 +453,12 @@ const CareersPage: React.FC = () => {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
-              <BriefcaseIcon className="w-10 h-10 text-black/15 dark:text-white/15" />
+              <BriefcaseIcon className="w-10 h-10 text-black/40 dark:text-white/15" />
               <div>
-                <p className="text-sm font-black uppercase tracking-widest text-black/30 dark:text-white/30 mb-2">
+                <p className="text-sm font-black uppercase tracking-widest text-black/50 dark:text-white/30 mb-2">
                   Nessuna posizione trovata
                 </p>
-                <p className="text-xs text-black/20 dark:text-white/20 font-medium">
+                <p className="text-xs text-black/40 dark:text-white/20 font-medium">
                   Nessuna offerta corrisponde ai filtri selezionati.
                 </p>
               </div>
@@ -481,7 +475,7 @@ const CareersPage: React.FC = () => {
         {/* Spontaneous Application */}
         <section className="container mx-auto max-w-7xl px-6">
           <div
-            className="bg-black dark:bg-dark-surface text-white dark:text-white p-12 md:p-24 text-center space-y-10 border border-black/5 dark:border-white/5 relative overflow-hidden group cursor-pointer"
+            className="bg-black dark:bg-dark-surface text-white dark:text-white p-12 md:p-24 text-center space-y-10 border border-black/10 dark:border-white/5 relative overflow-hidden group cursor-pointer"
             onClick={() => openApplication(null)}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/10 dark:to-accent/10 pointer-events-none" />
@@ -508,7 +502,7 @@ const CareersPage: React.FC = () => {
           aria-hidden={!isModalOpen}
         >
           <div className="container mx-auto max-w-5xl h-full flex flex-col relative">
-            <div className="flex justify-between items-center p-6 md:p-12 border-b border-black/5 dark:border-white/5">
+            <div className="flex justify-between items-center p-6 md:p-12 border-b border-black/10 dark:border-white/5">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-2">
                   {selectedJob ? 'Candidatura per' : 'Candidatura spontanea'}
@@ -517,7 +511,7 @@ const CareersPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors group rounded-full"
+                className="p-4 hover:bg-black/10 dark:hover:bg-white/5 transition-colors group rounded-full"
               >
                 <XMarkIcon className="w-8 h-8 md:w-10 md:h-10 transition-transform group-hover:rotate-90" />
               </button>
@@ -526,12 +520,12 @@ const CareersPage: React.FC = () => {
             <div className="flex-grow overflow-y-auto overflow-x-hidden p-6 md:p-12">
               <div className="max-w-2xl mx-auto pb-20">
                 {selectedJob && (
-                  <div className="mb-12 p-8 bg-gray-50 dark:bg-white/5 border border-black/5 dark:border-white/5 space-y-4">
+                  <div className="mb-12 p-8 bg-stone-50 dark:bg-white/5 border border-black/10 dark:border-white/5 space-y-4">
                     <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-widest text-primary">
                       <span className="flex items-center gap-2"><MapPinIcon className="w-3 h-3" /> {selectedJob.sede}</span>
                       <span className="flex items-center gap-2"><BriefcaseIcon className="w-3 h-3" /> {selectedJob.tipo}</span>
                     </div>
-                    <p className="text-sm text-black/70 dark:text-white/60 font-medium leading-relaxed">
+                    <p className="text-sm text-black/80 dark:text-white/60 font-medium leading-relaxed">
                       {selectedJob.descrizione}
                     </p>
                   </div>
@@ -543,7 +537,7 @@ const CareersPage: React.FC = () => {
                       <CheckCircleIcon className="w-12 h-12 text-green-500" />
                     </div>
                     <h3 className="text-3xl md:text-4xl font-black font-heading mb-4">Candidatura Inviata</h3>
-                    <p className="text-black/70 dark:text-white/60 font-medium max-w-md mx-auto leading-relaxed">
+                    <p className="text-black/80 dark:text-white/60 font-medium max-w-md mx-auto leading-relaxed">
                       Grazie per il tuo interesse. Il nostro team HR valuterà il tuo profilo e ti contatterà presto.
                     </p>
                     <button
@@ -559,7 +553,7 @@ const CareersPage: React.FC = () => {
                       <XMarkIcon className="w-12 h-12 text-red-500" />
                     </div>
                     <h3 className="text-3xl md:text-4xl font-black font-heading mb-4">Errore Invio</h3>
-                    <p className="text-black/70 dark:text-white/60 font-medium max-w-md mx-auto leading-relaxed mb-8">
+                    <p className="text-black/80 dark:text-white/60 font-medium max-w-md mx-auto leading-relaxed mb-8">
                       Si è verificato un errore durante l'invio della candidatura. Riprova o contattaci direttamente.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -578,13 +572,13 @@ const CareersPage: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <form id="application-form" onSubmit={handleSubmit(onSubmit)} className="space-y-px bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 animate-fade-in">
+                  <form id="application-form" onSubmit={handleSubmit(onSubmit)} className="space-y-px bg-black/8 dark:bg-white/5 border border-black/10 dark:border-white/5 animate-fade-in">
                     {[
                       { id: 'name', label: 'Nome e Cognome', type: 'text' },
                       { id: 'email', label: 'Email', type: 'email' },
                       { id: 'phone', label: 'Telefono', type: 'tel' }
                     ].map((f) => (
-                      <div key={f.id} className="bg-white dark:bg-black p-6 md:p-8 group focus-within:bg-gray-50 dark:focus-within:bg-white/5 transition-colors border-b border-black/5 dark:border-white/10">
+                      <div key={f.id} className="bg-white dark:bg-black p-6 md:p-8 group focus-within:bg-stone-50 dark:focus-within:bg-white/5 transition-colors border-b border-black/10 dark:border-white/10">
                         <label
                           htmlFor={f.id}
                           className={`block text-xs font-black uppercase mb-3 group-focus-within:text-primary transition-colors ${errors[f.id as keyof ApplicationFormData] ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}
@@ -595,7 +589,7 @@ const CareersPage: React.FC = () => {
                           id={f.id}
                           type={f.type}
                           {...register(f.id as keyof ApplicationFormData)}
-                          className={`w-full bg-transparent border-b pb-2 text-lg md:text-xl focus:ring-0 font-bold text-black dark:text-white transition-colors placeholder:text-black/30 placeholder:font-medium dark:placeholder:text-white/30 ${errors[f.id as keyof ApplicationFormData] ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
+                          className={`w-full bg-transparent border-b pb-2 text-lg md:text-xl focus:ring-0 font-bold text-black dark:text-white transition-colors placeholder:text-black/40 placeholder:font-medium dark:placeholder:text-white/30 ${errors[f.id as keyof ApplicationFormData] ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
                           placeholder={`Inserisci ${f.label.toLowerCase()}...`}
                         />
                         {errors[f.id as keyof ApplicationFormData] && (
@@ -603,7 +597,7 @@ const CareersPage: React.FC = () => {
                         )}
                       </div>
                     ))}
-                    <div className="bg-white dark:bg-black p-6 md:p-8 group focus-within:bg-gray-50 dark:focus-within:bg-white/5 transition-colors">
+                    <div className="bg-white dark:bg-black p-6 md:p-8 group focus-within:bg-stone-50 dark:focus-within:bg-white/5 transition-colors">
                       <label className={`block text-xs font-black uppercase mb-4 group-focus-within:text-primary transition-colors ${errors.cv ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}>
                         Curriculum Vitae
                       </label>
@@ -612,7 +606,7 @@ const CareersPage: React.FC = () => {
                         <span className="text-sm font-black uppercase tracking-widest transition-opacity block mb-2 text-black/80 dark:text-white/70 opacity-80 group-hover:opacity-100">
                           {selectedFile?.length > 0 ? 'Cambia File' : 'Seleziona File'}
                         </span>
-                        <span className="text-xs font-bold text-black/40 dark:text-white/30 block">Max 5MB · PDF, DOCX</span>
+                        <span className="text-xs font-bold text-black/60 dark:text-white/30 block">Max 5MB · PDF, DOCX</span>
                         <input
                           type="file"
                           accept=".pdf,.doc,.docx"
@@ -626,7 +620,7 @@ const CareersPage: React.FC = () => {
                       </label>
 
                       {selectedFile?.length > 0 && (
-                        <div className="mt-4 p-4 bg-gray-50 dark:bg-white/5 border border-black/5 dark:border-white/5 flex items-center justify-between animate-fade-in">
+                        <div className="mt-4 p-4 bg-stone-50 dark:bg-white/5 border border-black/10 dark:border-white/5 flex items-center justify-between animate-fade-in">
                           <div className="flex items-center gap-4 overflow-hidden">
                             <div className="w-10 h-10 bg-primary/10 flex items-center justify-center shrink-0 rounded-sm">
                               <BriefcaseIcon className="w-5 h-5 text-primary" />
@@ -660,8 +654,8 @@ const CareersPage: React.FC = () => {
             </div>
 
             {(status === 'idle' || status === 'submitting') && (
-              <div className="p-6 md:p-8 bg-white dark:bg-black border-t border-black/5 dark:border-white/5 flex flex-col md:flex-row gap-6 md:items-center justify-between shrink-0 mb-safe">
-                <p className="hidden md:block text-xs font-black uppercase tracking-widest text-black/40 dark:text-white/30">Invio candidatura conforme alla privacy</p>
+              <div className="p-6 md:p-8 bg-white dark:bg-black border-t border-black/10 dark:border-white/5 flex flex-col md:flex-row gap-6 md:items-center justify-between shrink-0 mb-safe">
+                <p className="hidden md:block text-xs font-black uppercase tracking-widest text-black/60 dark:text-white/30">Invio candidatura conforme alla privacy</p>
                 <button
                   type="submit"
                   form="application-form"

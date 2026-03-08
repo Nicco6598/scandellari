@@ -201,7 +201,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <AdminLayout title="Dashboard">
-      <div className="px-4 sm:px-6 lg:px-8 py-8 bg-gray-50 dark:bg-black min-h-screen">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 bg-stone-50 dark:bg-black min-h-screen">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-6 border-b border-black/5 dark:border-white/5">
           <h1 className="text-2xl font-black uppercase tracking-tight text-black dark:text-white mb-2 sm:mb-0">

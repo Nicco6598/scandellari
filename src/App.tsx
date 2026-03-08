@@ -1,5 +1,5 @@
 // src/App.tsx modificato
-import React, { Suspense, lazy, useEffect, useLayoutEffect } from 'react';
+import React, { lazy, useEffect, useLayoutEffect, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
@@ -59,8 +59,8 @@ const AnimationController: React.FC = () => {
     let idleHandle: number | undefined;
 
     const setupAnimations = () => {
-      ScrollTrigger.refresh();
-
+      setTimeout(() => ScrollTrigger.refresh(), 50);
+      
       const elements = gsap.utils.toArray<HTMLElement>('[data-animate]');
       elements.forEach((element) => {
         const type = element.dataset.animate ?? 'fade-up';
@@ -162,10 +162,20 @@ const App: React.FC = () => {
     const lenis = new Lenis({
       lerp: 0.08,
       smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+      infinite: false,
     });
 
     // Rendi lenis accessibile globalmente per ScrollToTop
     (window as Window & { lenis?: typeof lenis }).lenis = lenis;
+
+    // Integrate Lenis with GSAP ScrollTrigger
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+    gsap.ticker.lagSmoothing(0);
 
     let rafId = 0;
     const raf = (time: number) => {
@@ -177,6 +187,7 @@ const App: React.FC = () => {
 
     return () => {
       cancelAnimationFrame(rafId);
+      gsap.ticker.remove((time) => lenis.raf(time * 1000));
       lenis.destroy();
     };
   }, []);
@@ -198,7 +209,8 @@ const App: React.FC = () => {
                 Opzione 2: Usa un fallback più semplice se PageLoader richiede 'children'.
                 Ad esempio: fallback={<div>Caricamento...</div>} 
               */}
-              <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-dark/80 backdrop-blur-md"><div className="w-12 h-12 border-4 border-solid border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+              <Suspense fallback={null}>
+              <PageLoader>
                 <Routes>
                   {/* Rotte pubbliche */}
                   <Route path="/" element={<HomePage />} />
@@ -239,6 +251,7 @@ const App: React.FC = () => {
                   {/* 404 Not Found - Must be last */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
+              </PageLoader>
               </Suspense>
             </Router>
           </MobileMenuProvider>

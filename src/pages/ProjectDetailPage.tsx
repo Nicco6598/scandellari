@@ -163,17 +163,11 @@ const ProjectDetailPage: React.FC = () => {
         setIsLightboxOpen(true);
     };
 
-    if (loading) return (
-        <Layout>
-            <div className="min-h-screen bg-gray-50 dark:bg-black pt-40 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent animate-spin" />
-            </div>
-        </Layout>
-    );
+    if (loading) return null;
 
     if (!progetto) return (
         <Layout>
-            <div className="min-h-screen bg-gray-50 dark:bg-black pt-40 container mx-auto max-w-7xl px-6 text-center">
+            <div className="min-h-screen bg-stone-50 dark:bg-black pt-40 container mx-auto max-w-7xl px-6 text-center">
                 <h1 className="text-2xl font-black uppercase">Progetto non trovato</h1>
                 <Link to="/progetti" className="text-primary mt-8 inline-block font-bold">Torna alla lista</Link>
             </div>
@@ -182,7 +176,7 @@ const ProjectDetailPage: React.FC = () => {
 
     return (
         <Layout>
-            <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
+            <div className="bg-stone-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
                 <section className="container mx-auto max-w-7xl px-6 mb-20">
                     <Link
                         to="/progetti"
@@ -192,7 +186,7 @@ const ProjectDetailPage: React.FC = () => {
                         Tutti i Progetti
                     </Link>
 
-                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 border-b border-black/5 dark:border-white/5 pb-12">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 border-b border-black/10 dark:border-white/5 pb-12">
                         <div className="max-w-4xl">
                             <div className="flex items-center gap-4 mb-8">
                                 <span className="text-[10px] font-black bg-black dark:bg-white text-white dark:text-black px-2 py-1 uppercase tracking-tighter">
@@ -212,7 +206,7 @@ const ProjectDetailPage: React.FC = () => {
                     {/* Map Integration */}
                     <div
                         ref={mapContainerRef}
-                        className="mt-12 w-full h-80 bg-black/5 dark:bg-dark-surface border border-black/5 dark:border-white/5 overflow-hidden relative"
+                        className="mt-12 w-full h-80 bg-black/8 dark:bg-dark-surface border border-black/10 dark:border-white/5 overflow-hidden relative"
                     >
                         {mapPoints.length > 0 ? (
                             <Map
@@ -259,7 +253,7 @@ const ProjectDetailPage: React.FC = () => {
                                             closeButton={false}
                                             className="maplibre-popup-custom"
                                         >
-                                            <div className="p-3 min-w-[120px] bg-white dark:bg-dark-surface border border-black/5 dark:border-white/10 shadow-xl">
+                                            <div className="p-3 min-w-[120px] bg-white dark:bg-dark-surface border border-black/10 dark:border-white/10 shadow-xl">
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">
                                                     Località {i + 1}
                                                 </span>
@@ -276,7 +270,7 @@ const ProjectDetailPage: React.FC = () => {
                                 <div className="w-8 h-8 border border-black/10 dark:border-white/10 rotate-45 flex items-center justify-center">
                                     <div className="w-2 h-2 bg-primary/20" />
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-black/20 dark:text-white/20">
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-black/40 dark:text-white/20">
                                     Acquisizione coordinate...
                                 </span>
                             </div>
@@ -330,7 +324,7 @@ const ProjectDetailPage: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="grid md:grid-cols-2 gap-12 border-t border-black/5 dark:border-white/5 pt-16">
+                            <div className="grid md:grid-cols-2 gap-12 border-t border-black/10 dark:border-white/5 pt-16">
                                 {progetto.sfide?.length ? (
                                     <div className="space-y-8">
                                         <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40">Sfide e Soluzioni</h3>
@@ -363,7 +357,7 @@ const ProjectDetailPage: React.FC = () => {
 
                         <aside className="lg:col-span-4 gap-12 flex flex-col">
                             <div className="sticky top-32 space-y-16">
-                                <div className="p-10 bg-black/5 dark:bg-white/5 space-y-10 rounded-sm">
+                                <div className="p-10 bg-black/8 dark:bg-white/5 space-y-10 rounded-sm">
                                     <div>
                                         <h4 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 mb-6">Dettagli Appalto</h4>
                                         <dl className="space-y-6">
@@ -388,7 +382,7 @@ const ProjectDetailPage: React.FC = () => {
                                         </dl>
                                     </div>
 
-                                    <div className="pt-10 border-t border-black/5 dark:border-white/5">
+                                    <div className="pt-10 border-t border-black/10 dark:border-white/5">
                                         <Link
                                             to="/contatti"
                                             className="group flex items-center justify-between w-full text-left"
@@ -406,18 +400,18 @@ const ProjectDetailPage: React.FC = () => {
                     </div>
 
                     {progettiCorrelati.length > 0 && (
-                        <section className="mt-40 pt-20 border-t border-black/5 dark:border-white/5">
+                        <section className="mt-40 pt-20 border-t border-black/10 dark:border-white/5">
                             <div className="flex items-end justify-between mb-16">
                                 <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tighter font-heading">Opere Correlate</h2>
                             </div>
-                            <div className="grid md:grid-cols-3 gap-px bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+                            <div className="grid md:grid-cols-3 gap-px bg-black/8 dark:bg-white/5 border border-black/10 dark:border-white/5">
                                 {progettiCorrelati.map((p) => (
                                     <Link
                                         key={p.id}
                                         to={`/progetti/${p.id}`}
-                                        className="bg-white dark:bg-black p-8 group transition-colors hover:bg-gray-50 dark:hover:bg-dark-surface"
+                                        className="bg-white dark:bg-black p-8 group transition-colors hover:bg-stone-50 dark:hover:bg-dark-surface"
                                     >
-                                        <span className="text-[9px] font-black text-black/50 dark:text-white/40 uppercase tracking-[0.4em] mb-4 block">{p.anno}</span>
+                                        <span className="text-[9px] font-black text-black/60 dark:text-white/40 uppercase tracking-[0.4em] mb-4 block">{p.anno}</span>
                                         <h4 className="text-lg font-black mb-4 flex items-center gap-2 group-hover:text-primary transition-colors">
                                             {p.titolo}
                                         </h4>

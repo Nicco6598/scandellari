@@ -3,6 +3,7 @@ import { useMobileMenu } from '../../context/MobileMenuContext';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { createPortal } from 'react-dom';
+import gsap from 'gsap';
 import {
   XMarkIcon,
   Bars3Icon,
@@ -68,10 +69,10 @@ const MobileMenuPanel: React.FC<{
   const mobileSubRowBase = 'w-full flex items-center justify-between gap-5 py-3 px-4 transition-colors duration-200';
 
   const mobileTopRowClass = (active: boolean) =>
-    `${mobileTopRowBase} ${active ? 'text-primary dark:text-primary-light' : 'text-black/90 dark:text-white/80 hover:bg-black/5 dark:hover:bg-white/5'}`;
+    `${mobileTopRowBase} ${active ? 'text-primary dark:text-primary-light' : 'text-black dark:text-white/80 hover:bg-black/5 hover:text-primary dark:hover:bg-white/5 dark:hover:text-white'}`;
 
   const mobileSubRowClass = (active: boolean) =>
-    `${mobileSubRowBase} ${active ? 'bg-black/5 dark:bg-white/5 text-primary dark:text-primary-light' : 'text-black/80 dark:text-white/70 hover:bg-black/5 dark:hover:bg-white/5'}`;
+    `${mobileSubRowBase} ${active ? 'bg-black/5 dark:bg-white/5 text-primary dark:text-primary-light' : 'text-black/90 dark:text-white/70 hover:bg-black/5 hover:text-primary dark:hover:bg-white/5 dark:hover:text-white'}`;
 
   const indicatorClass = (active: boolean) =>
     `h-6 w-[2px] shrink-0 ${active ? 'bg-primary' : 'bg-transparent'}`;
@@ -228,16 +229,91 @@ const MobileMenuPanel: React.FC<{
   );
 };
 
+// ─── Magnetic Link Component ──────────────────────────────────────────────
+const MagneticLink: React.FC<{
+  children: React.ReactNode;
+  to: string;
+  active: boolean;
+  forceLightText: boolean;
+}> = ({ children, to, active, forceLightText }) => {
+  const linkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    const link = linkRef.current;
+    if (!link) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = link.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      
+      gsap.to(link, {
+        x: x * 0.15,
+        y: y * 0.15,
+        duration: 0.3,
+        ease: 'power2.out'
+      });
+    };
+
+    const handleMouseLeave = () => {
+      gsap.to(link, {
+        x: 0,
+        y: 0,
+        duration: 0.5,
+        ease: 'elastic.out(1, 0.5)'
+      });
+    };
+
+    link.addEventListener('mousemove', handleMouseMove);
+    link.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      link.removeEventListener('mousemove', handleMouseMove);
+      link.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  const baseClass = "relative text-[11px] font-black uppercase tracking-[0.2em] transition-colors after:content-[''] after:absolute after:left-0 after:-bottom-2 after:h-[2px] after:w-full after:bg-current after:origin-left after:scale-x-0 after:transition-transform after:duration-300";
+  const activeClass = active ? 'after:scale-x-100' : 'hover:after:scale-x-100';
+  const colorClass = forceLightText
+    ? active ? 'text-white' : 'text-white/75 hover:text-white'
+    : active ? 'text-primary dark:text-primary-light' : 'text-black/80 dark:text-white/70 hover:text-primary dark:hover:text-white';
+
+  return (
+    <Link ref={linkRef} to={to} className={`${baseClass} ${activeClass} ${colorClass}`}>
+      {children}
+    </Link>
+  );
+};
+
 // ─── Header ──────────────────────────────────────────────────────────────────
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsScrolled(currentScrollY > 20);
+      
+      if (currentScrollY > 100) {
+        if (currentScrollY > lastScrollY.current) {
+          setIsHidden(true);
+        } else {
+          setIsHidden(false);
+        }
+      } else {
+        setIsHidden(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+    
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -259,13 +335,13 @@ const Header: React.FC = () => {
   const desktopNavLinkClass = (active: boolean) =>
     `${desktopNavLinkBase} ${active ? 'after:scale-x-100' : 'hover:after:scale-x-100'} ${forceLightText
       ? active ? 'text-white' : 'text-white/75 hover:text-white'
-      : active ? 'text-primary dark:text-primary-light' : 'text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white'
+      : active ? 'text-primary dark:text-primary-light' : 'text-black/80 dark:text-white/70 hover:text-primary dark:hover:text-white'
     }`;
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${isScrolled
-        ? 'bg-gray-50/80 dark:bg-black/80 backdrop-blur-2xl border-b border-black/5 dark:border-white/5 py-4 lg:py-5'
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isHidden ? '-translate-y-full' : 'translate-y-0'} ${isScrolled
+        ? 'bg-stone-50/80 dark:bg-black/80 backdrop-blur-2xl border-b border-black/5 dark:border-white/5 py-4 lg:py-5'
         : 'bg-transparent py-7 lg:py-9'
       }`}>
         <div className="container mx-auto max-w-7xl px-6 flex items-center justify-between">
@@ -305,7 +381,7 @@ const Header: React.FC = () => {
                               to={sub.path}
                               className={`block px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${isActivePath(sub.path)
                                 ? 'bg-primary text-white'
-                                : 'text-black/80 dark:text-white/80 hover:bg-black/25 dark:hover:bg-white/15'
+                                : 'text-black dark:text-white/80 hover:bg-black/5 hover:text-primary dark:hover:bg-white/10 dark:hover:text-primary-light'
                               }`}
                             >
                               {sub.name}
@@ -316,9 +392,13 @@ const Header: React.FC = () => {
                     )}
                   </>
                 ) : (
-                  <Link to={(item as MenuItem).path} className={desktopNavLinkClass(isActivePath((item as MenuItem).path))}>
+                  <MagneticLink
+                    to={(item as MenuItem).path}
+                    active={isActivePath((item as MenuItem).path)}
+                    forceLightText={forceLightText}
+                  >
                     {item.name}
-                  </Link>
+                  </MagneticLink>
                 )}
               </div>
             ))}

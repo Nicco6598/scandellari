@@ -34,10 +34,75 @@ const tabs = [
   { id: 'infra', label: 'Infrastrutture', path: '/competenze/infrastrutture' },
 ];
 
+// ─── Magnetic CTA Button ────────────────────────────────────────────────────
+const MagneticCTA: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => {
+  const ctaRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    const cta = ctaRef.current;
+    if (!cta) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = cta.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+
+      gsap.to(cta, {
+        x: x * 0.2,
+        y: y * 0.2,
+        duration: 0.3,
+        ease: 'power2.out'
+      });
+    };
+
+    const handleMouseLeave = () => {
+      gsap.to(cta, {
+        x: 0,
+        y: 0,
+        duration: 0.6,
+        ease: 'elastic.out(1, 0.5)'
+      });
+    };
+
+    cta.addEventListener('mousemove', handleMouseMove);
+    cta.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      cta.removeEventListener('mousemove', handleMouseMove);
+      cta.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  return (
+    <Link
+      ref={ctaRef}
+      to={to}
+      className="text-xs font-black uppercase tracking-[0.3em] text-white dark:text-white hover:text-primary dark:hover:text-primary-light transition-colors flex items-center gap-4 group cursor-pointer"
+    >
+      {children}
+    </Link>
+  );
+};
+
 const Hero: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
+
+  // Background breath animation
+  useEffect(() => {
+    if (!bgRef.current) return;
+    
+    const tl = gsap.timeline({ repeat: -1, yoyo: true });
+    tl.to(bgRef.current, {
+      scale: 1.05,
+      duration: 8,
+      ease: 'sine.inOut'
+    });
+    
+    return () => { tl.kill(); };
+  }, []);
 
   // Preload first hero image for faster LCP (mobile-aware)
   useEffect(() => {
@@ -79,9 +144,9 @@ const Hero: React.FC = () => {
   const titleLines = ["Ingegneria", "Ferroviaria"];
 
   return (
-    <section className="relative w-full h-[100vh] flex flex-col items-center bg-gray-50 dark:bg-dark font-sans overflow-hidden">
+    <section className="relative w-full h-[100vh] flex flex-col items-center bg-stone-50 dark:bg-dark font-sans overflow-hidden">
       {/* Background Slideshow - Full Screen for impact */}
-      <div className="absolute inset-0 z-0 bg-black">
+      <div ref={bgRef} className="absolute inset-0 z-0 bg-black scale-100">
         <div className="absolute inset-0">
           {heroImages.map(({ src, mobileSrc }, i) => (
             <img
@@ -153,15 +218,12 @@ const Hero: React.FC = () => {
                   />
                 ))}
               </div>
-              <Link
-                to="/progetti"
-                className="text-xs font-black uppercase tracking-[0.3em] text-white dark:text-white hover:text-primary dark:hover:text-primary-light transition-colors flex items-center gap-4 group"
-              >
+              <MagneticCTA to="/progetti">
                 Esplora i Progetti
                 <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-primary transition-colors">
                   <div className="w-1.5 h-1.5 bg-white group-hover:bg-primary rounded-full" />
                 </div>
-              </Link>
+              </MagneticCTA>
             </div>
           </div>
         </div>

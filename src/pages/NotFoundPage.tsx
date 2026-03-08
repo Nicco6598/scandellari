@@ -15,7 +15,7 @@ const NotFoundPage: React.FC = () => {
                 description="La pagina che stai cercando non esiste o è stata spostata."
                 url="/404"
             />
-            <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans flex items-center">
+            <div className="bg-stone-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans flex items-center">
                 <div className="container mx-auto max-w-7xl px-6">
                     <div
                         className="text-center max-w-3xl mx-auto"

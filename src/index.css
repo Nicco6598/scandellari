@@ -10,7 +10,7 @@
   }
 
   body {
-    @apply bg-gray-50 text-text-primary font-sans dark:bg-dark dark:text-white transition-colors duration-300 overflow-x-hidden;
+    @apply bg-stone-50 text-text-primary font-sans dark:bg-dark dark:text-white transition-colors duration-300 overflow-x-hidden;
   }
 
   /* Cursore nativo nascosto su dispositivi pointer:fine (mouse), lasciato su touch */

@@ -75,7 +75,7 @@ const OfferteLavoroPage: React.FC = () => {
 
   return (
     <AdminLayout title="Gestione Offerte">
-      <div className="px-4 sm:px-6 lg:px-8 py-8 bg-gray-50 dark:bg-black min-h-screen">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 bg-stone-50 dark:bg-black min-h-screen">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-black/5 dark:border-white/5">
           <h1 className="text-2xl font-black uppercase tracking-tight text-black dark:text-white">Gestione Offerte</h1>

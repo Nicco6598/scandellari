@@ -10,7 +10,7 @@ import {
 const CookiePolicyPage: React.FC = () => {
   return (
     <Layout>
-      <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
+      <div className="bg-stone-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
         {/* Hero Section */}
         <section className="container mx-auto max-w-7xl px-6 mb-32">
           <div

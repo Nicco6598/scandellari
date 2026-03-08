@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
 import SEO from '../components/utils/SEO';
@@ -7,6 +7,7 @@ import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
 import { useForm } from 'react-hook-form';
 import { useTheme } from '../context/ThemeContext';
 import { zodResolver } from '@hookform/resolvers/zod';
+import gsap from 'gsap';
 import * as z from 'zod';
 import {
     MapPinIcon,
@@ -31,6 +32,40 @@ const contactSchema = z.object({
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
+
+// ─── Magnetic Link Component ──────────────────────────────────────────────────
+const MagneticLink: React.FC<{ href: string; children: React.ReactNode; className?: string }> = ({ href, children, className = '' }) => {
+    const linkRef = useRef<HTMLAnchorElement>(null);
+
+    useEffect(() => {
+        const link = linkRef.current;
+        if (!link) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const rect = link.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            gsap.to(link, { x: x * 0.1, y: y * 0.1, duration: 0.2, ease: 'power2.out' });
+        };
+
+        const handleMouseLeave = () => {
+            gsap.to(link, { x: 0, y: 0, duration: 0.4, ease: 'elastic.out(1, 0.5)' });
+        };
+
+        link.addEventListener('mousemove', handleMouseMove);
+        link.addEventListener('mouseleave', handleMouseLeave);
+        return () => {
+            link.removeEventListener('mousemove', handleMouseMove);
+            link.removeEventListener('mouseleave', handleMouseLeave);
+        };
+    }, []);
+
+    return (
+        <a ref={linkRef} href={href} className={className}>
+            {children}
+        </a>
+    );
+};
 
 const ContactPage: React.FC = () => {
     const { theme } = useTheme();
@@ -117,11 +152,11 @@ const ContactPage: React.FC = () => {
                 keywords="contatti scandellari, preventivo segnalamento, consulenza ferroviaria, Treviglio, Via Roggia Vignola"
                 url="/contatti"
             />
-            <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
+            <div className="bg-stone-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
                 {/* Hero Section */}
                 <section className="container mx-auto max-w-7xl px-6 mb-32">
                     <div
-                        className="border-b border-black/5 dark:border-white/5 pb-20"
+                        className="border-b border-black/10 dark:border-white/5 pb-20"
                         data-animate="fade-up"
                         data-animate-distance="20"
                     >
@@ -154,20 +189,20 @@ const ContactPage: React.FC = () => {
                                 <div className="group">
                                     <div className="text-xs font-black uppercase tracking-widest text-primary mb-4">Recapiti</div>
                                     <div className="space-y-4">
-                                        <a href="tel:+390363303506" className="flex items-center gap-4 text-xl font-black hover:text-primary transition-colors">
+                                        <MagneticLink href="tel:+390363303506" className="flex items-center gap-4 text-xl font-black hover:text-primary transition-colors">
                                             <PhoneIcon className="w-5 h-5" />
                                             +39 0363 303 506
-                                        </a>
-                                        <a href="mailto:info@scandellarigiacintosnc.it" className="flex items-center gap-4 text-xl font-black hover:text-primary transition-colors">
+                                        </MagneticLink>
+                                        <MagneticLink href="mailto:info@scandellarigiacintosnc.it" className="flex items-center gap-4 text-xl font-black hover:text-primary transition-colors">
                                             <EnvelopeIcon className="w-5 h-5" />
                                             info@scandellarigiacintosnc.it
-                                        </a>
+                                        </MagneticLink>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Map */}
-                            <div className="aspect-square bg-black/5 dark:bg-dark-surface border border-black/5 dark:border-white/5 overflow-hidden group hover:border-primary/30 transition-all relative">
+                            <div className="aspect-square bg-black/8 dark:bg-dark-surface border border-black/10 dark:border-white/5 overflow-hidden group hover:border-primary/30 transition-all relative">
                                 <Map
                                     {...viewState}
                                     onMove={evt => setViewState(evt.viewState)}
@@ -199,7 +234,7 @@ const ContactPage: React.FC = () => {
                                         closeButton={false}
                                         className="maplibre-popup-custom"
                                     >
-                                        <div className="p-4 min-w-[180px] bg-white dark:bg-dark-surface border border-black/5 dark:border-white/10 shadow-xl">
+                                        <div className="p-4 min-w-[180px] bg-white dark:bg-dark-surface border border-black/10 dark:border-white/10 shadow-xl">
                                             <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">Sede Operativa</span>
                                             <h4 className="font-black uppercase text-xs tracking-tight text-black dark:text-white">Scandellari Giacinto s.n.c.</h4>
                                         </div>
@@ -245,7 +280,7 @@ const ContactPage: React.FC = () => {
                             ) : (
                                 <form
                                     onSubmit={handleSubmit(onSubmit)}
-                                    className="space-y-px bg-gradient-to-br from-black/5 via-black/5 to-primary/5 dark:from-white/5 dark:via-white/5 dark:to-primary/10 border border-black/5 dark:border-white/5 animate-fade-in"
+                                    className="space-y-px bg-gradient-to-br from-black/8 via-black/8 to-primary/5 dark:from-white/5 dark:via-white/5 dark:to-primary/10 border border-black/10 dark:border-white/5 animate-fade-in"
                                 >
                                         {[
                                             { id: 'name', label: 'Nome e Cognome', type: 'text' },
@@ -253,10 +288,10 @@ const ContactPage: React.FC = () => {
                                             { id: 'phone', label: 'Telefono', type: 'tel' },
                                             { id: 'subject', label: 'Oggetto', type: 'text' }
                                         ].map((field) => (
-                                            <div key={field.id} className="bg-white dark:bg-black p-8 group border-b border-black/5 dark:border-white/10 hover:bg-gray-50/50 dark:hover:bg-dark-surface focus-within:bg-gray-50 dark:focus-within:bg-dark-surface transition-all duration-300">
+                                            <div key={field.id} className="bg-white dark:bg-black p-8 group border-b border-black/10 dark:border-white/10 hover:bg-stone-50/50 dark:hover:bg-dark-surface focus-within:bg-stone-50 dark:focus-within:bg-dark-surface transition-all duration-300">
                                                 <label
                                                     htmlFor={field.id}
-                                                    className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors[field.id as keyof ContactFormData] ? 'text-red-500' : 'text-black/60 dark:text-white/60'}`}
+                                                    className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors[field.id as keyof ContactFormData] ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}
                                                 >
                                                     {field.label}
                                                 </label>
@@ -264,7 +299,7 @@ const ContactPage: React.FC = () => {
                                                     id={field.id}
                                                     type={field.type}
                                                     {...register(field.id as keyof ContactFormData)}
-                                                    className={`w-full bg-transparent border-b pb-2 text-black dark:text-white font-black text-lg focus:ring-0 placeholder-black/30 dark:placeholder-white/30 transition-colors ${errors[field.id as keyof ContactFormData] ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
+                                                    className={`w-full bg-transparent border-b pb-2 text-black dark:text-white font-black text-lg focus:ring-0 placeholder-black/40 dark:placeholder-white/30 transition-colors ${errors[field.id as keyof ContactFormData] ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
                                                 />
                                                 {errors[field.id as keyof ContactFormData] && (
                                                     <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2">
@@ -273,10 +308,10 @@ const ContactPage: React.FC = () => {
                                                 )}
                                             </div>
                                         ))}
-                                        <div className="bg-white dark:bg-black p-8 group hover:bg-gray-50/50 dark:hover:bg-dark-surface focus-within:bg-gray-50 dark:focus-within:bg-dark-surface transition-all duration-300">
+                                        <div className="bg-white dark:bg-black p-8 group hover:bg-stone-50/50 dark:hover:bg-dark-surface focus-within:bg-stone-50 dark:focus-within:bg-dark-surface transition-all duration-300">
                                             <label
                                                 htmlFor="message"
-                                                className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors.message ? 'text-red-500' : 'text-black/60 dark:text-white/60'}`}
+                                                className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors.message ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}
                                             >
                                                 Messaggio
                                             </label>
@@ -284,7 +319,7 @@ const ContactPage: React.FC = () => {
                                                 id="message"
                                                 rows={5}
                                                 {...register('message')}
-                                                className={`w-full bg-transparent border-b pb-2 text-black dark:text-white font-black text-lg focus:ring-0 resize-none placeholder-black/30 dark:placeholder-white/30 transition-colors ${errors.message ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
+                                                className={`w-full bg-transparent border-b pb-2 text-black dark:text-white font-black text-lg focus:ring-0 resize-none placeholder-black/40 dark:placeholder-white/30 transition-colors ${errors.message ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
                                             />
                                             {errors.message && (
                                                 <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2">

@@ -104,13 +104,7 @@ const CertificationsPage: React.FC = () => {
     const isPolitica = selectedCertification?.id === POLITICA_ID;
     const isMultiPage = numPages !== null && numPages > 1;
 
-    if (loading) return (
-        <Layout>
-            <div className="min-h-screen bg-gray-50 dark:bg-black pt-40 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent animate-spin" />
-            </div>
-        </Layout>
-    );
+    if (loading) return null;
 
     return (
         <Layout>
@@ -120,11 +114,11 @@ const CertificationsPage: React.FC = () => {
                 keywords="certificazioni ISO, ISO 9001, ISO 14001, ISO 45001, qualità, sicurezza, ambiente, sistema integrato"
                 url="/certificazioni"
             />
-            <div className="bg-gray-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
+            <div className="bg-stone-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
 
                 {/* Hero */}
                 <section className="container mx-auto max-w-7xl px-6 mb-32">
-                    <div className="border-b border-black/5 dark:border-white/5 pb-20" data-animate="fade-up" data-animate-distance="20">
+                    <div className="border-b border-black/10 dark:border-white/5 pb-20" data-animate="fade-up" data-animate-distance="20">
                         <div className="flex items-center gap-4 mb-12">
                             <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
                             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
@@ -144,7 +138,7 @@ const CertificationsPage: React.FC = () => {
                                 <div className="text-7xl md:text-8xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums select-none">
                                     <AnimatedCounter to={certifications.length} duration={1200} />
                                 </div>
-                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30 dark:text-white/30 mt-1">
+                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/50 dark:text-white/30 mt-1">
                                     Certificazioni
                                 </div>
                             </div>
@@ -164,7 +158,7 @@ const CertificationsPage: React.FC = () => {
                                     { icon: SparklesIcon, title: "Assetto Ambientale", desc: "Riduzione dell'impatto ambientale in ogni fase di cantiere." }
                                 ].map((item, i) => (
                                     <div key={i} className="flex gap-6 items-start group" data-animate="fade-up" data-animate-delay={(i * 0.04).toFixed(2)}>
-                                        <div className="w-12 h-12 bg-black/5 dark:bg-dark-surface border border-black/5 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:border-primary transition-all">
+                                        <div className="w-12 h-12 bg-black/8 dark:bg-dark-surface border border-black/10 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:border-primary transition-all">
                                             <item.icon className="w-6 h-6 group-hover:text-white transition-colors" />
                                         </div>
                                         <div>
@@ -206,7 +200,7 @@ const CertificationsPage: React.FC = () => {
                                     <button
                                         key={cat}
                                         onClick={() => setActiveCategory(cat)}
-                                        className={`px-6 py-3 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCategory === cat ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/60 dark:text-white/40'}`}
+                                        className={`px-6 py-3 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCategory === cat ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/70 dark:text-white/40'}` }
                                     >
                                         {cat === 'all' ? 'Tutte' : cat}
                                     </button>
@@ -226,12 +220,12 @@ const CertificationsPage: React.FC = () => {
                         {filteredCertifications.map((cert, index) => (
                             <div
                                 key={cert.id}
-                                className="bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 flex flex-col h-full hover:border-primary/30 transition-all duration-500 group overflow-hidden relative"
+                                className="bg-white dark:bg-dark-surface border border-black/10 dark:border-white/5 flex flex-col h-full hover:border-primary/30 transition-all duration-500 group overflow-hidden relative"
                                 data-animate="fade-up"
                                 data-animate-delay={(index * 0.03).toFixed(2)}
                             >
                                 <div
-                                    className="relative overflow-hidden cursor-pointer aspect-[3/2] bg-black/5 dark:bg-black/40 border-b border-black/5 dark:border-white/5"
+                                    className="relative overflow-hidden cursor-pointer aspect-[3/2] bg-black/8 dark:bg-black/40 border-b border-black/10 dark:border-white/5"
                                     onClick={() => openCertification(cert)}
                                 >
                                     <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105 origin-top">
@@ -251,11 +245,11 @@ const CertificationsPage: React.FC = () => {
                                     </span>
                                     <div className="text-[9px] font-black uppercase tracking-[0.35em] text-primary mb-3">{cert.category}</div>
                                     <h3 className="text-xl font-black text-black dark:text-white mb-3 tracking-tighter leading-tight group-hover:text-primary transition-colors duration-300">{cert.title}</h3>
-                                    <p className="text-xs text-black/50 dark:text-white/40 font-medium mb-5 leading-relaxed line-clamp-2">{cert.description}</p>
-                                    <div className="mt-auto pt-6 border-t border-black/5 dark:border-white/5 space-y-4">
+                                    <p className="text-xs text-black/60 dark:text-white/40 font-medium mb-5 leading-relaxed line-clamp-2">{cert.description}</p>
+                                    <div className="mt-auto pt-6 border-t border-black/10 dark:border-white/5 space-y-4">
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
-                                                <div className="text-[9px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 mb-0.5">Ente</div>
+                                                <div className="text-[9px] font-black uppercase tracking-[0.3em] text-black/50 dark:text-white/30 mb-0.5">Ente</div>
                                                 <div className="text-xs font-bold text-black/70 dark:text-white/60 leading-tight">{cert.issuer}</div>
                                             </div>
                                             <div className="text-right shrink-0">
@@ -281,9 +275,9 @@ const CertificationsPage: React.FC = () => {
                 {selectedCertification && (
                     <div className="fixed inset-0 z-[100] bg-white dark:bg-black flex flex-col">
                         {/* Header */}
-                        <div className="flex justify-between items-center p-6 md:p-8 border-b border-black/5 dark:border-white/5 shrink-0">
+                        <div className="flex justify-between items-center p-6 md:p-8 border-b border-black/10 dark:border-white/5 shrink-0">
                             <div className="flex-1 min-w-0 mr-4">
-                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/40 dark:text-white/40 mb-2">
+                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 mb-2">
                                     {selectedCertification.category}
                                 </div>
                                 <h3 className="text-lg md:text-xl font-black uppercase tracking-tight text-black dark:text-white truncate">
@@ -294,7 +288,7 @@ const CertificationsPage: React.FC = () => {
                                 {isPolitica && (
                                     <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-black/10 dark:border-white/10">
                                         <ShieldCheckIcon className="w-3.5 h-3.5 text-primary" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-black/40 dark:text-white/40">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/40">
                                             Solo visualizzazione
                                         </span>
                                     </div>
@@ -302,11 +296,11 @@ const CertificationsPage: React.FC = () => {
                                 {/* Hint sfoglia se multi pagina */}
                                 {isMultiPage && (
                                     <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-black/10 dark:border-white/10">
-                                        <ArrowLeftIcon className="w-3 h-3 text-black/30 dark:text-white/30" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-black/30 dark:text-white/30">
+                                        <ArrowLeftIcon className="w-3 h-3 text-black/50 dark:text-white/30" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-black/50 dark:text-white/30">
                                             Scorri o trascina
                                         </span>
-                                        <ArrowRightIcon className="w-3 h-3 text-black/30 dark:text-white/30" />
+                                        <ArrowRightIcon className="w-3 h-3 text-black/50 dark:text-white/30" />
                                     </div>
                                 )}
                                 <button
@@ -320,7 +314,7 @@ const CertificationsPage: React.FC = () => {
                         </div>
 
                         {/* PDF Viewer */}
-                        <div className="flex-1 overflow-auto bg-gray-50 dark:bg-zinc-950 flex items-center justify-center p-4 md:p-8 min-h-0">
+                        <div className="flex-1 overflow-auto bg-stone-50 dark:bg-zinc-950 flex items-center justify-center p-4 md:p-8 min-h-0">
                             <Suspense fallback={
                                 <div className="flex items-center justify-center w-full h-full">
                                     <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent animate-spin" />
@@ -339,7 +333,7 @@ const CertificationsPage: React.FC = () => {
                         </div>
 
                         {/* Footer controls */}
-                        <div className="p-6 md:p-8 border-t border-black/5 dark:border-white/5 bg-gray-50 dark:bg-black shrink-0">
+                        <div className="p-6 md:p-8 border-t border-black/10 dark:border-white/5 bg-stone-50 dark:bg-black shrink-0">
                             <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
                                 {/* Navigazione pagine */}
                                 <div className="flex items-center gap-4">
@@ -386,7 +380,7 @@ const CertificationsPage: React.FC = () => {
 
                                     {!isPolitica && (
                                         <>
-                                            <div className="w-px h-8 bg-black/10 dark:bg-white/10 mx-2" />
+                                            <div className="w-px h-8 bg-black/20 dark:bg-white/10 mx-2" />
                                             <a
                                                 href={selectedCertification.pdfUrl}
                                                 target="_blank"
@@ -406,7 +400,7 @@ const CertificationsPage: React.FC = () => {
 
                 {/* Mobile Filter Modal */}
                 <div
-                    className={`fixed inset-0 z-[100] bg-gray-50 dark:bg-black p-6 flex flex-col transition-opacity duration-300 ${showMobileFilters ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    className={`fixed inset-0 z-[100] bg-stone-50 dark:bg-black p-6 flex flex-col transition-opacity duration-300 ${showMobileFilters ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                     aria-hidden={!showMobileFilters}
                 >
                     <div className="flex justify-between items-center mb-12">
@@ -418,7 +412,7 @@ const CertificationsPage: React.FC = () => {
                     <div className="flex-grow flex flex-col gap-8">
                         <button
                             onClick={() => { setActiveCategory('all'); setShowMobileFilters(false); }}
-                            className={`text-xl font-black uppercase tracking-wider text-left pb-6 border-b border-black/10 dark:border-white/10 ${activeCategory === 'all' ? 'text-accent' : 'text-black/30 dark:text-white/20'}`}
+                            className={`text-xl font-black uppercase tracking-wider text-left pb-6 border-b border-black/10 dark:border-white/10 ${activeCategory === 'all' ? 'text-accent' : 'text-black/50 dark:text-white/20'}`}
                         >
                             Tutte le Certificazioni
                         </button>
@@ -426,7 +420,7 @@ const CertificationsPage: React.FC = () => {
                             <button
                                 key={cat}
                                 onClick={() => { setActiveCategory(cat); setShowMobileFilters(false); }}
-                                className={`text-3xl font-black tracking-tighter text-left ${activeCategory === cat ? 'text-primary' : 'text-black/20 dark:text-white/10'}`}
+                                className={`text-3xl font-black tracking-tighter text-left ${activeCategory === cat ? 'text-primary' : 'text-black/50 dark:text-white/10'}`}
                             >
                                 {cat.charAt(0).toUpperCase() + cat.slice(1)}
                             </button>

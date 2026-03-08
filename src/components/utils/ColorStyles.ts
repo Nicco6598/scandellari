@@ -25,7 +25,7 @@ export const inactiveElementClasses = "bg-gray-100 dark:bg-dark-accent hover:bg-
 export const mainBgClasses = "bg-white dark:bg-dark";
 
 // Sfondo secondario chiaro/scuro (per card, sezioni alternate)
-export const secondaryBgClasses = "bg-gray-50 dark:bg-dark-surface";
+export const secondaryBgClasses = "bg-stone-50 dark:bg-dark-surface";
 
 // Testo primario
 export const primaryTextClasses = "text-text-primary dark:text-white";

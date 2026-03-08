@@ -142,7 +142,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-black relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-stone-50 dark:bg-black relative overflow-hidden">
       {/* Theme toggle */}
       <div className="absolute top-4 right-4 z-50">
         <button

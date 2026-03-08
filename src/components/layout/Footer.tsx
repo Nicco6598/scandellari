@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import gsap from 'gsap';
 
 // Importa loghi azienda
 import logoBlu from '../../assets/images/LogoBlu.svg';
@@ -13,9 +14,53 @@ import logoIso9001 from '../../assets/images/aid-iso-9001.webp';
 import logoIso45001 from '../../assets/images/aid-iso-45001.webp';
 
 // Importa Icone Heroicons necessarie
-import { MapPinIcon, EnvelopeIcon, PhoneIcon, ArrowRightIcon, MapIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 
-// Rimossa importazione react-icons: import { FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+// ─── Magnetic Footer Link ──────────────────────────────────────────────────
+const MagneticLink: React.FC<{ to: string; children: React.ReactNode; className?: string }> = ({ to, children, className = '' }) => {
+  const linkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    const link = linkRef.current;
+    if (!link) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = link.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+
+      gsap.to(link, {
+        x: x * 0.1,
+        y: y * 0.1,
+        duration: 0.2,
+        ease: 'power2.out'
+      });
+    };
+
+    const handleMouseLeave = () => {
+      gsap.to(link, {
+        x: 0,
+        y: 0,
+        duration: 0.4,
+        ease: 'elastic.out(1, 0.5)'
+      });
+    };
+
+    link.addEventListener('mousemove', handleMouseMove);
+    link.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      link.removeEventListener('mousemove', handleMouseMove);
+      link.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  return (
+    <Link ref={linkRef} to={to} className={className}>
+      {children}
+    </Link>
+  );
+};
 
 const Footer: React.FC = () => {
     const currentYear = new Date().getFullYear();
@@ -75,17 +120,17 @@ const Footer: React.FC = () => {
 
                     {/* Navigation Column */}
                     <div className="lg:col-span-3 space-y-8">
-                        <h4 className="text-xs font-black uppercase tracking-[0.3em] text-black/70 dark:text-white/60">Navigazione</h4>
+                        <h4 className="text-xs font-black uppercase tracking-[0.3em] text-black/50 dark:text-white/60">Navigazione</h4>
                         <ul className="space-y-4" data-animate-stagger>
                             {footerLinks.map((link) => (
                                 <li key={link.name}>
-                                    <Link
+                                    <MagneticLink
                                         to={link.path}
                                         className="text-xl font-bold text-black dark:text-white hover:text-primary transition-colors font-heading tracking-tight group inline-flex items-center gap-2"
                                     >
                                         {link.name}
                                         <ArrowTopRightOnSquareIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1 group-hover:-translate-y-1" />
-                                    </Link>
+                                    </MagneticLink>
                                 </li>
                             ))}
                         </ul>
@@ -121,20 +166,20 @@ const Footer: React.FC = () => {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="pt-12 border-t border-gray-100 dark:border-gray-900 flex flex-col md:flex-row justify-between items-center gap-8">
-                    <p className="text-xs font-bold text-black/70 dark:text-white/60 uppercase tracking-widest">
+                <div className="pt-12 border-t border-gray-300 dark:border-gray-900 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <p className="text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-widest">
                         © {currentYear} Scandellari Giacinto s.n.c. Tutti i diritti riservati.
                     </p>
                     <div className="flex gap-8">
                         {legalLinks.map((link) => (
-                            <Link
+                            <MagneticLink
                                 key={link.name}
                                 to={link.path}
-                                className="text-xs font-bold text-black/70 dark:text-white/60 uppercase tracking-widest hover:text-primary transition-colors group inline-flex items-center gap-1.5"
+                                className="text-xs font-bold text-black/60 dark:text-white/60 uppercase tracking-widest hover:text-primary transition-colors group inline-flex items-center gap-1.5"
                             >
                                 {link.name}
                                 <ArrowTopRightOnSquareIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                            </Link>
+                            </MagneticLink>
                         ))}
                     </div>
                 </div>
