@@ -5,6 +5,7 @@ import { progettiService } from '../../supabase/services';
 import { logger } from '../../utils/logger';
 import { ProgettoData } from '../../types/supabaseTypes';
 import gsap from 'gsap';
+import LoadingState from '../utils/LoadingState';
 
 const ProjectCard: React.FC<{ project: ProgettoData; index: number }> = ({ project, index }) => {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -125,7 +126,15 @@ const Projects: React.FC = () => {
     fetchProjects();
   }, []);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <LoadingState
+        variant="section"
+        label="Progetti"
+        description="Stiamo caricando i lavori più rappresentativi."
+      />
+    );
+  }
 
   return (
     <section id="projects" className="py-24 md:py-48 bg-stone-50 dark:bg-black overflow-hidden">

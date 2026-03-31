@@ -7,6 +7,7 @@ import { CompetenzaData, ProgettoData } from '../types/supabaseTypes';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import SEO from '../components/utils/SEO';
+import LoadingState from '../components/utils/LoadingState';
 import {
     WrenchScrewdriverIcon,
     FunnelIcon,
@@ -59,7 +60,16 @@ const CompetenzePage: React.FC = () => {
         setShowMobileFilters(false);
     };
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <Layout>
+                <LoadingState
+                    label="Competenze"
+                    description="Stiamo caricando competenze tecniche e progetti correlati."
+                />
+            </Layout>
+        );
+    }
 
     return (
         <Layout>

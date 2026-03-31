@@ -22,6 +22,7 @@ import {
 } from '@heroicons/react/24/outline';
 import PDFThumbnail from '../components/utils/PDFThumbnail';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
+import LoadingState from '../components/utils/LoadingState';
 
 const LazyPDFViewer = React.lazy(() => import('./LazyPDFViewer'));
 
@@ -104,7 +105,16 @@ const CertificationsPage: React.FC = () => {
     const isPolitica = selectedCertification?.id === POLITICA_ID;
     const isMultiPage = numPages !== null && numPages > 1;
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <Layout>
+                <LoadingState
+                    label="Certificazioni"
+                    description="Stiamo preparando la documentazione certificata."
+                />
+            </Layout>
+        );
+    }
 
     return (
         <Layout>

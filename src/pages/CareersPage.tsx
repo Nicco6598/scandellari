@@ -17,6 +17,7 @@ import {
   BriefcaseIcon
 } from '@heroicons/react/24/outline';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
+import LoadingState from '../components/utils/LoadingState';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = [
@@ -267,7 +268,16 @@ const CareersPage: React.FC = () => {
     setExpandedJobId(null);
   }, [filterDipartimento, filterTipo, filterSede]);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <Layout>
+        <LoadingState
+          label="Lavora con noi"
+          description="Stiamo caricando le posizioni aperte disponibili."
+        />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

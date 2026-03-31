@@ -5,6 +5,7 @@ import { logger } from '../../utils/logger';
 import { CompetenzaData } from '../../types/supabaseTypes';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import gsap from 'gsap';
+import LoadingState from '../utils/LoadingState';
 
 // ─── Service Card with Micro-interactions ──────────────────────────────────
 const ServiceCard: React.FC<{ service: CompetenzaData; index: number }> = ({ service, index }) => {
@@ -125,7 +126,15 @@ const Services: React.FC = () => {
     fetchServices();
   }, []);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <LoadingState
+        variant="section"
+        label="Ambiti d'azione"
+        description="Stiamo caricando le competenze in evidenza."
+      />
+    );
+  }
 
   return (
     <section id="services" className="py-24 md:py-48 bg-stone-50 dark:bg-black">

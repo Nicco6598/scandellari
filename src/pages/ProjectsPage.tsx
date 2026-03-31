@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import SEO from '../components/utils/SEO';
+import LoadingState from '../components/utils/LoadingState';
 
 interface Coordinate { lat: number; lng: number; }
 type ProjectCoordinates = { points: Coordinate[]; route?: Coordinate[]; error?: string; };
@@ -362,7 +363,16 @@ const ProjectsPage: React.FC = () => {
     // Mostra mappa appena almeno un marker è disponibile, anche se il geocoding non è finito
     const hasAnyCoords = groupedMarkers.length > 0;
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <Layout>
+                <LoadingState
+                    label="Progetti"
+                    description="Stiamo caricando portfolio, filtri e mappa dei cantieri."
+                />
+            </Layout>
+        );
+    }
 
     return (
         <Layout>

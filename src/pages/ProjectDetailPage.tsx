@@ -15,6 +15,7 @@ import {
     ArrowRightIcon,
     PhotoIcon,
 } from '@heroicons/react/24/outline';
+import LoadingState from '../components/utils/LoadingState';
 
 interface Coordinate { lat: number; lng: number; }
 
@@ -163,12 +164,21 @@ const ProjectDetailPage: React.FC = () => {
         setIsLightboxOpen(true);
     };
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <Layout>
+                <LoadingState
+                    label="Dettaglio progetto"
+                    description="Stiamo caricando contenuti, immagini e localizzazione del progetto."
+                />
+            </Layout>
+        );
+    }
 
     if (!progetto) return (
         <Layout>
             <div className="min-h-screen bg-stone-50 dark:bg-black pt-40 container mx-auto max-w-7xl px-6 text-center">
-                <h1 className="text-2xl font-black uppercase">Progetto non trovato</h1>
+                <h1 className="text-2xl font-black uppercase">{error || 'Progetto non trovato'}</h1>
                 <Link to="/progetti" className="text-primary mt-8 inline-block font-bold">Torna alla lista</Link>
             </div>
         </Layout>

@@ -1,10 +1,32 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { logger } from '../../utils/logger';
+import {
+    COOKIE_CONSENT_CHANGED_EVENT,
+    hasAnalyticsConsent,
+    readCookieConsent,
+} from '../../utils/cookieConsent';
 
 // Google Analytics 4 Measurement ID
 // Replace with your actual GA4 Measurement ID (format: G-XXXXXXXXXX)
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || '';
+const GTAG_SCRIPT_ID = 'ga4-script';
+let gaInitialized = false;
+
+const updateAnalyticsConsent = (granted: boolean) => {
+    if (!GA_MEASUREMENT_ID || typeof window === 'undefined') return;
+
+    (window as any)[`ga-disable-${GA_MEASUREMENT_ID}`] = !granted;
+
+    if (typeof window.gtag === 'function') {
+        window.gtag('consent', 'update', {
+            analytics_storage: granted ? 'granted' : 'denied',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied'
+        });
+    }
+};
 
 // Initialize Google Analytics
 export const initGA = () => {
@@ -13,25 +35,42 @@ export const initGA = () => {
         return;
     }
 
+    updateAnalyticsConsent(true);
+    if (gaInitialized) return;
+
     // Load gtag.js script after critical render
-    const script = document.createElement('script');
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+    if (!document.getElementById(GTAG_SCRIPT_ID)) {
+        const script = document.createElement('script');
+        script.id = GTAG_SCRIPT_ID;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    }
 
     // Initialize dataLayer
     window.dataLayer = window.dataLayer || [];
     function gtag(...args: any[]) {
         window.dataLayer.push(args);
     }
-    gtag('js', new Date());
-    gtag('config', GA_MEASUREMENT_ID, {
+
+    window.gtag = gtag;
+    window.gtag('js', new Date());
+    window.gtag('consent', 'default', {
+        analytics_storage: 'granted',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied'
+    });
+    window.gtag('config', GA_MEASUREMENT_ID, {
         send_page_view: false // We'll send page views manually
     });
 
-    // Make gtag available globally
-    (window as any).gtag = gtag;
+    gaInitialized = true;
+};
+
+export const disableGA = () => {
+    updateAnalyticsConsent(false);
 };
 
 // Track page view
@@ -112,16 +151,39 @@ export const trackCertificationView = (certificationTitle: string) => {
 // React component to track page views automatically
 const Analytics: React.FC = () => {
     const location = useLocation();
+    const [analyticsEnabled, setAnalyticsEnabled] = useState<boolean>(() =>
+        hasAnalyticsConsent(readCookieConsent())
+    );
 
     useEffect(() => {
-        // Initialize GA on mount
-        initGA();
+        const syncConsent = () => {
+            setAnalyticsEnabled(hasAnalyticsConsent(readCookieConsent()));
+        };
+
+        syncConsent();
+        window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, syncConsent);
+        window.addEventListener('storage', syncConsent);
+
+        return () => {
+            window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, syncConsent);
+            window.removeEventListener('storage', syncConsent);
+        };
     }, []);
 
     useEffect(() => {
-        // Track page view on route change
+        if (analyticsEnabled) {
+            initGA();
+            return;
+        }
+
+        disableGA();
+    }, [analyticsEnabled]);
+
+    useEffect(() => {
+        if (!analyticsEnabled) return;
+
         trackPageView(location.pathname + location.search);
-    }, [location]);
+    }, [analyticsEnabled, location.pathname, location.search]);
 
     return null;
 };
@@ -131,6 +193,7 @@ export default Analytics;
 // TypeScript declarations
 declare global {
     interface Window {
+        [key: `ga-disable-${string}`]: boolean | undefined;
         dataLayer: any[];
         gtag?: (...args: any[]) => void;
     }

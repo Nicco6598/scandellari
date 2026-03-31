@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
+import { readCookieConsent, writeCookieConsent } from '../../utils/cookieConsent';
 
 const CookieBanner: React.FC = () => {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
-    const cookiesAccepted = localStorage.getItem('cookiesAccepted');
+    const cookiesAccepted = readCookieConsent();
     if (!cookiesAccepted) {
       const timer = setTimeout(() => {
         setShowBanner(true);
@@ -17,12 +18,12 @@ const CookieBanner: React.FC = () => {
   }, []);
 
   const acceptCookies = () => {
-    localStorage.setItem('cookiesAccepted', 'true');
+    writeCookieConsent('true');
     setShowBanner(false);
   };
 
   const declineCookies = () => {
-    localStorage.setItem('cookiesAccepted', 'minimal');
+    writeCookieConsent('minimal');
     setShowBanner(false);
   };
 
@@ -45,7 +46,7 @@ const CookieBanner: React.FC = () => {
                   </h3>
                 </div>
                 <p className="text-sm font-medium text-black/70 dark:text-white/60 leading-relaxed max-w-2xl">
-                  Questo sito utilizza cookie tecnici e analitici per migliorare la tua esperienza di navigazione.
+                  Questo sito utilizza cookie tecnici e, previo consenso, cookie analitici per migliorare la tua esperienza di navigazione.
                   {' '}
                   <Link
                     to="/cookie-policy"
