@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { logger } from '../../utils/logger';
 import {
-    COOKIE_CONSENT_CHANGED_EVENT,
     hasAnalyticsConsent,
-    readCookieConsent,
+    useCookieConsent,
 } from '../../utils/cookieConsent';
 
 // Google Analytics 4 Measurement ID
@@ -13,19 +12,28 @@ const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || '';
 const GTAG_SCRIPT_ID = 'ga4-script';
 let gaInitialized = false;
 
+type AnalyticsParams = {
+    category?: string;
+    label?: string;
+    value?: number;
+    [key: string]: unknown;
+};
+
+type Gtag = (command: string, ...args: unknown[]) => void;
+
+const getGtag = (): Gtag | undefined => window.gtag;
+
 const updateAnalyticsConsent = (granted: boolean) => {
     if (!GA_MEASUREMENT_ID || typeof window === 'undefined') return;
 
-    (window as any)[`ga-disable-${GA_MEASUREMENT_ID}`] = !granted;
+    window[`ga-disable-${GA_MEASUREMENT_ID}`] = !granted;
 
-    if (typeof window.gtag === 'function') {
-        window.gtag('consent', 'update', {
-            analytics_storage: granted ? 'granted' : 'denied',
-            ad_storage: 'denied',
-            ad_user_data: 'denied',
-            ad_personalization: 'denied'
-        });
-    }
+    getGtag()?.('consent', 'update', {
+        analytics_storage: granted ? 'granted' : 'denied',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied'
+    });
 };
 
 // Initialize Google Analytics
@@ -50,19 +58,19 @@ export const initGA = () => {
 
     // Initialize dataLayer
     window.dataLayer = window.dataLayer || [];
-    function gtag(...args: any[]) {
+    const gtag: Gtag = (...args) => {
         window.dataLayer.push(args);
-    }
+    };
 
     window.gtag = gtag;
-    window.gtag('js', new Date());
-    window.gtag('consent', 'default', {
+    gtag('js', new Date());
+    gtag('consent', 'default', {
         analytics_storage: 'granted',
         ad_storage: 'denied',
         ad_user_data: 'denied',
         ad_personalization: 'denied'
     });
-    window.gtag('config', GA_MEASUREMENT_ID, {
+    gtag('config', GA_MEASUREMENT_ID, {
         send_page_view: false // We'll send page views manually
     });
 
@@ -75,9 +83,9 @@ export const disableGA = () => {
 
 // Track page view
 export const trackPageView = (path: string, title?: string) => {
-    if (!GA_MEASUREMENT_ID || typeof (window as any).gtag !== 'function') return;
+    if (!GA_MEASUREMENT_ID) return;
 
-    (window as any).gtag('event', 'page_view', {
+    getGtag()?.('event', 'page_view', {
         page_path: path,
         page_title: title || document.title
     });
@@ -86,16 +94,11 @@ export const trackPageView = (path: string, title?: string) => {
 // Track custom events
 export const trackEvent = (
     eventName: string,
-    eventParams?: {
-        category?: string;
-        label?: string;
-        value?: number;
-        [key: string]: any;
-    }
+    eventParams?: AnalyticsParams
 ) => {
-    if (!GA_MEASUREMENT_ID || typeof (window as any).gtag !== 'function') return;
+    if (!GA_MEASUREMENT_ID) return;
 
-    (window as any).gtag('event', eventName, eventParams);
+    getGtag()?.('event', eventName, eventParams);
 };
 
 // Common event trackers
@@ -149,26 +152,9 @@ export const trackCertificationView = (certificationTitle: string) => {
 };
 
 // React component to track page views automatically
-const Analytics: React.FC = () => {
+function Analytics() {
     const location = useLocation();
-    const [analyticsEnabled, setAnalyticsEnabled] = useState<boolean>(() =>
-        hasAnalyticsConsent(readCookieConsent())
-    );
-
-    useEffect(() => {
-        const syncConsent = () => {
-            setAnalyticsEnabled(hasAnalyticsConsent(readCookieConsent()));
-        };
-
-        syncConsent();
-        window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, syncConsent);
-        window.addEventListener('storage', syncConsent);
-
-        return () => {
-            window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, syncConsent);
-            window.removeEventListener('storage', syncConsent);
-        };
-    }, []);
+    const analyticsEnabled = hasAnalyticsConsent(useCookieConsent());
 
     useEffect(() => {
         if (analyticsEnabled) {
@@ -186,7 +172,7 @@ const Analytics: React.FC = () => {
     }, [analyticsEnabled, location.pathname, location.search]);
 
     return null;
-};
+}
 
 export default Analytics;
 
@@ -194,7 +180,7 @@ export default Analytics;
 declare global {
     interface Window {
         [key: `ga-disable-${string}`]: boolean | undefined;
-        dataLayer: any[];
-        gtag?: (...args: any[]) => void;
+        dataLayer: unknown[][];
+        gtag?: Gtag;
     }
 }

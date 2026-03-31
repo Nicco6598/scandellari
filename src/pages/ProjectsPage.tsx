@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
@@ -20,8 +20,21 @@ import AnimatedCounter from '../components/utils/AnimatedCounter';
 import SEO from '../components/utils/SEO';
 import LoadingState from '../components/utils/LoadingState';
 
-interface Coordinate { lat: number; lng: number; }
-type ProjectCoordinates = { points: Coordinate[]; route?: Coordinate[]; error?: string; };
+type Coordinate = { lat: number; lng: number };
+type ProjectCoordinates = { points: Coordinate[]; route?: Coordinate[] };
+type GeocodingPhase = { current: number; total: number };
+type SelectedGroup = { projects: ProgettoData[]; coord: Coordinate };
+type MarkerGroup = { lat: number; lng: number; projects: ProgettoData[] };
+type LineFeature = {
+    type: 'Feature';
+    geometry: { type: 'LineString'; coordinates: Array<[number, number]> };
+    properties: { id?: string };
+};
+type LineFeatureCollection = { type: 'FeatureCollection'; features: LineFeature[] };
+type NominatimResponse = Array<{ lat: string; lon: string }>;
+type OsrmResponse = {
+    routes?: Array<{ geometry: { coordinates: Array<[number, number]> } }>;
+};
 
 const geoCache: Record<string, Coordinate> = {};
 const CONCURRENCY = 3;
@@ -37,7 +50,7 @@ async function geocodePart(part: string): Promise<Coordinate | null> {
             const retry = await fetch(
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`
             );
-            const data = await retry.json();
+            const data: NominatimResponse = await retry.json();
             if (data?.length > 0) {
                 const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
                 geoCache[part] = coord;
@@ -45,7 +58,7 @@ async function geocodePart(part: string): Promise<Coordinate | null> {
             }
             return null;
         }
-        const data = await res.json();
+        const data: NominatimResponse = await res.json();
         if (data?.length > 0) {
             const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
             geoCache[part] = coord;
@@ -63,9 +76,9 @@ async function fetchRoute(coords: Coordinate[]): Promise<Coordinate[]> {
         const res = await fetch(
             `https://router.project-osrm.org/route/v1/driving/${osrmPath}?overview=full&geometries=geojson`
         );
-        const data = await res.json();
+        const data: OsrmResponse = await res.json();
         if (data.routes?.[0]) {
-            return data.routes[0].geometry.coordinates.map((c: any) => ({ lng: c[0], lat: c[1] }));
+            return data.routes[0].geometry.coordinates.map(([lng, lat]) => ({ lng, lat }));
         }
     } catch (e) {
         logger.warn('OSRM error', e);
@@ -96,7 +109,12 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 }
 
 // ─── Project Item Card con Magnetic Effect ─────────────────────────────────
-const ProjectItemCard: React.FC<{ project: ProgettoData; index: number }> = ({ project, index }) => {
+type ProjectItemCardProps = {
+    project: ProgettoData;
+    index: number;
+};
+
+function ProjectItemCard({ project, index }: ProjectItemCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const imageRef = useRef<HTMLDivElement>(null);
 
@@ -204,9 +222,9 @@ const ProjectItemCard: React.FC<{ project: ProgettoData; index: number }> = ({ p
             </Link>
         </div>
     );
-};
+}
 
-const ProjectsPage: React.FC = () => {
+function ProjectsPage() {
     const { theme } = useTheme();
 
     useEffect(() => {
@@ -218,13 +236,13 @@ const ProjectsPage: React.FC = () => {
 
     const [progetti, setProgetti] = useState<ProgettoData[]>([]);
     const [categorie, setCategorie] = useState<string[]>(['tutti']);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [categoriaAttiva, setCategoriaAttiva] = useState<string>('tutti');
+    const [loading, setLoading] = useState(true);
+    const [categoriaAttiva, setCategoriaAttiva] = useState('tutti');
     const [visualizzazione, setVisualizzazione] = useState<'lista' | 'mappa'>('lista');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
-    const [projectCoordinates, setProjectCoordinates] = useState<Record<string | number, ProjectCoordinates>>({});
-    const [geocodingPhase, setGeocodingPhase] = useState<{ current: number, total: number }>({ current: 0, total: 0 });
-    const [selectedGroup, setSelectedGroup] = useState<{ projects: ProgettoData[], coord: Coordinate } | null>(null);
+    const [projectCoordinates, setProjectCoordinates] = useState<Record<string, ProjectCoordinates>>({});
+    const [geocodingPhase, setGeocodingPhase] = useState<GeocodingPhase>({ current: 0, total: 0 });
+    const [selectedGroup, setSelectedGroup] = useState<SelectedGroup | null>(null);
     const [activeProjectIndex, setActiveProjectIndex] = useState(0);
     const mapContainerRef = useRef<HTMLDivElement>(null);
 
@@ -254,8 +272,11 @@ const ProjectsPage: React.FC = () => {
                     progettiService.getAllProjects(),
                     categorieService.getAllCategorie()
                 ]);
+                const categoryNames = catData.flatMap(({ nome }) => (
+                    nome ? [nome.toLowerCase()] : []
+                ));
                 setProgetti(projData);
-                setCategorie(['tutti', ...new Set(catData.map(c => c.nome?.toLowerCase()).filter(Boolean) as string[])]);
+                setCategorie(['tutti', ...new Set(categoryNames)]);
             } catch (err) {
                 logger.error('Impossibile caricare i progetti.');
             } finally {
@@ -318,45 +339,49 @@ const ProjectsPage: React.FC = () => {
     }, [visualizzazione, progettiFiltrati]);
 
     useEffect(() => {
-        const firstWithCoords = progettiFiltrati.find(p => {
-            const coords = projectCoordinates[p.id || ''];
-            return coords && coords.points && coords.points.length > 0;
-        });
+        const firstWithCoords = progettiFiltrati.find((progetto) =>
+            (projectCoordinates[progetto.id ?? '']?.points.length ?? 0) > 0
+        );
         if (firstWithCoords && visualizzazione === 'mappa' && viewState.zoom === 5) {
-            const coords = projectCoordinates[firstWithCoords.id || ''].points[0];
+            const coords = projectCoordinates[firstWithCoords.id ?? '']?.points[0];
             if (coords) {
                 setViewState(prev => ({ ...prev, longitude: coords.lng, latitude: coords.lat, zoom: 6 }));
             }
         }
-    }, [projectCoordinates, visualizzazione, progettiFiltrati]);
+    }, [projectCoordinates, progettiFiltrati, viewState.zoom, visualizzazione]);
 
     const groupedMarkers = useMemo(() => {
-        const coordsMap: Record<string, { lat: number, lng: number, projects: ProgettoData[] }> = {};
-        progettiFiltrati.forEach(p => {
-            const coords = projectCoordinates[p.id || ''];
+        const coordsMap: Record<string, MarkerGroup> = {};
+        progettiFiltrati.forEach((progetto) => {
+            const coords = projectCoordinates[progetto.id ?? ''];
             if (coords?.points) {
-                coords.points.forEach(pt => {
+                coords.points.forEach((pt) => {
                     const key = `${pt.lat.toFixed(5)},${pt.lng.toFixed(5)}`;
                     if (!coordsMap[key]) coordsMap[key] = { lat: pt.lat, lng: pt.lng, projects: [] };
                     const group = coordsMap[key];
-                    if (!group.projects.find((proj: ProgettoData) => proj.id === p.id)) group.projects.push(p);
+                    if (!group.projects.find(({ id }) => id === progetto.id)) group.projects.push(progetto);
                 });
             }
         });
         return Object.values(coordsMap);
     }, [progettiFiltrati, projectCoordinates]);
 
-    const lineGeoJSON = useMemo(() => {
-        const features = progettiFiltrati.map(p => {
-            const coords = projectCoordinates[p.id || ''];
-            if (!coords?.route || coords.route.length < 2) return null;
-            return {
+    const lineGeoJSON = useMemo<LineFeatureCollection>(() => {
+        const features = progettiFiltrati.flatMap((progetto) => {
+            const coords = projectCoordinates[progetto.id ?? ''];
+            if (!coords?.route || coords.route.length < 2) return [];
+
+            return [{
                 type: 'Feature' as const,
-                geometry: { type: 'LineString' as const, coordinates: coords.route.map(pt => [pt.lng, pt.lat]) },
-                properties: { id: p.id }
-            };
-        }).filter(Boolean);
-        return { type: 'FeatureCollection' as const, features: features as any[] };
+                geometry: {
+                    type: 'LineString' as const,
+                    coordinates: coords.route.map((pt) => [pt.lng, pt.lat] as [number, number])
+                },
+                properties: { id: progetto.id }
+            }];
+        });
+
+        return { type: 'FeatureCollection', features };
     }, [progettiFiltrati, projectCoordinates]);
 
     const isGeocodingDone = geocodingPhase.current === geocodingPhase.total && geocodingPhase.total > 0;
@@ -701,6 +726,6 @@ const ProjectsPage: React.FC = () => {
             </div>
         </Layout>
     );
-};
+}
 
 export default ProjectsPage;

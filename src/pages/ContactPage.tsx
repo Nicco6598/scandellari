@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
 import SEO from '../components/utils/SEO';
+import { trackFormSubmit } from '../components/utils/Analytics';
 import Map, { Marker, Popup, NavigationControl } from 'react-map-gl/maplibre';
 import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
 import { useForm } from 'react-hook-form';
@@ -33,8 +35,28 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
-// ─── Magnetic Link Component ──────────────────────────────────────────────────
-const MagneticLink: React.FC<{ href: string; children: React.ReactNode; className?: string }> = ({ href, children, className = '' }) => {
+type SubmissionStatus = 'idle' | 'submitting' | 'success' | 'error';
+
+type MagneticLinkProps = {
+    href: string;
+    children: ReactNode;
+    className?: string;
+};
+
+type ContactField = {
+    id: keyof ContactFormData;
+    label: string;
+    type: 'text' | 'email' | 'tel';
+};
+
+const contactFields: ContactField[] = [
+    { id: 'name', label: 'Nome e Cognome', type: 'text' },
+    { id: 'email', label: 'Email Aziendale', type: 'email' },
+    { id: 'phone', label: 'Telefono', type: 'tel' },
+    { id: 'subject', label: 'Oggetto', type: 'text' }
+];
+
+function MagneticLink({ href, children, className = '' }: MagneticLinkProps) {
     const linkRef = useRef<HTMLAnchorElement>(null);
 
     useEffect(() => {
@@ -65,11 +87,11 @@ const MagneticLink: React.FC<{ href: string; children: React.ReactNode; classNam
             {children}
         </a>
     );
-};
+}
 
-const ContactPage: React.FC = () => {
+function ContactPage() {
     const { theme } = useTheme();
-    const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+    const [status, setStatus] = useState<SubmissionStatus>('idle');
 
     useEffect(() => {
         const style = document.createElement('style');
@@ -115,32 +137,13 @@ const ContactPage: React.FC = () => {
                 throw new Error(errorData.message || 'Errore durante l\'invio del messaggio');
             }
 
-            // Success
             setStatus('success');
             reset();
-
-            // Track successful form submission (if Analytics is configured)
-            if (typeof window !== 'undefined' && (window as any).gtag) {
-                (window as any).gtag('event', 'form_submit', {
-                    category: 'engagement',
-                    label: 'contact_form',
-                    value: 1,
-                    success: true
-                });
-            }
+            trackFormSubmit('contact_form', true);
         } catch (error) {
             logger.error('Error sending contact form:', error);
             setStatus('error');
-
-            // Track failed form submission
-            if (typeof window !== 'undefined' && (window as any).gtag) {
-                (window as any).gtag('event', 'form_submit', {
-                    category: 'engagement',
-                    label: 'contact_form',
-                    value: 0,
-                    success: false
-                });
-            }
+            trackFormSubmit('contact_form', false);
         }
     };
 
@@ -282,28 +285,23 @@ const ContactPage: React.FC = () => {
                                     onSubmit={handleSubmit(onSubmit)}
                                     className="space-y-px bg-gradient-to-br from-black/8 via-black/8 to-primary/5 dark:from-white/5 dark:via-white/5 dark:to-primary/10 border border-black/10 dark:border-white/5 animate-fade-in"
                                 >
-                                        {[
-                                            { id: 'name', label: 'Nome e Cognome', type: 'text' },
-                                            { id: 'email', label: 'Email Aziendale', type: 'email' },
-                                            { id: 'phone', label: 'Telefono', type: 'tel' },
-                                            { id: 'subject', label: 'Oggetto', type: 'text' }
-                                        ].map((field) => (
+                                        {contactFields.map((field) => (
                                             <div key={field.id} className="bg-white dark:bg-black p-8 group border-b border-black/10 dark:border-white/10 hover:bg-stone-50/50 dark:hover:bg-dark-surface focus-within:bg-stone-50 dark:focus-within:bg-dark-surface transition-all duration-300">
                                                 <label
                                                     htmlFor={field.id}
-                                                    className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors[field.id as keyof ContactFormData] ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}
+                                                    className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors[field.id] ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}
                                                 >
                                                     {field.label}
                                                 </label>
                                                 <input
                                                     id={field.id}
                                                     type={field.type}
-                                                    {...register(field.id as keyof ContactFormData)}
-                                                    className={`w-full bg-transparent border-b pb-2 text-black dark:text-white font-black text-lg focus:ring-0 placeholder-black/40 dark:placeholder-white/30 transition-colors ${errors[field.id as keyof ContactFormData] ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
+                                                    {...register(field.id)}
+                                                    className={`w-full bg-transparent border-b pb-2 text-black dark:text-white font-black text-lg focus:ring-0 placeholder-black/40 dark:placeholder-white/30 transition-colors ${errors[field.id] ? 'border-red-500 focus:border-red-500' : 'border-black/10 dark:border-white/20 focus:border-primary'}`}
                                                 />
-                                                {errors[field.id as keyof ContactFormData] && (
+                                                {errors[field.id] && (
                                                     <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2">
-                                                        {errors[field.id as keyof ContactFormData]?.message}
+                                                        {errors[field.id]?.message}
                                                     </p>
                                                 )}
                                             </div>
@@ -343,6 +341,6 @@ const ContactPage: React.FC = () => {
             </div>
         </Layout>
     );
-};
+}
 
 export default ContactPage;

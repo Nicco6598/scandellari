@@ -37,9 +37,9 @@ function buildOptimizationPlugin(): Plugin {
                 '<link rel="stylesheet" crossorigin href="$2" media="print" onload="this.media=\'all\'">'
             );
             // Remove modulepreload for heavy lazy chunks — browser will load them on demand
-            // This saves ~400 KiB of unnecessary downloads on initial page load
+            // This saves unnecessary downloads on initial page load
             html = html.replace(
-                /<link rel="modulepreload" crossorigin href="[^"]*(?:maplibre|supabase|pdfjs)[^"]*\.js">\n?/g,
+                /<link rel="modulepreload" crossorigin href="[^"]*(?:maplibre|react-map|supabase|pdf-core|react-pdf)[^"]*\.js">\n?/g,
                 ''
             );
             return html;
@@ -76,14 +76,15 @@ export default defineConfig({
             output: {
                 // Manual chunk splitting to separate heavy vendor libs
                 manualChunks: (id) => {
-                    // Isola solo le librerie "foglia" senza dipendenze incrociate verso React
-                    // per evitare circular chunk che causano errori runtime
-                    if (id.includes('pdfjs-dist')) return 'pdfjs';
-                    if (id.includes('maplibre-gl') || id.includes('react-map-gl')) return 'maplibre';
+                    if (id.includes('pdfjs-dist')) return 'pdf-core';
+                    if (id.includes('react-pdf')) return 'react-pdf';
+                    if (id.includes('maplibre-gl')) return 'maplibre-core';
+                    if (id.includes('react-map-gl')) return 'react-map';
                     if (id.includes('@supabase')) return 'supabase';
                     if (id.includes('yet-another-react-lightbox')) return 'lightbox';
                     if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) return 'forms';
                     if (id.includes('react-phone-number-input')) return 'phone-input';
+                    if (id.includes('gsap') || id.includes('lenis')) return 'motion';
                 },
             },
         },

@@ -1,5 +1,4 @@
-// src/App.tsx modificato
-import React, { lazy, useEffect, useLayoutEffect, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
@@ -8,7 +7,6 @@ import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Componenti utili - SPOSTATI IN ALTO PER ESLINT
 import ScrollToTop from './components/utils/ScrollToTop';
 import PageLoader from './components/utils/PageLoader';
 import ErrorBoundary from './components/utils/ErrorBoundary';
@@ -17,13 +15,8 @@ import ScrollProgress from './components/utils/ScrollProgress';
 import CustomCursor from './components/utils/CustomCursor';
 import PageTransition from './components/utils/PageTransition';
 
-// Rimuovo l'import di ProtectedRoute qui, verrà usato in AdminLayout
-// import ProtectedRoute from './components/admin/ProtectedRoute'; 
-
-// Importa il nuovo layout admin
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
 
-// Pagine pubbliche - Lazy load
 const HomePage = lazy(() => import('./pages/HomePage'));
 const CompetenzePage = lazy(() => import('./pages/CompetenzePage'));
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
@@ -37,7 +30,6 @@ const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage'));
 const CompanyPolicyPage = lazy(() => import('./pages/CompanyPolicyPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
-// Pagine admin - Lazy load
 const LoginPage = lazy(() => import('./pages/admin/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
 const ProgettiPage = lazy(() => import('./pages/admin/ProgettiPage'));
@@ -47,19 +39,22 @@ const CompetenzaFormPage = lazy(() => import('./pages/admin/CompetenzaFormPage')
 const OfferteLavoroPage = lazy(() => import('./pages/admin/OfferteLavoroPage'));
 const OffertaLavoroFormPage = lazy(() => import('./pages/admin/OffertaLavoroFormPage'));
 
-const AnimationController: React.FC = () => {
+type LenisWindow = Window & { lenis?: Lenis };
+
+function AnimationController() {
   const location = useLocation();
 
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
-    // Pulizia immediata (sincrona) dei trigger della route precedente
+
+    let idleHandle: number | undefined;
+    let refreshTimeoutId: ReturnType<typeof setTimeout> | undefined;
+
     ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     ScrollTrigger.clearMatchMedia();
 
-    let idleHandle: number | undefined;
-
     const setupAnimations = () => {
-      setTimeout(() => ScrollTrigger.refresh(), 50);
+      refreshTimeoutId = setTimeout(() => ScrollTrigger.refresh(), 50);
       
       const elements = gsap.utils.toArray<HTMLElement>('[data-animate]');
       elements.forEach((element) => {
@@ -95,7 +90,6 @@ const AnimationController: React.FC = () => {
         );
       });
 
-      // Stagger animation for children of [data-animate-stagger]
       const staggerContainers = gsap.utils.toArray<HTMLElement>('[data-animate-stagger]');
       staggerContainers.forEach((container) => {
         const children = container.children;
@@ -119,7 +113,6 @@ const AnimationController: React.FC = () => {
         );
       });
 
-      // Parallax effect for [data-parallax]
       const parallaxElements = gsap.utils.toArray<HTMLElement>('[data-parallax]');
       parallaxElements.forEach((el) => {
         const speed = Number(el.dataset.parallax ?? 0.1);
@@ -136,28 +129,28 @@ const AnimationController: React.FC = () => {
       });
     };
 
-    // Defer heavy GSAP setup to idle time so it doesn't block the main thread (TBT)
     if (typeof window.requestIdleCallback === 'function') {
       idleHandle = window.requestIdleCallback(setupAnimations, { timeout: 300 });
     } else {
-      // Fallback: defer by one frame to allow paint first
       const raf = requestAnimationFrame(() => { requestAnimationFrame(setupAnimations); });
       return () => {
         cancelAnimationFrame(raf);
+        if (refreshTimeoutId) clearTimeout(refreshTimeoutId);
         ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
       };
     }
 
     return () => {
       if (idleHandle !== undefined) window.cancelIdleCallback(idleHandle);
+      if (refreshTimeoutId) clearTimeout(refreshTimeoutId);
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, [location.pathname]);
 
   return null;
-};
+}
 
-const App: React.FC = () => {
+function App() {
   useEffect(() => {
     const lenis = new Lenis({
       lerp: 0.08,
@@ -167,28 +160,21 @@ const App: React.FC = () => {
       infinite: false,
     });
 
-    // Rendi lenis accessibile globalmente per ScrollToTop
-    (window as Window & { lenis?: typeof lenis }).lenis = lenis;
+    (window as LenisWindow).lenis = lenis;
 
-    // Integrate Lenis with GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
-    gsap.ticker.lagSmoothing(0);
 
-    let rafId = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+    const lenisTicker = (time: number) => {
+      lenis.raf(time * 1000);
     };
 
-    rafId = requestAnimationFrame(raf);
+    gsap.ticker.add(lenisTicker);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
-      cancelAnimationFrame(rafId);
-      gsap.ticker.remove((time) => lenis.raf(time * 1000));
+      gsap.ticker.remove(lenisTicker);
       lenis.destroy();
+      delete (window as LenisWindow).lenis;
     };
   }, []);
 
@@ -204,54 +190,38 @@ const App: React.FC = () => {
               <ScrollProgress />
               <CustomCursor />
               <PageTransition />
-              {/* 
-                Opzione 1: Modifica PageLoader per rendere 'children' opzionale.
-                Opzione 2: Usa un fallback più semplice se PageLoader richiede 'children'.
-                Ad esempio: fallback={<div>Caricamento...</div>} 
-              */}
               <Suspense fallback={null}>
-              <PageLoader>
-                <Routes>
-                  {/* Rotte pubbliche */}
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/competenze" element={<CompetenzePage />} />
-                  <Route path="/competenze/:categoria" element={<CompetenzePage />} />
-                  <Route path="/progetti" element={<ProjectsPage />} />
-                  <Route path="/progetti/:id" element={<ProjectDetailPage />} />
-                  <Route path="/chi-siamo" element={<AboutPage />} />
-                  <Route path="/contatti" element={<ContactPage />} />
-                  <Route path="/certificazioni" element={<CertificationsPage />} />
-                  <Route path="/lavora-con-noi" element={<CareersPage />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                  <Route path="/cookie-policy" element={<CookiePolicyPage />} />
-                  <Route path="/policy-aziendale" element={<CompanyPolicyPage />} />
-
-                  {/* Rotta login admin (non protetta) */}
-                  <Route path="/admin/login" element={<LoginPage />} />
-
-                  {/* Rotte admin protette raggruppate sotto AdminLayout */}
-                  <Route path="/admin" element={<AdminLayout />}>
-                    {/* Il path "/admin" può reindirizzare a dashboard o mostrare dashboard di default */}
-                    {/* Se vuoi dashboard come index: */}
-                    <Route index element={<DashboardPage />} />
-                    <Route path="dashboard" element={<DashboardPage />} />
-                    <Route path="progetti" element={<ProgettiPage />} />
-                    <Route path="progetti/nuovo" element={<ProgettoFormPage />} />
-                    <Route path="progetti/modifica/:id" element={<ProgettoFormPage />} />
-                    <Route path="competenze" element={<AdminCompetenzePage />} />
-                    <Route path="competenze/nuova" element={<CompetenzaFormPage />} />
-                    <Route path="competenze/modifica/:id" element={<CompetenzaFormPage />} />
-                    <Route path="offerte-lavoro" element={<OfferteLavoroPage />} />
-                    <Route path="offerte-lavoro/nuova" element={<OffertaLavoroFormPage />} />
-                    <Route path="offerte-lavoro/modifica/:id" element={<OffertaLavoroFormPage />} />
-                    {/* Nota: ho aggiunto una rotta index per /admin che punta alla dashboard */}
-                    {/* Puoi rimuoverla se /admin non deve mostrare nulla di default */}
-                  </Route>
-
-                  {/* 404 Not Found - Must be last */}
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </PageLoader>
+                <PageLoader>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/competenze" element={<CompetenzePage />} />
+                    <Route path="/competenze/:categoria" element={<CompetenzePage />} />
+                    <Route path="/progetti" element={<ProjectsPage />} />
+                    <Route path="/progetti/:id" element={<ProjectDetailPage />} />
+                    <Route path="/chi-siamo" element={<AboutPage />} />
+                    <Route path="/contatti" element={<ContactPage />} />
+                    <Route path="/certificazioni" element={<CertificationsPage />} />
+                    <Route path="/lavora-con-noi" element={<CareersPage />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                    <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+                    <Route path="/policy-aziendale" element={<CompanyPolicyPage />} />
+                    <Route path="/admin/login" element={<LoginPage />} />
+                    <Route path="/admin" element={<AdminLayout />}>
+                      <Route index element={<DashboardPage />} />
+                      <Route path="dashboard" element={<DashboardPage />} />
+                      <Route path="progetti" element={<ProgettiPage />} />
+                      <Route path="progetti/nuovo" element={<ProgettoFormPage />} />
+                      <Route path="progetti/modifica/:id" element={<ProgettoFormPage />} />
+                      <Route path="competenze" element={<AdminCompetenzePage />} />
+                      <Route path="competenze/nuova" element={<CompetenzaFormPage />} />
+                      <Route path="competenze/modifica/:id" element={<CompetenzaFormPage />} />
+                      <Route path="offerte-lavoro" element={<OfferteLavoroPage />} />
+                      <Route path="offerte-lavoro/nuova" element={<OffertaLavoroFormPage />} />
+                      <Route path="offerte-lavoro/modifica/:id" element={<OffertaLavoroFormPage />} />
+                    </Route>
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </PageLoader>
               </Suspense>
             </Router>
           </MobileMenuProvider>
@@ -259,6 +229,6 @@ const App: React.FC = () => {
       </ThemeProvider>
     </ErrorBoundary>
   );
-};
+}
 
 export default App;

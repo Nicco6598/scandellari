@@ -1,14 +1,13 @@
-// Update to src/components/layout/Layout.tsx
-import React from 'react';
+import type { ReactNode } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import CookieBanner from '../utils/CookieBanner';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
+type LayoutProps = {
+  children: ReactNode;
+};
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+function Layout({ children }: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -19,6 +18,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <CookieBanner />
     </div>
   );
-};
+}
 
 export default Layout;

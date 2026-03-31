@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ElementType, ReactNode } from 'react';
 import Layout from '../components/layout/Layout';
 import SEO from '../components/utils/SEO';
 import gsap from 'gsap';
@@ -13,44 +14,176 @@ import {
     BoltIcon,
 } from '@heroicons/react/24/outline';
 
-// ─── Animated Counter Hook ───────────────────────────────────────────────────
-function useCountUp(target: number, duration: number = 1800, start: boolean = false) {
+type FadeInProps = {
+    children: ReactNode;
+    delay?: number;
+    className?: string;
+};
+
+type MagneticCardProps = {
+    children: ReactNode;
+    className?: string;
+};
+
+type StatCardProps = {
+    icon: ElementType;
+    label: string;
+    value: number;
+    suffix?: string;
+    delay?: number;
+};
+
+type Competenza = {
+    text: string;
+    icon: ElementType;
+};
+
+type Specializzazione = {
+    area: string;
+    badge: string;
+    items: string[];
+    highlight: boolean;
+};
+
+type TimelineStep = {
+    year: string;
+    title: string;
+    desc: string;
+    detail: string;
+};
+
+const FOUNDING_YEAR = 1945;
+
+const collaborazioni = [
+    'R.F.I.', 'TRENITALIA', 'ITALFERR', 'SERFER-MERCITALIA S.& T.',
+    'TRENORD', 'ALSTOM FERROVIARIA', 'ANSALDO FERROVIARIA', 'SIEMENS',
+    'BONCIANI', 'A.C.M.A.R.', 'COSTRUZIONE LINEE FERROVIARIE',
+    'VALSECCHI ARMAMENTO', 'G.C.F. GENERALE COSTRUZIONI FERROVIARIE'
+] as const;
+
+const competenze: Competenza[] = [
+    { text: 'Installazione impianti di segnalamento e sicurezza per linee "lente" e ad "alta velocità"', icon: BoltIcon },
+    { text: 'Installazione impianti S.C.M.T., A.C.E.I., A.C.S., A.C.C., B.C.A.', icon: ShieldCheckIcon },
+    { text: 'Allestimento tecnologico e funzionale DIGICODE alta velocità', icon: BoltIcon },
+    { text: 'Installazione sistemi oleodinamici (TG 0,040 - 0,074 - 0,022 C.P.F./C.P.M. e MOT)', icon: WrenchScrewdriverIcon },
+    { text: 'Installazione sistemi elettromeccanici (P.80, L.90, P.64, L.63, L.88, P.75, FS.55)', icon: WrenchScrewdriverIcon },
+    { text: 'Installazione impianti R.E.D., Diffusione Sonora, L.F.M., T.L.C.', icon: BoltIcon },
+    { text: 'Posa cavi in fibra ottica e realizzazione giunzioni ottiche', icon: CheckCircleIcon },
+    { text: 'Allestimento locali tecnologici', icon: BuildingOffice2Icon },
+    { text: 'Manutenzione ordinaria e straordinaria impianti segnalamento', icon: WrenchScrewdriverIcon },
+    { text: 'Perizie di commessa', icon: CheckCircleIcon },
+];
+
+const specializzazioni: Specializzazione[] = [
+    {
+        area: 'Alta Velocità',
+        badge: 'Core Expertise',
+        items: ['DIGICODE AV', 'S.C.M.T.', 'A.C.E.I.', 'A.C.C.'],
+        highlight: false,
+    },
+    {
+        area: 'Sistemi Oleodinamici Ferroviari',
+        badge: 'Eccellenza Tecnica',
+        items: ['TG 0,040', 'TG 0,074', 'TG 0,022', 'C.P.F. / C.P.M.', 'MOT'],
+        highlight: true,
+    },
+    {
+        area: 'Manovre Oleodinamiche in Traversa',
+        badge: 'Eccellenza Tecnica',
+        items: ['Deviatoi ad azionamento oleodinamico', 'Traverse in calcestruzzo e legno', 'Impianti di comando centralizzato'],
+        highlight: true,
+    },
+    {
+        area: 'Sistemi Elettromeccanici',
+        badge: 'Core Expertise',
+        items: ['P.80', 'L.90', 'P.64', 'L.63', 'L.88', 'P.75', 'FS.55'],
+        highlight: false,
+    },
+    {
+        area: 'Infrastruttura TLC',
+        badge: 'Specializzazione',
+        items: ['Fibra Ottica', 'Giunzioni Ottiche', 'R.E.D.', 'Diffusione Sonora', 'L.F.M.'],
+        highlight: false,
+    },
+    {
+        area: 'Sicurezza & Compliance',
+        badge: 'Specializzazione',
+        items: ['A.C.S.', 'B.C.A.', 'Manutenzione Ordinaria', 'Manutenzione Straordinaria', 'Perizie di Commessa'],
+        highlight: false,
+    },
+];
+
+const timelineSteps: TimelineStep[] = [
+    {
+        year: '1945', title: 'Fondazione',
+        desc: 'Giacinto Scandellari apre i battenti lavorando esclusivamente per le Ferrovie, specializzandosi come ditta operante nella manutenzione ferroviaria.',
+        detail: 'Un singolo uomo, una visione chiara: diventare il riferimento per la manutenzione ferroviaria italiana nel dopoguerra.'
+    },
+    {
+        year: '1961', title: 'Seconda Generazione',
+        desc: "Leonida Scandellari, figlio del fondatore, assume la conduzione dell'azienda. Per un trentennio guida l'attività portandola oltre i confini delle attività manutentive.",
+        detail: "Sotto la guida di Leonida, l'azienda triplica il numero di cantieri seguiti e inizia a posizionarsi come partner tecnico, non più solo manutentore."
+    },
+    {
+        year: "Anni '70", title: 'Espansione Nazionale',
+        desc: "L'azienda diventa ditta di subappalto di multinazionali italiane, ampliando significativamente il proprio raggio d'azione.",
+        detail: 'Il boom infrastrutturale italiano apre nuovi scenari: Scandellari partecipa ai grandi cantieri di ammodernamento della rete ferroviaria nazionale.'
+    },
+    {
+        year: "Primi '90", title: 'Nuova Leadership',
+        desc: "Luigi Guglielmetti e Carlo Manara assumono la guida dell'azienda, mantenendo il nome originario per rispetto verso i predecessori.",
+        detail: "Una transizione pianificata e rispettosa: la nuova direzione porta competenze manageriali moderne senza perdere il DNA tecnico dell'azienda."
+    },
+    {
+        year: 'Oggi', title: 'Crescita Esponenziale',
+        desc: "Scandellari opera per le più grandi imprese del settore ferroviario, distinguendosi per professionalità e competenza tecnica in tutta Italia.",
+        detail: '13 partner strategici, decine di grandi opere completate, presenza capillare su tutto il territorio nazionale.'
+    }
+];
+
+function useCountUp(target: number, duration = 1800, start = false) {
     const [count, setCount] = useState(0);
     useEffect(() => {
         if (!start) return;
+        let animationFrameId = 0;
         let startTime: number | null = null;
         const step = (timestamp: number) => {
             if (!startTime) startTime = timestamp;
             const progress = Math.min((timestamp - startTime) / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             setCount(Math.floor(eased * target));
-            if (progress < 1) requestAnimationFrame(step);
-            else setCount(target);
+            if (progress < 1) {
+                animationFrameId = requestAnimationFrame(step);
+                return;
+            }
+            setCount(target);
         };
-        requestAnimationFrame(step);
+        animationFrameId = requestAnimationFrame(step);
+        return () => cancelAnimationFrame(animationFrameId);
     }, [start, target, duration]);
     return count;
 }
 
-// ─── Intersection Observer Hook ──────────────────────────────────────────────
-function useInView(threshold = 0.2): [React.MutableRefObject<HTMLDivElement | null>, boolean] {
+function useInView(threshold = 0.2) {
     const ref = useRef<HTMLDivElement | null>(null);
     const [inView, setInView] = useState(false);
     useEffect(() => {
-        const obs = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting) { setInView(true); obs.disconnect(); } },
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting) return;
+                setInView(true);
+                observer.disconnect();
+            },
             { threshold }
         );
-        if (ref.current) obs.observe(ref.current);
-        return () => obs.disconnect();
+        const element = ref.current;
+        if (element) observer.observe(element);
+        return () => observer.disconnect();
     }, [threshold]);
-    return [ref, inView];
+    return [ref, inView] as const;
 }
 
-// ─── Fade-in wrapper ──────────────────────────────────────────────────────────
-const FadeIn: React.FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({
-    children, delay = 0, className = ''
-}) => {
+function FadeIn({ children, delay = 0, className = '' }: FadeInProps) {
     const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const el = ref.current;
@@ -69,10 +202,9 @@ const FadeIn: React.FC<{ children: React.ReactNode; delay?: number; className?: 
         return () => obs.disconnect();
     }, [delay]);
     return <div ref={ref} className={className}>{children}</div>;
-};
+}
 
-// ─── Magnetic Card with Hover ───────────────────────────────────────────────
-const MagneticCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => {
+function MagneticCard({ children, className = '' }: MagneticCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -99,16 +231,9 @@ const MagneticCard: React.FC<{ children: React.ReactNode; className?: string }> 
     }, []);
 
     return <div ref={cardRef} className={className}>{children}</div>;
-};
+}
 
-// ─── Stat Card with Counter ───────────────────────────────────────────────────
-const StatCard: React.FC<{
-    icon: React.ElementType;
-    label: string;
-    value: number;
-    suffix?: string;
-    delay?: number;
-}> = ({ icon: Icon, label, value, suffix = '', delay = 0 }) => {
+function StatCard({ icon: Icon, label, value, suffix = '', delay = 0 }: StatCardProps) {
     const [ref, inView] = useInView(0.3);
     const count = useCountUp(value, 1800, inView);
     return (
@@ -124,110 +249,21 @@ const StatCard: React.FC<{
             </MagneticCard>
         </FadeIn>
     );
-};
+}
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-const AboutPage: React.FC = () => {
+function AboutPage() {
     const [activeTimeline, setActiveTimeline] = useState<number | null>(null);
-
-    const collaborazioni = [
-        'R.F.I.', 'TRENITALIA', 'ITALFERR', 'SERFER-MERCITALIA S.& T.',
-        'TRENORD', 'ALSTOM FERROVIARIA', 'ANSALDO FERROVIARIA', 'SIEMENS',
-        'BONCIANI', 'A.C.M.A.R.', 'COSTRUZIONE LINEE FERROVIARIE',
-        'VALSECCHI ARMAMENTO', 'G.C.F. GENERALE COSTRUZIONI FERROVIARIE'
-    ];
-
-    const competenze = [
-        { text: 'Installazione impianti di segnalamento e sicurezza per linee "lente" e ad "alta velocità"', icon: BoltIcon },
-        { text: 'Installazione impianti S.C.M.T., A.C.E.I., A.C.S., A.C.C., B.C.A.', icon: ShieldCheckIcon },
-        { text: 'Allestimento tecnologico e funzionale DIGICODE alta velocità', icon: BoltIcon },
-        { text: 'Installazione sistemi oleodinamici (TG 0,040 - 0,074 - 0,022 C.P.F./C.P.M. e MOT)', icon: WrenchScrewdriverIcon },
-        { text: 'Installazione sistemi elettromeccanici (P.80, L.90, P.64, L.63, L.88, P.75, FS.55)', icon: WrenchScrewdriverIcon },
-        { text: 'Installazione impianti R.E.D., Diffusione Sonora, L.F.M., T.L.C.', icon: BoltIcon },
-        { text: 'Posa cavi in fibra ottica e realizzazione giunzioni ottiche', icon: CheckCircleIcon },
-        { text: 'Allestimento locali tecnologici', icon: BuildingOffice2Icon },
-        { text: 'Manutenzione ordinaria e straordinaria impianti segnalamento', icon: WrenchScrewdriverIcon },
-        { text: 'Perizie di commessa', icon: CheckCircleIcon },
-    ];
-
-    const specializzazioni = [
-        {
-            area: 'Alta Velocità',
-            badge: 'Core Expertise',
-            items: ['DIGICODE AV', 'S.C.M.T.', 'A.C.E.I.', 'A.C.C.'],
-            highlight: false,
-        },
-        {
-            area: 'Sistemi Oleodinamici Ferroviari',
-            badge: 'Eccellenza Tecnica',
-            items: ['TG 0,040', 'TG 0,074', 'TG 0,022', 'C.P.F. / C.P.M.', 'MOT'],
-            highlight: true,
-        },
-        {
-            area: 'Manovre Oleodinamiche in Traversa',
-            badge: 'Eccellenza Tecnica',
-            items: ['Deviatoi ad azionamento oleodinamico', 'Traverse in calcestruzzo e legno', 'Impianti di comando centralizzato'],
-            highlight: true,
-        },
-        {
-            area: 'Sistemi Elettromeccanici',
-            badge: 'Core Expertise',
-            items: ['P.80', 'L.90', 'P.64', 'L.63', 'L.88', 'P.75', 'FS.55'],
-            highlight: false,
-        },
-        {
-            area: 'Infrastruttura TLC',
-            badge: 'Specializzazione',
-            items: ['Fibra Ottica', 'Giunzioni Ottiche', 'R.E.D.', 'Diffusione Sonora', 'L.F.M.'],
-            highlight: false,
-        },
-        {
-            area: 'Sicurezza & Compliance',
-            badge: 'Specializzazione',
-            items: ['A.C.S.', 'B.C.A.', 'Manutenzione Ordinaria', 'Manutenzione Straordinaria', 'Perizie di Commessa'],
-            highlight: false,
-        },
-    ];
-
-    const timelineSteps = [
-        {
-            year: "1945", title: "Fondazione",
-            desc: "Giacinto Scandellari apre i battenti lavorando esclusivamente per le Ferrovie, specializzandosi come ditta operante nella manutenzione ferroviaria.",
-            detail: "Un singolo uomo, una visione chiara: diventare il riferimento per la manutenzione ferroviaria italiana nel dopoguerra."
-        },
-        {
-            year: "1961", title: "Seconda Generazione",
-            desc: "Leonida Scandellari, figlio del fondatore, assume la conduzione dell'azienda. Per un trentennio guida l'attività portandola oltre i confini delle attività manutentive.",
-            detail: "Sotto la guida di Leonida, l'azienda triplica il numero di cantieri seguiti e inizia a posizionarsi come partner tecnico, non più solo manutentore."
-        },
-        {
-            year: "Anni '70", title: "Espansione Nazionale",
-            desc: "L'azienda diventa ditta di subappalto di multinazionali italiane, ampliando significativamente il proprio raggio d'azione.",
-            detail: "Il boom infrastrutturale italiano apre nuovi scenari: Scandellari partecipa ai grandi cantieri di ammodernamento della rete ferroviaria nazionale."
-        },
-        {
-            year: "Primi '90", title: "Nuova Leadership",
-            desc: "Luigi Guglielmetti e Carlo Manara assumono la guida dell'azienda, mantenendo il nome originario per rispetto verso i predecessori.",
-            detail: "Una transizione pianificata e rispettosa: la nuova direzione porta competenze manageriali moderne senza perdere il DNA tecnico dell'azienda."
-        },
-        {
-            year: "Oggi", title: "Crescita Esponenziale",
-            desc: "Scandellari opera per le più grandi imprese del settore ferroviario, distinguendosi per professionalità e competenza tecnica in tutta Italia.",
-            detail: "13 partner strategici, decine di grandi opere completate, presenza capillare su tutto il territorio nazionale."
-        }
-    ];
+    const companyAge = new Date().getFullYear() - FOUNDING_YEAR;
 
     return (
         <Layout>
             <SEO
                 title="Chi Siamo - Storia e Valori | Scandellari"
-                description={`${new Date().getFullYear() - 1945} anni di esperienza nel settore ferroviario. Scopri la storia di Scandellari Giacinto s.n.c., leader nell'installazione di sistemi di segnalamento dal 1945.`}
+                description={`${companyAge} anni di esperienza nel settore ferroviario. Scopri la storia di Scandellari Giacinto s.n.c., leader nell'installazione di sistemi di segnalamento dal 1945.`}
                 keywords="storia scandellari, azienda ferroviaria, esperienza ferroviaria, Treviglio, segnalamento ferroviario"
                 url="/chi-siamo"
             />
             <div className="bg-stone-50 dark:bg-black min-h-screen pt-32 pb-20 font-sans">
-
-                {/* ── Hero ─────────────────────────────────────────────────── */}
                 <section className="container mx-auto max-w-7xl px-6 mb-32">
                     <div className="border-b border-black/10 dark:border-white/5 pb-20">
                         <div className="flex items-center gap-4 mb-12">
@@ -248,24 +284,22 @@ const AboutPage: React.FC = () => {
                             <div className="shrink-0 text-right select-none">
                                 <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/50 dark:text-white/30 mb-2">Fondata nel</div>
                                 <div className="text-8xl md:text-9xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums">
-                                    1945
+                                    {FOUNDING_YEAR}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* ── Stats Row ────────────────────────────────────────────── */}
                 <section className="container mx-auto max-w-7xl px-6 mb-40">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-black/8 dark:bg-white/5 border border-black/10 dark:border-white/5">
-                        <StatCard icon={ClockIcon}          label="Anni di attività"   value={new Date().getFullYear() - 1945}  suffix="+" delay={0}    />
+                        <StatCard icon={ClockIcon}          label="Anni di attività"   value={companyAge}  suffix="+" delay={0}    />
                         <StatCard icon={MapPinIcon}          label="Grandi opere"       value={50}  suffix="+" delay={0.08} />
                         <StatCard icon={UserGroupIcon}       label="Partner strategici" value={13}  suffix=""  delay={0.16} />
-                        <StatCard icon={ShieldCheckIcon}     label="Anni di sicurezza"  value={new Date().getFullYear() - 1945}  suffix=""  delay={0.24} />
+                        <StatCard icon={ShieldCheckIcon}     label="Anni di sicurezza"  value={companyAge}  suffix=""  delay={0.24} />
                     </div>
                 </section>
 
-                {/* ── Chi Siamo + Specializzazioni ─────────────────────────── */}
                 <section className="container mx-auto max-w-7xl px-6 mb-40">
                     <div className="grid lg:grid-cols-2 gap-24 items-start">
                         <FadeIn delay={0}>
@@ -285,15 +319,14 @@ const AboutPage: React.FC = () => {
                             </div>
                         </FadeIn>
 
-                        {/* Specializzazioni cards */}
                         <FadeIn delay={0.15}>
                             <div className="space-y-3">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 mb-6">
                                     Aree di Specializzazione
                                 </h3>
-                                {specializzazioni.map((s, i) => (
+                                {specializzazioni.map((s) => (
                                     <div
-                                        key={i}
+                                        key={s.area}
                                         className={`border p-5 transition-all duration-300 group relative overflow-hidden
                                             ${s.highlight
                                                 ? 'border-primary/40 bg-primary/[0.03] dark:bg-primary/[0.06] hover:border-primary/70'
@@ -316,9 +349,9 @@ const AboutPage: React.FC = () => {
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap gap-2 relative z-10">
-                                            {s.items.map((item, j) => (
+                                            {s.items.map((item) => (
                                                 <span
-                                                    key={j}
+                                                    key={item}
                                                     className={`text-[9px] font-black uppercase tracking-wider px-2 py-1
                                                         ${s.highlight
                                                             ? 'bg-primary/10 text-primary/80'
@@ -336,7 +369,6 @@ const AboutPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* ── Timeline Interattiva ──────────────────────────────────── */}
                 <section className="bg-black/[0.03] dark:bg-dark-surface py-32 mb-40">
                     <div className="container mx-auto max-w-7xl px-6">
                         <FadeIn>
@@ -347,7 +379,7 @@ const AboutPage: React.FC = () => {
                                 </span>
                             </div>
                             <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tighter font-heading mb-20">
-                                {new Date().getFullYear() - 1945} anni di<br />eccellenza
+                                {companyAge} anni di<br />eccellenza
                             </h2>
                         </FadeIn>
 
@@ -355,19 +387,17 @@ const AboutPage: React.FC = () => {
                             <div className="absolute left-[19px] md:left-[calc(theme(spacing.36)+19px)] top-0 bottom-0 w-[1px] bg-black/10 dark:bg-white/5" />
                             <div className="space-y-4">
                                 {timelineSteps.map((step, i) => (
-                                    <FadeIn key={i} delay={i * 0.08}>
+                                    <FadeIn key={step.year} delay={i * 0.08}>
                                         <div
                                             className="relative flex gap-6 md:gap-0 cursor-pointer group"
                                             onClick={() => setActiveTimeline(activeTimeline === i ? null : i)}
                                         >
-                                            {/* Anno sidebar desktop */}
                                             <div className="hidden md:flex w-36 shrink-0 justify-end pr-10 pt-6">
                                                 <span className={`text-sm font-black tabular-nums transition-colors duration-300 ${activeTimeline === i ? 'text-primary' : 'text-black/50 dark:text-white/20 group-hover:text-black/70 dark:group-hover:text-white/50'}`}>
                                                     {step.year}
                                                 </span>
                                             </div>
 
-                                            {/* Dot */}
                                             <div className="relative flex items-start pt-5 shrink-0 z-10">
                                                 <div className={`w-10 h-10 flex items-center justify-center transition-all duration-300 border ${activeTimeline === i
                                                     ? 'bg-primary border-primary'
@@ -377,7 +407,6 @@ const AboutPage: React.FC = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Card */}
                                             <div className="flex-grow pb-4 pl-6">
                                                 <span className={`md:hidden text-[10px] font-black uppercase tracking-widest mb-1 block transition-colors ${activeTimeline === i ? 'text-primary' : 'text-black/60 dark:text-white/30'}`}>
                                                     {step.year}
@@ -418,7 +447,6 @@ const AboutPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* ── Competenze ───────────────────────────────────────────── */}
                 <section className="container mx-auto max-w-7xl px-6 mb-40">
                     <FadeIn>
                         <div className="mb-20">
@@ -432,7 +460,7 @@ const AboutPage: React.FC = () => {
                     </FadeIn>
                     <div className="grid md:grid-cols-2 gap-4">
                         {competenze.map((comp, i) => (
-                            <FadeIn key={i} delay={i * 0.04}>
+                            <FadeIn key={comp.text} delay={i * 0.04}>
                                 <div className="bg-white dark:bg-dark-surface border border-black/10 dark:border-white/5 hover:border-primary/30 p-6 md:p-8 flex gap-4 items-start group transition-all duration-300 h-full">
                                     <comp.icon className="w-5 h-5 text-primary shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-300" />
                                     <p className="text-sm md:text-base text-black/90 dark:text-white/80 font-medium leading-relaxed">
@@ -444,7 +472,6 @@ const AboutPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* ── Partnerships ─────────────────────────────────────────── */}
                 <section className="container mx-auto max-w-7xl px-6 pb-20">
                     <FadeIn>
                         <div className="mb-20">
@@ -458,7 +485,7 @@ const AboutPage: React.FC = () => {
                     </FadeIn>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-px bg-black/8 dark:bg-white/5 border border-black/10 dark:border-white/5">
                         {collaborazioni.map((p, i) => (
-                            <FadeIn key={i} delay={i * 0.03}>
+                            <FadeIn key={p} delay={i * 0.03}>
                                 <div className="aspect-video bg-white dark:bg-dark-surface flex items-center justify-center p-6 group transition-all duration-300 hover:bg-stone-50 dark:hover:bg-black relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                     <span className="text-[10px] md:text-xs font-black uppercase tracking-wider text-center text-black/70 dark:text-white/40 group-hover:text-primary transition-colors duration-300 relative z-10 leading-relaxed">
@@ -473,6 +500,6 @@ const AboutPage: React.FC = () => {
             </div>
         </Layout>
     );
-};
+}
 
 export default AboutPage;

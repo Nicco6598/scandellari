@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { competenzeService } from '../../supabase/services';
 import { logger } from '../../utils/logger';
@@ -7,8 +7,20 @@ import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import gsap from 'gsap';
 import LoadingState from '../utils/LoadingState';
 
+type ServiceCardProps = {
+  service: CompetenzaData;
+  index: number;
+};
+
+const FEATURED_SERVICE_TITLES = [
+  'Manovre Oleodinamiche in Traversa (MOT)',
+  'Sistemi Oleodinamici Ferroviari',
+  'Impianti Diffusione Sonora',
+  'Impianti S.C.M.T.'
+] as const;
+
 // ─── Service Card with Micro-interactions ──────────────────────────────────
-const ServiceCard: React.FC<{ service: CompetenzaData; index: number }> = ({ service, index }) => {
+function ServiceCard({ service, index }: ServiceCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLDivElement>(null);
 
@@ -92,9 +104,9 @@ const ServiceCard: React.FC<{ service: CompetenzaData; index: number }> = ({ ser
       </Link>
     </div>
   );
-};
+}
 
-const Services: React.FC = () => {
+function Services() {
   const [services, setServices] = useState<CompetenzaData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -102,21 +114,12 @@ const Services: React.FC = () => {
     const fetchServices = async () => {
       try {
         const data = await competenzeService.getAllCompetenze();
+        const featuredServices = FEATURED_SERVICE_TITLES.flatMap((title) => {
+          const service = data.find((competenza) => competenza.titolo === title);
+          return service ? [service] : [];
+        });
 
-        // Select the 4 specific featured competenze matching old website
-        const featuredTitles = [
-          'Manovre Oleodinamiche in Traversa (MOT)',
-          'Sistemi Oleodinamici Ferroviari',
-          'Impianti Diffusione Sonora',
-          'Impianti S.C.M.T.'
-        ];
-
-        // Filter to get only these specific ones in the order we want
-        const featured = featuredTitles
-          .map(title => data.find(comp => comp.titolo === title))
-          .filter(comp => comp !== undefined) as CompetenzaData[];
-
-        setServices(featured);
+        setServices(featuredServices);
       } catch (err) {
         logger.error('❌ Error fetching services:', err);
       } finally {
@@ -180,6 +183,6 @@ const Services: React.FC = () => {
       </div>
     </section>
   );
-};
+}
 
 export default Services;

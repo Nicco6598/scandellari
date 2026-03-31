@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
 import SEO from '../components/utils/SEO';
-import { pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
 import { certifications, Certification } from '../data/certificationsData';
 import {
     ArrowTopRightOnSquareIcon,
@@ -24,7 +21,7 @@ import PDFThumbnail from '../components/utils/PDFThumbnail';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
 
-const LazyPDFViewer = React.lazy(() => import('./LazyPDFViewer'));
+const LazyPDFViewer = lazy(() => import('./LazyPDFViewer'));
 
 const POLITICA_ID = 'politica-aziendale';
 const POLITICA_CERT: Certification = {
@@ -39,7 +36,7 @@ const POLITICA_CERT: Certification = {
     thumbnailUrl: '',
 };
 
-const CertificationsPage: React.FC = () => {
+function CertificationsPage() {
     const [selectedCertification, setSelectedCertification] = useState<Certification | null>(null);
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState<number>(1);
@@ -440,6 +437,6 @@ const CertificationsPage: React.FC = () => {
             </div>
         </Layout>
     );
-};
+}
 
 export default CertificationsPage;

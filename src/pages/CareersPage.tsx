@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
 import { offerteService } from '../supabase/services';
@@ -18,35 +18,45 @@ import {
 } from '@heroicons/react/24/outline';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
+import { trackEvent } from '../components/utils/Analytics';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = [
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-];
+] as const;
+
+type SubmissionStatus = 'idle' | 'submitting' | 'success' | 'error';
+type UploadedCv = FileList | null | undefined;
 
 const applicationSchema = z.object({
   name: z.string().min(2, 'Il nome deve contenere almeno 2 caratteri'),
   email: z.string().email('Inserisci un indirizzo email valido'),
   phone: z.string().min(6, 'Inserisci un numero di telefono valido'),
-  cv: z.any()
+  cv: z.custom<UploadedCv>()
     .refine((files) => files?.length === 1, 'Il CV è obbligatorio')
-    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, 'La dimensione massima è 5MB')
+    .refine((files) => {
+      const file = files?.item(0);
+      return !!file && file.size <= MAX_FILE_SIZE;
+    }, 'La dimensione massima è 5MB')
     .refine(
-      (files) => ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
+      (files) => {
+        const fileType = files?.item(0)?.type;
+        return !!fileType && ACCEPTED_FILE_TYPES.some((acceptedType) => acceptedType === fileType);
+      },
       'Formati supportati: PDF, DOC, DOCX. Le foto non sono ammesse.'
     ),
 });
 
 type ApplicationFormData = z.infer<typeof applicationSchema>;
 
-const CareersPage: React.FC = () => {
+function CareersPage() {
   const [offerte, setOfferte] = useState<OffertaLavoroData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<OffertaLavoroData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<SubmissionStatus>('idle');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [isJobDescriptionTruncated, setIsJobDescriptionTruncated] = useState<Record<string, boolean>>({});
   const jobDescriptionRefs = useRef<Record<string, HTMLParagraphElement | null>>({});
@@ -65,6 +75,7 @@ const CareersPage: React.FC = () => {
   });
 
   const selectedFile = watch('cv');
+  const selectedCvFile = selectedFile?.[0];
 
   // Filter States
   const [filterDipartimento, setFilterDipartimento] = useState('');
@@ -188,6 +199,16 @@ const CareersPage: React.FC = () => {
     reset();
   };
 
+  const trackApplicationSubmit = (success: boolean) => {
+    trackEvent('form_submit', {
+      category: 'engagement',
+      label: 'job_application',
+      value: success ? 1 : 0,
+      success,
+      job_title: selectedJob?.titolo ?? 'spontaneous'
+    });
+  };
+
   const onSubmit = async (data: ApplicationFormData) => {
     setStatus('submitting');
 
@@ -204,7 +225,7 @@ const CareersPage: React.FC = () => {
         : 'Candidatura spontanea per posizioni future'
       );
 
-      if (data.cv && data.cv[0]) {
+      if (data.cv?.[0]) {
         formData.append('cv', data.cv[0]);
       }
 
@@ -219,28 +240,11 @@ const CareersPage: React.FC = () => {
       }
 
       setStatus('success');
-
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'form_submit', {
-          category: 'engagement',
-          label: 'job_application',
-          value: 1,
-          success: true,
-          job_title: selectedJob?.titolo || 'spontaneous'
-        });
-      }
+      trackApplicationSubmit(true);
     } catch (error) {
       logger.error('Error sending application:', error);
       setStatus('error');
-
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'form_submit', {
-          category: 'engagement',
-          label: 'job_application',
-          value: 0,
-          success: false
-        });
-      }
+      trackApplicationSubmit(false);
     }
   };
 
@@ -614,7 +618,7 @@ const CareersPage: React.FC = () => {
 
                       <label className={`block border-2 border-dashed p-12 text-center group hover:border-primary transition-colors cursor-pointer ${errors.cv ? 'border-red-500' : 'border-black/10 dark:border-white/10'}`}>
                         <span className="text-sm font-black uppercase tracking-widest transition-opacity block mb-2 text-black/80 dark:text-white/70 opacity-80 group-hover:opacity-100">
-                          {selectedFile?.length > 0 ? 'Cambia File' : 'Seleziona File'}
+                          {selectedCvFile ? 'Cambia File' : 'Seleziona File'}
                         </span>
                         <span className="text-xs font-bold text-black/60 dark:text-white/30 block">Max 5MB · PDF, DOCX</span>
                         <input
@@ -629,16 +633,16 @@ const CareersPage: React.FC = () => {
                         />
                       </label>
 
-                      {selectedFile?.length > 0 && (
+                      {selectedCvFile && (
                         <div className="mt-4 p-4 bg-stone-50 dark:bg-white/5 border border-black/10 dark:border-white/5 flex items-center justify-between animate-fade-in">
                           <div className="flex items-center gap-4 overflow-hidden">
                             <div className="w-10 h-10 bg-primary/10 flex items-center justify-center shrink-0 rounded-sm">
                               <BriefcaseIcon className="w-5 h-5 text-primary" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-bold truncate text-black dark:text-white">{selectedFile[0].name}</p>
+                              <p className="text-sm font-bold truncate text-black dark:text-white">{selectedCvFile.name}</p>
                               <p className="text-[10px] text-black/60 dark:text-white/40 font-medium">
-                                {(selectedFile[0].size / 1024 / 1024).toFixed(2)} MB
+                                {(selectedCvFile.size / 1024 / 1024).toFixed(2)} MB
                               </p>
                             </div>
                           </div>
@@ -681,6 +685,6 @@ const CareersPage: React.FC = () => {
       </div>
     </Layout>
   );
-};
+}
 
 export default CareersPage;

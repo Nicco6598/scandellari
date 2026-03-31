@@ -1,30 +1,28 @@
-// src/components/utils/CookieBanner.tsx
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
-import { readCookieConsent, writeCookieConsent } from '../../utils/cookieConsent';
+import { useCookieConsent, writeCookieConsent } from '../../utils/cookieConsent';
 
-const CookieBanner: React.FC = () => {
+function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
+  const cookieConsent = useCookieConsent();
 
   useEffect(() => {
-    const cookiesAccepted = readCookieConsent();
-    if (!cookiesAccepted) {
+    if (!cookieConsent) {
       const timer = setTimeout(() => {
         setShowBanner(true);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, []);
+    setShowBanner(false);
+  }, [cookieConsent]);
 
   const acceptCookies = () => {
     writeCookieConsent('true');
-    setShowBanner(false);
   };
 
   const declineCookies = () => {
     writeCookieConsent('minimal');
-    setShowBanner(false);
   };
 
   return (
@@ -78,6 +76,6 @@ const CookieBanner: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default CookieBanner;

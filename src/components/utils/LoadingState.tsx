@@ -1,16 +1,14 @@
-import React from 'react';
-
-interface LoadingStateProps {
+type LoadingStateProps = {
   description?: string;
   label: string;
   variant?: 'page' | 'section';
-}
+};
 
-const LoadingState: React.FC<LoadingStateProps> = ({
+function LoadingState({
   description = 'Stiamo preparando i contenuti.',
   label,
   variant = 'page',
-}) => {
+}: LoadingStateProps) {
   const isPage = variant === 'page';
 
   return (
@@ -42,6 +40,6 @@ const LoadingState: React.FC<LoadingStateProps> = ({
       </div>
     </section>
   );
-};
+}
 
 export default LoadingState;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
@@ -17,7 +17,19 @@ import {
 } from '@heroicons/react/24/outline';
 import LoadingState from '../components/utils/LoadingState';
 
-interface Coordinate { lat: number; lng: number; }
+type Coordinate = { lat: number; lng: number };
+type RouteFeatureCollection = {
+    type: 'FeatureCollection';
+    features: Array<{
+        type: 'Feature';
+        geometry: { type: 'LineString'; coordinates: Array<[number, number]> };
+        properties: Record<string, never>;
+    }>;
+};
+type NominatimResponse = Array<{ lat: string; lon: string }>;
+type OsrmResponse = {
+    routes?: Array<{ geometry: { coordinates: Array<[number, number]> } }>;
+};
 
 const detailGeoCache: Record<string, Coordinate> = {};
 
@@ -27,7 +39,7 @@ async function geocodePartDetail(part: string): Promise<Coordinate | null> {
         const res = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`
         );
-        const data = await res.json();
+        const data: NominatimResponse = await res.json();
         if (data?.length > 0) {
             const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
             detailGeoCache[part] = coord;
@@ -39,7 +51,7 @@ async function geocodePartDetail(part: string): Promise<Coordinate | null> {
     return null;
 }
 
-const ProjectDetailPage: React.FC = () => {
+function ProjectDetailPage() {
     const { theme } = useTheme();
     const { id } = useParams<{ id: string }>();
 
@@ -52,7 +64,7 @@ const ProjectDetailPage: React.FC = () => {
 
     const [progetto, setProgetto] = useState<ProgettoData | null>(null);
     const [progettiCorrelati, setProgettiCorrelati] = useState<ProgettoData[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -120,11 +132,14 @@ const ProjectDetailPage: React.FC = () => {
                                 const routeRes = await fetch(
                                     `https://router.project-osrm.org/route/v1/driving/${osrmPath}?overview=full&geometries=geojson`
                                 );
-                                const routeData = await routeRes.json();
+                                const routeData: OsrmResponse = await routeRes.json();
                                 if (routeData.routes?.[0]) {
-                                    setRoutePoints(routeData.routes[0].geometry.coordinates.map((c: any) => ({
-                                        lng: c[0], lat: c[1]
-                                    })));
+                                    setRoutePoints(
+                                        routeData.routes[0].geometry.coordinates.map(([lng, lat]) => ({
+                                            lng,
+                                            lat
+                                        }))
+                                    );
                                 } else {
                                     setRoutePoints(coords);
                                 }
@@ -144,15 +159,15 @@ const ProjectDetailPage: React.FC = () => {
         fetchProject();
     }, [id]);
 
-    const lineGeoJSON = useMemo(() => {
+    const lineGeoJSON = useMemo<RouteFeatureCollection | null>(() => {
         if (routePoints.length < 2) return null;
         return {
-            type: 'FeatureCollection' as const,
+            type: 'FeatureCollection',
             features: [{
-                type: 'Feature' as const,
+                type: 'Feature',
                 geometry: {
-                    type: 'LineString' as const,
-                    coordinates: routePoints.map(pt => [pt.lng, pt.lat])
+                    type: 'LineString',
+                    coordinates: routePoints.map((pt) => [pt.lng, pt.lat] as [number, number])
                 },
                 properties: {}
             }]
@@ -244,7 +259,7 @@ const ProjectDetailPage: React.FC = () => {
                                     </Source>
                                 )}
                                 {mapPoints.map((pt, i) => (
-                                    <React.Fragment key={i}>
+                                    <Fragment key={`${pt.lat}-${pt.lng}`}>
                                         <Marker
                                             longitude={pt.lng}
                                             latitude={pt.lat}
@@ -262,17 +277,17 @@ const ProjectDetailPage: React.FC = () => {
                                             offset={15}
                                             closeButton={false}
                                             className="maplibre-popup-custom"
-                                        >
-                                            <div className="p-3 min-w-[120px] bg-white dark:bg-dark-surface border border-black/10 dark:border-white/10 shadow-xl">
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">
+                                            >
+                                                <div className="p-3 min-w-[120px] bg-white dark:bg-dark-surface border border-black/10 dark:border-white/10 shadow-xl">
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">
                                                     Località {i + 1}
                                                 </span>
                                                 <h4 className="font-black uppercase text-[10px] tracking-tight text-black dark:text-white leading-tight">
                                                     {progetto.localita.split(/[-/]/)[i]?.trim() || progetto.localita}
                                                 </h4>
-                                            </div>
-                                        </Popup>
-                                    </React.Fragment>
+                                                </div>
+                                            </Popup>
+                                    </Fragment>
                                 ))}
                             </Map>
                         ) : (
@@ -442,6 +457,6 @@ const ProjectDetailPage: React.FC = () => {
             </div>
         </Layout>
     );
-};
+}
 
 export default ProjectDetailPage;

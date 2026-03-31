@@ -1,23 +1,26 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import gsap from 'gsap';
 
-// Importa loghi azienda
 import logoBlu from '../../assets/images/LogoBlu.svg';
 import logoBianco from '../../assets/images/LogoBianco.svg';
 
-// Importa loghi certificazione
 import logoAccredia from '../../assets/images/accredia.webp';
 import logoIso14001 from '../../assets/images/aid-iso-14001.webp';
 import logoIso9001 from '../../assets/images/aid-iso-9001.webp';
 import logoIso45001 from '../../assets/images/aid-iso-45001.webp';
 
-// Importa Icone Heroicons necessarie
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 
-// ─── Magnetic Footer Link ──────────────────────────────────────────────────
-const MagneticLink: React.FC<{ to: string; children: React.ReactNode; className?: string }> = ({ to, children, className = '' }) => {
+type MagneticLinkProps = {
+  to: string;
+  children: ReactNode;
+  className?: string;
+};
+
+function MagneticLink({ to, children, className = '' }: MagneticLinkProps) {
   const linkRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -60,9 +63,9 @@ const MagneticLink: React.FC<{ to: string; children: React.ReactNode; className?
       {children}
     </Link>
   );
-};
+}
 
-const Footer: React.FC = () => {
+function Footer() {
     const currentYear = new Date().getFullYear();
     const { theme } = useTheme();
 
@@ -111,8 +114,8 @@ const Footer: React.FC = () => {
                         <div className="pt-4">
                             <span className="text-xs font-black uppercase tracking-[0.3em] text-primary-dark dark:text-primary-medium">Qualità Certificata</span>
                             <div className="flex flex-wrap gap-8 mt-6 grayscale opacity-30">
-                                {certificationLogos.map((logo, i) => (
-                                    <img key={i} src={logo.src} alt={logo.alt} width="80" height="24" className="h-6 w-auto object-contain" loading="lazy" decoding="async" />
+                                {certificationLogos.map((logo) => (
+                                    <img key={logo.alt} src={logo.src} alt={logo.alt} width="80" height="24" className="h-6 w-auto object-contain" loading="lazy" decoding="async" />
                                 ))}
                             </div>
                         </div>
@@ -186,6 +189,6 @@ const Footer: React.FC = () => {
             </div>
         </footer>
     );
-};
+}
 
 export default Footer;

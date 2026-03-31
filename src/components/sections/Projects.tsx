@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { progettiService } from '../../supabase/services';
@@ -7,7 +7,12 @@ import { ProgettoData } from '../../types/supabaseTypes';
 import gsap from 'gsap';
 import LoadingState from '../utils/LoadingState';
 
-const ProjectCard: React.FC<{ project: ProgettoData; index: number }> = ({ project, index }) => {
+type ProjectCardProps = {
+  project: ProgettoData;
+  index: number;
+};
+
+function ProjectCard({ project, index }: ProjectCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
 
@@ -104,9 +109,9 @@ const ProjectCard: React.FC<{ project: ProgettoData; index: number }> = ({ proje
       </Link>
     </div>
   );
-};
+}
 
-const Projects: React.FC = () => {
+function Projects() {
   const [projects, setProjects] = useState<ProgettoData[]>([]);
   const [totalProjects, setTotalProjects] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -175,6 +180,6 @@ const Projects: React.FC = () => {
       </div>
     </section>
   );
-};
+}
 
 export default Projects;

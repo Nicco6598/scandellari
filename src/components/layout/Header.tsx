@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useMobileMenu } from '../../context/MobileMenuContext';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
@@ -15,17 +16,34 @@ import {
 import logoBlu from '../../assets/images/LogoBlu.svg';
 import logoBianco from '../../assets/images/LogoBianco.svg';
 
-interface MenuItem {
+type MenuItem = {
   name: string;
   path: string;
-}
+};
 
-interface MenuGroup {
+type MenuGroup = {
   name: string;
   items: MenuItem[];
-}
+};
 
-const menuGroups: (MenuItem | MenuGroup)[] = [
+type MenuEntry = MenuItem | MenuGroup;
+
+type MobileMenuPanelProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  theme: string;
+  toggleTheme: () => void;
+  location: ReturnType<typeof useLocation>;
+};
+
+type MagneticLinkProps = {
+  children: ReactNode;
+  to: string;
+  active: boolean;
+  forceLightText: boolean;
+};
+
+const menuGroups = [
   { name: 'Competenze', path: '/competenze' },
   { name: 'Progetti', path: '/progetti' },
   { name: 'Certificazioni', path: '/certificazioni' },
@@ -36,32 +54,25 @@ const menuGroups: (MenuItem | MenuGroup)[] = [
       { name: 'Carriera', path: '/lavora-con-noi' },
     ]
   },
-];
+] satisfies MenuEntry[];
 
-const isMenuGroup = (item: any): item is MenuGroup => 'items' in item;
+const isMenuGroup = (item: MenuEntry): item is MenuGroup => 'items' in item;
 
-// ─── Mobile Menu Panel (rendered via portal, fully isolated) ─────────────────
-const MobileMenuPanel: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  theme: string;
-  toggleTheme: () => void;
-  location: ReturnType<typeof useLocation>;
-}> = ({ isOpen, onClose, theme, toggleTheme, location }) => {
+function MobileMenuPanel({ isOpen, onClose, theme, toggleTheme, location }: MobileMenuPanelProps) {
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const isActivePath = (path: string) => location.pathname === path;
   const isGroupActive = (group: MenuGroup) => group.items.some(s => isActivePath(s.path));
 
-  // Lock scroll on html element (no reflow)
   useEffect(() => {
     document.documentElement.style.overflow = isOpen ? 'hidden' : '';
     return () => { document.documentElement.style.overflow = ''; };
   }, [isOpen]);
 
-  // Auto-expand active group on open
   useEffect(() => {
     if (!isOpen) return;
-    const active = menuGroups.find(item => isMenuGroup(item) && isGroupActive(item as MenuGroup));
+    const active = menuGroups.find(
+      (item): item is MenuGroup => isMenuGroup(item) && isGroupActive(item)
+    );
     if (active && isMenuGroup(active)) setExpandedGroup(active.name);
   }, [isOpen]);
 
@@ -83,14 +94,12 @@ const MobileMenuPanel: React.FC<{
       style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
       aria-hidden={!isOpen}
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-500"
         style={{ opacity: isOpen ? 1 : 0 }}
         onClick={onClose}
       />
 
-      {/* Panel — always bg-white/bg-black, no transparency */}
       <div
         className="absolute inset-y-0 right-0 w-full sm:w-[460px] bg-white dark:bg-black shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-l border-black/10 dark:border-white/10 flex flex-col"
         style={{
@@ -98,7 +107,6 @@ const MobileMenuPanel: React.FC<{
           transition: 'transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
       >
-        {/* Header row */}
         <div className="p-6 flex items-center justify-between shrink-0">
           <img
             src={theme === 'dark' ? logoBianco : logoBlu}
@@ -116,10 +124,9 @@ const MobileMenuPanel: React.FC<{
           </button>
         </div>
 
-        {/* Nav items */}
         <nav className="flex flex-col flex-grow overflow-y-auto px-2 pb-6">
-          {menuGroups.map((item, index) => (
-            <div key={index} className="pt-1">
+          {menuGroups.map((item) => (
+            <div key={item.name} className="pt-1">
               {isMenuGroup(item) ? (
                 <>
                   <button
@@ -146,10 +153,10 @@ const MobileMenuPanel: React.FC<{
                     }}
                   >
                     <div className="pt-2 pb-2 flex flex-col gap-1">
-                      {item.items.map((sub, i) => {
+                      {item.items.map((sub) => {
                         const active = isActivePath(sub.path);
                         return (
-                          <Link key={i} to={sub.path} onClick={onClose} className={mobileSubRowClass(active)}>
+                          <Link key={sub.path} to={sub.path} onClick={onClose} className={mobileSubRowClass(active)}>
                             <div className="flex items-center gap-4 min-w-0">
                               <span className={indicatorClass(active)} />
                               <span className="text-2xl font-black tracking-tight font-heading uppercase truncate">
@@ -164,26 +171,20 @@ const MobileMenuPanel: React.FC<{
                   </div>
                 </>
               ) : (
-                (() => {
-                  const active = isActivePath((item as MenuItem).path);
-                  return (
-                    <Link to={(item as MenuItem).path} onClick={onClose} className={mobileTopRowClass(active)}>
-                      <div className="flex items-center gap-4 min-w-0">
-                        <span className={indicatorClass(active)} />
-                        <span className="text-3xl font-black tracking-tight font-heading uppercase truncate">
-                          {item.name}
-                        </span>
-                      </div>
-                      <span className="w-5 h-5" />
-                    </Link>
-                  );
-                })()
+                <Link to={item.path} onClick={onClose} className={mobileTopRowClass(isActivePath(item.path))}>
+                  <div className="flex items-center gap-4 min-w-0">
+                    <span className={indicatorClass(isActivePath(item.path))} />
+                    <span className="text-3xl font-black tracking-tight font-heading uppercase truncate">
+                      {item.name}
+                    </span>
+                  </div>
+                  <span className="w-5 h-5" />
+                </Link>
               )}
             </div>
           ))}
         </nav>
 
-        {/* Footer */}
         <div className="p-6 border-t border-black/10 dark:border-white/10 flex flex-col gap-6 shrink-0">
           <div className="flex flex-col gap-3">
             <span className="text-[10px] font-black uppercase tracking-[0.25em] text-black/60 dark:text-white/60">
@@ -227,15 +228,9 @@ const MobileMenuPanel: React.FC<{
     </div>,
     document.body
   );
-};
+}
 
-// ─── Magnetic Link Component ──────────────────────────────────────────────
-const MagneticLink: React.FC<{
-  children: React.ReactNode;
-  to: string;
-  active: boolean;
-  forceLightText: boolean;
-}> = ({ children, to, active, forceLightText }) => {
+function MagneticLink({ children, to, active, forceLightText }: MagneticLinkProps) {
   const linkRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -284,10 +279,9 @@ const MagneticLink: React.FC<{
       {children}
     </Link>
   );
-};
+}
 
-// ─── Header ──────────────────────────────────────────────────────────────────
-const Header: React.FC = () => {
+function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
@@ -345,7 +339,6 @@ const Header: React.FC = () => {
         : 'bg-transparent py-7 lg:py-9'
       }`}>
         <div className="container mx-auto max-w-7xl px-6 flex items-center justify-between">
-          {/* Logo */}
           <Link to="/" aria-label="Home - Scandellari Giacinto s.n.c." className="flex items-center">
             <img
               src={(theme === 'dark' || forceLightText) ? logoBianco : logoBlu}
@@ -356,10 +349,9 @@ const Header: React.FC = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-10">
-            {menuGroups.map((item, index) => (
-              <div key={index} className="relative group">
+            {menuGroups.map((item) => (
+              <div key={item.name} className="relative group">
                 {isMenuGroup(item) ? (
                   <>
                     <button
@@ -375,9 +367,9 @@ const Header: React.FC = () => {
                         className="absolute top-full left-0 pt-6 w-56"
                       >
                         <div className="bg-white dark:bg-black border border-black/5 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden p-2">
-                          {item.items.map((sub, i) => (
+                          {item.items.map((sub) => (
                             <Link
-                              key={i}
+                              key={sub.path}
                               to={sub.path}
                               className={`block px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${isActivePath(sub.path)
                                 ? 'bg-primary text-white'
@@ -393,8 +385,8 @@ const Header: React.FC = () => {
                   </>
                 ) : (
                   <MagneticLink
-                    to={(item as MenuItem).path}
-                    active={isActivePath((item as MenuItem).path)}
+                    to={item.path}
+                    active={isActivePath(item.path)}
                     forceLightText={forceLightText}
                   >
                     {item.name}
@@ -441,7 +433,6 @@ const Header: React.FC = () => {
             </div>
           </nav>
 
-          {/* Mobile Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
             className={`lg:hidden p-2 transition-colors ${forceLightText ? 'text-white' : 'text-black dark:text-white'}`}
@@ -452,7 +443,6 @@ const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Menu — portaled to document.body, completely isolated from header */}
       <MobileMenuPanel
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
@@ -462,6 +452,6 @@ const Header: React.FC = () => {
       />
     </>
   );
-};
+}
 
 export default Header;
