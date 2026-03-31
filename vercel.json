@@ -24,7 +24,7 @@
                 },
                 {
                     "key": "Content-Security-Policy",
-                    "value": "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.supabase.co https://*.cartocdn.com https://*.openstreetmap.org; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://*.basemaps.cartocdn.com https://api.maptiler.com https://scandellari-backend.vercel.app; font-src 'self' data: https://fonts.gstatic.com https://*.cartocdn.com; media-src 'self' blob:; frame-ancestors 'none'; worker-src 'self' blob:;"
+                    "value": "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.supabase.co https://*.cartocdn.com https://*.openstreetmap.org; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://*.basemaps.cartocdn.com https://*.cartocdn.com https://api.maptiler.com https://scandellari-backend.vercel.app; font-src 'self' data: https://fonts.gstatic.com https://*.cartocdn.com; media-src 'self' blob:; frame-ancestors 'none'; worker-src 'self' blob:;"
                 }
             ]
         },
