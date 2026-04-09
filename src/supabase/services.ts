@@ -15,6 +15,13 @@ type FrontendTimestampFields = {
   updatedAt?: Date;
 };
 
+type ProjectLocationFields = {
+  coordinatePunti?: unknown;
+  coordinatePercorso?: unknown;
+  coordinate_punti?: unknown;
+  coordinate_percorso?: unknown;
+};
+
 const convertTimestampToDate = <T extends Record<string, unknown>>(item: T): T & FrontendTimestampFields => {
   const newItem = { ...item } as T & FrontendTimestampFields & TimestampFields;
 
@@ -32,6 +39,60 @@ const convertTimestampToDate = <T extends Record<string, unknown>>(item: T): T &
 const stripFrontendTimestampFields = <T extends Record<string, unknown>>(payload: T) => {
   const { createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = payload as T & FrontendTimestampFields;
   return rest as Omit<T, keyof FrontendTimestampFields>;
+};
+
+const normalizeProjectLocationFields = <T extends Record<string, unknown>>(payload: T) => {
+  const {
+    coordinatePunti,
+    coordinatePercorso,
+    coordinate_punti,
+    coordinate_percorso,
+    ...rest
+  } = payload as T & ProjectLocationFields;
+
+  const normalizedPoints = coordinate_punti ?? coordinatePunti;
+  const normalizedRoute = coordinate_percorso ?? coordinatePercorso;
+
+  return {
+    ...rest,
+    ...(normalizedPoints !== undefined ? { coordinate_punti: normalizedPoints } : {}),
+    ...(normalizedRoute !== undefined ? { coordinate_percorso: normalizedRoute } : {}),
+  };
+};
+
+const stripProjectLocationFields = <T extends Record<string, unknown>>(payload: T) => {
+  const {
+    coordinatePunti: _coordinatePunti,
+    coordinatePercorso: _coordinatePercorso,
+    coordinate_punti: _coordinatePuntiSnake,
+    coordinate_percorso: _coordinatePercorsoSnake,
+    ...rest
+  } = payload as T & ProjectLocationFields;
+
+  return rest;
+};
+
+const isProjectLocationSchemaError = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') return false;
+
+  const details = [
+    (error as { code?: string }).code,
+    (error as { message?: string }).message,
+    (error as { details?: string }).details,
+    (error as { hint?: string }).hint,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  const mentionsProjectCoordinates = (
+    details.includes('coordinate_punti') ||
+    details.includes('coordinate_percorso') ||
+    details.includes('coordinatepunti') ||
+    details.includes('coordinatepercorso')
+  );
+
+  return mentionsProjectCoordinates || details.includes('pgrst204') || details.includes('42703');
 };
 
 const getCurrentUser = async () => {
@@ -210,6 +271,59 @@ export const offerteService = {
 // Progetti Service (Projects)
 // ==========================
 export const progettiService = {
+  getProjectsCount: async (): Promise<number> => {
+    const { count, error } = await supabase
+      .from('progetti')
+      .select('id', { count: 'exact', head: true });
+
+    if (error) {
+      logger.error('Errore getProjectsCount:', error);
+      throw error;
+    }
+
+    return count ?? 0;
+  },
+
+  getFeaturedProjects: async (limit: number = 4): Promise<ProgettoData[]> => {
+    const { data, error } = await supabase
+      .from('progetti')
+      .select('id,id_numerico,titolo,descrizione,categoria,localita,anno,tecnologie,immagini,created_at,updated_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      logger.error('Errore getFeaturedProjects:', error);
+      throw error;
+    }
+
+    return (data ?? []).map((item) => convertTimestampToDate(item)) as ProgettoData[];
+  },
+
+  getProjectsByCategory: async (category: string, limit?: number, excludeId?: string): Promise<ProgettoData[]> => {
+    let query = supabase
+      .from('progetti')
+      .select('id,id_numerico,titolo,descrizione,categoria,localita,anno,tecnologie,immagini,created_at,updated_at')
+      .ilike('categoria', category)
+      .order('created_at', { ascending: false });
+
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+
+    if (typeof limit === 'number') {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      logger.error('Errore getProjectsByCategory:', error);
+      throw error;
+    }
+
+    return (data ?? []).map((item) => convertTimestampToDate(item)) as ProgettoData[];
+  },
+
   // Get all projects
   getAllProjects: async (): Promise<ProgettoData[]> => {
     const { data, error } = await supabase
@@ -250,13 +364,22 @@ export const progettiService = {
     const currentUser = await getCurrentUser();
     const newId = uuidv4();
 
-    const insertPayload = {
-        ...projectData,
-        id: newId,
-        created_at: new Date().toISOString(),
-    };
+    const insertPayload = normalizeProjectLocationFields({
+      ...projectData,
+      id: newId,
+      created_at: new Date().toISOString(),
+    });
 
-    const { data, error } = await supabase.from('progetti').insert([insertPayload]).select().single();
+    let { data, error } = await supabase.from('progetti').insert([insertPayload]).select().single();
+
+    if (error && isProjectLocationSchemaError(error)) {
+      logger.warn('Colonne coordinate progetto non ancora disponibili. Riprovo senza campi geografici.', error);
+      ({ data, error } = await supabase
+        .from('progetti')
+        .insert([stripProjectLocationFields(insertPayload)])
+        .select()
+        .single());
+    }
 
     if (error) {
       logger.error("Errore createProject:", error);
@@ -284,12 +407,22 @@ export const progettiService = {
     }
     const projectId = existingProject.id;
 
-    const updatePayload = {
+    const updatePayload = normalizeProjectLocationFields({
       ...stripFrontendTimestampFields(projectData),
       updated_at: new Date().toISOString()
-    };
+    });
 
-    const { data, error } = await supabase.from('progetti').update(updatePayload).eq('id', projectId).select().single();
+    let { data, error } = await supabase.from('progetti').update(updatePayload).eq('id', projectId).select().single();
+
+    if (error && isProjectLocationSchemaError(error)) {
+      logger.warn('Colonne coordinate progetto non ancora disponibili. Riprovo aggiornamento senza campi geografici.', error);
+      ({ data, error } = await supabase
+        .from('progetti')
+        .update(stripProjectLocationFields(updatePayload))
+        .eq('id', projectId)
+        .select()
+        .single());
+    }
 
     if (error) {
         logger.error("Errore updateProject (database):", error);
@@ -319,6 +452,40 @@ export const progettiService = {
       entityType: 'progetto',
       entityId: projectId
     }, 'updateProject');
+    return convertTimestampToDate(data) as ProgettoData;
+  },
+
+  updateProjectLocationData: async (
+    id: string,
+    locationData: Pick<ProgettoData, 'coordinatePunti' | 'coordinatePercorso' | 'coordinate_punti' | 'coordinate_percorso'>
+  ): Promise<ProgettoData> => {
+    const existingProject = await progettiService.getProjectById(id);
+    if (!existingProject || !existingProject.id) {
+      throw new Error(`Progetto con ID/ID_Numerico ${id} non trovato o ID mancante per l'aggiornamento coordinate.`);
+    }
+
+    const updatePayload = normalizeProjectLocationFields({
+      ...locationData,
+      updated_at: new Date().toISOString(),
+    });
+
+    let { data, error } = await supabase
+      .from('progetti')
+      .update(updatePayload)
+      .eq('id', existingProject.id)
+      .select()
+      .single();
+
+    if (error && isProjectLocationSchemaError(error)) {
+      logger.warn('Colonne coordinate progetto non ancora disponibili. Aggiornamento geografico ignorato.', error);
+      throw error;
+    }
+
+    if (error) {
+      logger.error('Errore updateProjectLocationData (database):', error);
+      throw error;
+    }
+
     return convertTimestampToDate(data) as ProgettoData;
   },
 
@@ -422,6 +589,29 @@ export const progettiService = {
 // Competenze Service (Skills)
 // ==========================
 export const competenzeService = {
+  getCompetenzeByTitles: async (titles: readonly string[]): Promise<CompetenzaData[]> => {
+    if (titles.length === 0) return [];
+
+    const { data, error } = await supabase
+      .from('competenze')
+      .select('*')
+      .in('titolo', [...titles]);
+
+    if (error) {
+      logger.error('Errore getCompetenzeByTitles:', error);
+      throw error;
+    }
+
+    const titleOrder = new Map(titles.map((title, index) => [title, index]));
+
+    return (data ?? [])
+      .map((item) => convertTimestampToDate(item) as CompetenzaData)
+      .sort((left, right) => (
+        (titleOrder.get(left.titolo) ?? Number.MAX_SAFE_INTEGER) -
+        (titleOrder.get(right.titolo) ?? Number.MAX_SAFE_INTEGER)
+      ));
+  },
+
   // Get all skills
   getAllCompetenze: async (): Promise<CompetenzaData[]> => {
     const { data, error } = await supabase

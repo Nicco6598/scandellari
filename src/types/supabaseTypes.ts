@@ -6,6 +6,11 @@ export interface ImmagineInfo {
   path: string; // Path nel bucket Supabase Storage, necessario per la cancellazione
 }
 
+export interface CoordinateInfo {
+  lat: number;
+  lng: number;
+}
+
 export interface ProgettoData {
   id?: string; // UUID gestito da Supabase/servizio
   id_numerico?: number; // ID numerico sequenziale opzionale
@@ -21,6 +26,10 @@ export interface ProgettoData {
   caratteristiche?: string[]; // Array di caratteristiche chiave del progetto
   risultati?: string[]; // Array di risultati ottenuti
   sfide?: string[]; // Array di sfide affrontate
+  coordinatePunti?: CoordinateInfo[]; // Coordinate persistite opzionali per i punti del progetto
+  coordinatePercorso?: CoordinateInfo[]; // Percorso persistito opzionale per la mappa
+  coordinate_punti?: CoordinateInfo[]; // Compatibilità con possibili colonne snake_case
+  coordinate_percorso?: CoordinateInfo[]; // Compatibilità con possibili colonne snake_case
   // Sostituito 'immaginiGalleria' con 'immagini' che contiene oggetti ImmagineInfo
   immagini?: ImmagineInfo[]; // Array di oggetti contenenti URL e path delle immagini
   created_at?: string | Date; // Timestamp di creazione (Supabase usa stringa ISO)
