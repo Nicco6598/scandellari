@@ -7,6 +7,7 @@ import {
   SparklesIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
+import { metaTextClasses, secondaryTextClasses } from '../components/utils/ColorStyles';
 
 const CompanyPolicyPage: React.FC = () => {
   return (
@@ -21,14 +22,14 @@ const CompanyPolicyPage: React.FC = () => {
           >
             <div className="flex items-center gap-4 mb-12">
               <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+              <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                 Governance & Standards
               </span>
             </div>
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
               Policy<br />Aziendale
             </h1>
-            <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+            <p className={`text-base md:text-xl max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
               I nostri parametri di eccellenza operativa, responsabilità ambientale e tutela della sicurezza sul lavoro.
             </p>
           </div>
@@ -47,7 +48,7 @@ const CompanyPolicyPage: React.FC = () => {
                     { code: 'ISO 45001:2018', label: 'Sicurezza' }
                   ].map((cert, i) => (
                     <li key={i} className="flex justify-between items-center text-xs font-black uppercase tracking-widest">
-                      <span className="text-black/30 dark:text-white/20">{cert.label}</span>
+                      <span className={metaTextClasses}>{cert.label}</span>
                       <span className="text-black dark:text-white">{cert.code}</span>
                     </li>
                   ))}
@@ -56,7 +57,7 @@ const CompanyPolicyPage: React.FC = () => {
 
               <div className="p-8 border border-black dark:border-white space-y-6">
                 <h3 className="text-lg font-black font-heading">Documentazione</h3>
-                <p className="text-xs text-black/40 dark:text-white/40 font-medium">Scarica la politica integrale del sistema di gestione integrato.</p>
+                <p className={`text-xs font-medium ${secondaryTextClasses}`}>Scarica la politica integrale del sistema di gestione integrato.</p>
                 <a
                   href="/certificazioni/Politica_Sistema_Integrato_Qualita_Ambiente_Sicurezza.pdf"
                   target="_blank"
@@ -98,7 +99,7 @@ const CompanyPolicyPage: React.FC = () => {
                     <h2 className="text-3xl font-black font-heading tracking-tight uppercase">{section.title}</h2>
                   </div>
                   <div className="max-w-2xl space-y-8">
-                    <p className="text-base text-black/50 dark:text-white/40 font-medium leading-relaxed">{section.content}</p>
+                    <p className={`text-base font-medium leading-relaxed ${secondaryTextClasses}`}>{section.content}</p>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {section.points.map((point, j) => (
                         <div key={j} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest py-4 border-b border-black/5 dark:border-white/5">

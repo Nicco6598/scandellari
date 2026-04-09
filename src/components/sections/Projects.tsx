@@ -7,6 +7,7 @@ import { ProgettoData } from '../../types/supabaseTypes';
 import gsap from 'gsap';
 import LoadingState from '../utils/LoadingState';
 import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../utils/ProjectImagePlaceholder';
+import { metaTextClasses, primaryTextClasses, secondaryTextClasses } from '../utils/ColorStyles';
 
 type ProjectCardProps = {
   project: ProgettoData;
@@ -93,16 +94,16 @@ function ProjectCard({ project, index }: ProjectCardProps) {
           <div className="flex items-center gap-4">
             <span className="text-xs font-black text-primary-dark dark:text-primary-medium uppercase tracking-[0.3em]">{project.anno}</span>
             <div className="w-8 h-[1px] bg-black/10 dark:bg-white/10" />
-            <span className="text-[10px] font-black text-black/60 dark:text-white/50 uppercase tracking-[0.3em]">{project.localita}</span>
+            <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${metaTextClasses}`}>{project.localita}</span>
           </div>
-          <h3 className="text-4xl lg:text-5xl font-black text-black dark:text-white tracking-tighter leading-none font-heading group-hover:text-primary transition-colors duration-300">
+          <h3 className={`text-4xl lg:text-5xl font-black tracking-tighter leading-none font-heading group-hover:text-primary transition-colors duration-300 ${primaryTextClasses}`}>
             {project.titolo}
           </h3>
-          <p className="text-base text-black/70 dark:text-white/60 font-medium leading-relaxed line-clamp-2 max-w-xl">
+          <p className={`text-base font-medium leading-relaxed line-clamp-2 max-w-xl ${secondaryTextClasses}`}>
             {project.descrizione}
           </p>
           <div className="flex items-center gap-3 pt-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-black/60 dark:text-white/50 group-hover:text-primary transition-colors">
+            <span className={`text-[10px] font-black uppercase tracking-[0.3em] group-hover:text-primary transition-colors ${metaTextClasses}`}>
               Scopri Progetto
             </span>
             <ArrowRightIcon className="w-5 h-5 text-primary group-hover:translate-x-2 transition-all duration-300" />
@@ -152,7 +153,7 @@ function Projects() {
             <div className="space-y-8" data-animate="fade-up" data-animate-distance="20">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+                <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                   Portfolio & Expertise
                 </span>
               </div>
@@ -163,7 +164,7 @@ function Projects() {
           </div>
           <Link
             to="/progetti"
-            className="text-[10px] font-black uppercase tracking-[0.3em] text-black/70 dark:text-white/60 hover:text-black dark:hover:text-white transition-colors group flex items-center gap-4"
+            className={`text-[10px] font-black uppercase tracking-[0.3em] hover:text-black dark:hover:text-white transition-colors group flex items-center gap-4 ${metaTextClasses}`}
           >
             Tutti i Progetti{totalProjects > 0 ? ` (${totalProjects})` : ''}
             <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-2 text-primary" />

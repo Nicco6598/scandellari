@@ -20,6 +20,11 @@ import {
     XMarkIcon,
     CheckCircleIcon
 } from '@heroicons/react/24/outline';
+import {
+    metaTextClasses,
+    primaryTextClasses,
+    secondaryTextClasses,
+} from '../components/utils/ColorStyles';
 
 const companyCoords = { longitude: 9.59088, latitude: 45.51263 };
 
@@ -160,14 +165,14 @@ function ContactPage() {
                     >
                         <div className="flex items-center gap-4 mb-12">
                             <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                                 Canali Diretti
                             </span>
                         </div>
                         <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
                             Parliamo
                         </h1>
-                        <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+                        <p className={`text-base md:text-xl max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
                             Contattaci per consulenze tecniche, preventivi o informazioni sui nostri sistemi di segnalamento ferroviario.
                         </p>
                     </div>
@@ -180,8 +185,8 @@ function ContactPage() {
                             <div className="space-y-12">
                                 <div className="group">
                                     <div className="text-xs font-black uppercase tracking-widest text-primary mb-4">Sede Operativa</div>
-                                    <h3 className="text-2xl font-black text-black dark:text-white mb-2 font-heading">Treviglio, BG</h3>
-                                    <p className="text-black/70 dark:text-white/60 font-medium">Via Roggia Vignola, 9<br />24047 Treviglio (BG)</p>
+                                    <h3 className={`text-2xl font-black mb-2 font-heading ${primaryTextClasses}`}>Treviglio, BG</h3>
+                                    <p className={`font-medium ${secondaryTextClasses}`}>Via Roggia Vignola, 9<br />24047 Treviglio (BG)</p>
                                 </div>
 
                                 <div className="group">
@@ -284,7 +289,7 @@ function ContactPage() {
                                             <div key={field.id} className="bg-white dark:bg-black p-8 group border-b border-black/10 dark:border-white/10 hover:bg-stone-50/50 dark:hover:bg-dark-surface focus-within:bg-stone-50 dark:focus-within:bg-dark-surface transition-all duration-300">
                                                 <label
                                                     htmlFor={field.id}
-                                                    className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors[field.id] ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}
+                                                    className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors[field.id] ? 'text-red-500' : metaTextClasses}`}
                                                 >
                                                     {field.label}
                                                 </label>
@@ -304,7 +309,7 @@ function ContactPage() {
                                         <div className="bg-white dark:bg-black p-8 group hover:bg-stone-50/50 dark:hover:bg-dark-surface focus-within:bg-stone-50 dark:focus-within:bg-dark-surface transition-all duration-300">
                                             <label
                                                 htmlFor="message"
-                                                className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors.message ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}
+                                                className={`block text-xs font-black uppercase tracking-widest mb-4 group-focus-within:text-primary transition-colors ${errors.message ? 'text-red-500' : metaTextClasses}`}
                                             >
                                                 Messaggio
                                             </label>

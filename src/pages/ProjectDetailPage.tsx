@@ -17,6 +17,11 @@ import {
 import LoadingState from '../components/utils/LoadingState';
 import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../components/utils/ProjectImagePlaceholder';
 import { useInjectedHeadStyle } from '../hooks/useInjectedHeadStyle';
+import {
+    metaTextClasses,
+    primaryTextClasses,
+    secondaryTextClasses,
+} from '../components/utils/ColorStyles';
 
 type Coordinate = { lat: number; lng: number };
 type RouteFeatureCollection = {
@@ -201,7 +206,7 @@ function ProjectDetailPage() {
                 <section className="container mx-auto max-w-7xl px-6 mb-20">
                     <Link
                         to="/progetti"
-                        className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] text-black/70 dark:text-white/60 hover:text-black dark:hover:text-white transition-colors mb-12"
+                        className={`inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] hover:text-black dark:hover:text-white transition-colors mb-12 ${metaTextClasses}`}
                     >
                         <ArrowLeftIcon className="w-4 h-4" />
                         Tutti i Progetti
@@ -214,13 +219,13 @@ function ProjectDetailPage() {
                                     {progetto.categoria}
                                 </span>
                                 <div className="w-12 h-[1px] bg-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+                                <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                                     {progetto.anno} • {progetto.localita}
                                 </span>
                             </div>
-                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-black dark:text-white tracking-tighter leading-[0.85] font-heading">
-                                {progetto.titolo}
-                            </h1>
+                                <h1 className={`text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.85] font-heading ${primaryTextClasses}`}>
+                                    {progetto.titolo}
+                                </h1>
                         </div>
                     </div>
 
@@ -315,16 +320,16 @@ function ProjectDetailPage() {
                             </div>
 
                             <div className="max-w-3xl">
-                                <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 mb-8 font-heading">Panoramica</h2>
+                                <h2 className={`text-xs font-black uppercase tracking-[0.4em] mb-8 font-heading ${metaTextClasses}`}>Panoramica</h2>
                                 <div
-                                    className="text-lg text-black/80 dark:text-white/70 leading-relaxed font-medium prose dark:prose-invert max-w-none prose-p:mb-6"
+                                    className={`text-lg leading-relaxed font-medium prose dark:prose-invert max-w-none prose-p:mb-6 ${secondaryTextClasses}`}
                                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(progetto.descrizioneLunga || progetto.descrizione || '') }}
                                 />
                             </div>
 
                             {progetto.immagini && progetto.immagini.length > 1 && (
                                 <div className="space-y-8">
-                                    <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 font-heading">Documentazione Fotografica</h2>
+                                    <h2 className={`text-xs font-black uppercase tracking-[0.4em] font-heading ${metaTextClasses}`}>Documentazione Fotografica</h2>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
                                         {progetto.immagini.map((img, i) => (
                                             <div
@@ -346,7 +351,7 @@ function ProjectDetailPage() {
                             <div className="grid md:grid-cols-2 gap-12 border-t border-black/10 dark:border-white/5 pt-16">
                                 {progetto.sfide?.length ? (
                                     <div className="space-y-8">
-                                        <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40">Sfide e Soluzioni</h3>
+                                        <h3 className={`text-xs font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>Sfide e Soluzioni</h3>
                                         <ul className="space-y-4">
                                             {progetto.sfide.map((item, i) => (
                                                 <li key={i} className="flex gap-4 text-sm font-bold text-black dark:text-white">
@@ -360,7 +365,7 @@ function ProjectDetailPage() {
 
                                 {progetto.risultati?.length ? (
                                     <div className="space-y-8">
-                                        <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40">Risultati</h3>
+                                        <h3 className={`text-xs font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>Risultati</h3>
                                         <ul className="space-y-4">
                                             {progetto.risultati.map((item, i) => (
                                                 <li key={i} className="flex gap-4 text-sm font-bold text-black dark:text-white">
@@ -378,19 +383,19 @@ function ProjectDetailPage() {
                             <div className="sticky top-32 space-y-16">
                                 <div className="p-10 bg-black/8 dark:bg-white/5 space-y-10 rounded-sm">
                                     <div>
-                                        <h4 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 mb-6">Dettagli Appalto</h4>
+                                        <h4 className={`text-xs font-black uppercase tracking-[0.4em] mb-6 ${metaTextClasses}`}>Dettagli Appalto</h4>
                                         <dl className="space-y-6">
                                             <div className="flex flex-col gap-1">
-                                                <dt className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/40">Committente / Località</dt>
+                                                <dt className={`text-[9px] font-black uppercase tracking-widest ${metaTextClasses}`}>Committente / Località</dt>
                                                 <dd className="text-sm font-black text-black dark:text-white">{progetto.localita}</dd>
                                             </div>
                                             <div className="flex flex-col gap-1">
-                                                <dt className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/40">Anno di Esecuzione</dt>
+                                                <dt className={`text-[9px] font-black uppercase tracking-widest ${metaTextClasses}`}>Anno di Esecuzione</dt>
                                                 <dd className="text-sm font-black text-black dark:text-white">{progetto.anno}</dd>
                                             </div>
                                             {progetto.tecnologie?.length ? (
                                                 <div className="flex flex-col gap-1">
-                                                    <dt className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/40">Sistemi Impiegati</dt>
+                                                    <dt className={`text-[9px] font-black uppercase tracking-widest ${metaTextClasses}`}>Sistemi Impiegati</dt>
                                                     <dd className="flex flex-wrap gap-2 mt-2">
                                                         {progetto.tecnologie.map((tech, i) => (
                                                             <span key={i} className="px-2 py-1 bg-black/10 dark:bg-white/10 text-[9px] font-black uppercase">{tech}</span>
@@ -421,7 +426,7 @@ function ProjectDetailPage() {
                     {progettiCorrelati.length > 0 && (
                         <section className="mt-40 pt-20 border-t border-black/10 dark:border-white/5">
                             <div className="flex items-end justify-between mb-16">
-                                <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tighter font-heading">Opere Correlate</h2>
+                                <h2 className={`text-4xl md:text-5xl font-black tracking-tighter font-heading ${primaryTextClasses}`}>Opere Correlate</h2>
                             </div>
                             <div className="grid md:grid-cols-3 gap-px bg-black/8 dark:bg-white/5 border border-black/10 dark:border-white/5">
                                 {progettiCorrelati.map((p) => (
@@ -430,11 +435,11 @@ function ProjectDetailPage() {
                                         to={`/progetti/${p.id}`}
                                         className="bg-white dark:bg-black p-8 group transition-colors hover:bg-stone-50 dark:hover:bg-dark-surface"
                                     >
-                                        <span className="text-[9px] font-black text-black/60 dark:text-white/40 uppercase tracking-[0.4em] mb-4 block">{p.anno}</span>
+                                        <span className={`text-[9px] font-black uppercase tracking-[0.4em] mb-4 block ${metaTextClasses}`}>{p.anno}</span>
                                         <h4 className="text-lg font-black mb-4 flex items-center gap-2 group-hover:text-primary transition-colors">
                                             {p.titolo}
                                         </h4>
-                                        <p className="text-[11px] text-black/70 dark:text-white/60 font-bold uppercase tracking-widest">{p.localita}</p>
+                                        <p className={`text-[11px] font-bold uppercase tracking-widest ${metaTextClasses}`}>{p.localita}</p>
                                     </Link>
                                 ))}
                             </div>

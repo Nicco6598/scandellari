@@ -20,6 +20,11 @@ import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
 import { trackEvent } from '../components/utils/Analytics';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import {
+  metaTextClasses,
+  primaryTextClasses,
+  secondaryTextClasses,
+} from '../components/utils/ColorStyles';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = [
@@ -271,7 +276,7 @@ function CareersPage() {
           >
             <div className="flex items-center gap-4 mb-12">
               <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+              <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                 Careers & Growth
               </span>
             </div>
@@ -280,7 +285,7 @@ function CareersPage() {
                 <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
                   Unisciti al<br />Team
                 </h1>
-                <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+                <p className={`text-base md:text-xl max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
                   Cerchiamo professionisti pronti a costruire l'infrastruttura ferroviaria del domani. Innovazione, sicurezza e competenza tecnica sono i nostri pilastri.
                 </p>
               </div>
@@ -289,7 +294,7 @@ function CareersPage() {
                   <div className="text-7xl md:text-8xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums select-none">
                     <AnimatedCounter to={offerte.length} duration={1200} />
                   </div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/50 dark:text-white/30 mt-1">
+                  <div className={`text-[10px] font-black uppercase tracking-[0.4em] mt-1 ${metaTextClasses}`}>
                     Posizioni aperte
                   </div>
                 </div>
@@ -313,7 +318,7 @@ function CareersPage() {
                 <item.icon className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
                 <div>
                   <h3 className="text-lg font-black uppercase tracking-widest font-heading mb-2">{item.title}</h3>
-                  <p className="text-xs text-black/70 dark:text-white/60 font-medium leading-relaxed">{item.desc}</p>
+                  <p className={`text-xs font-medium leading-relaxed ${secondaryTextClasses}`}>{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -331,7 +336,7 @@ function CareersPage() {
               {(filterDipartimento || filterTipo || filterSede) && (
                 <button
                   onClick={() => { setFilterDipartimento(''); setFilterTipo(''); setFilterSede(''); }}
-                  className="text-[10px] font-black uppercase tracking-widest text-black/60 dark:text-white/30 hover:text-primary transition-colors self-start md:self-auto"
+                  className={`text-[10px] font-black uppercase tracking-widest hover:text-primary transition-colors self-start md:self-auto ${metaTextClasses}`}
                 >
                   Rimuovi filtri ×
                 </button>
@@ -346,11 +351,11 @@ function CareersPage() {
                 { label: 'Sede', value: filterSede, setter: setFilterSede, options: getUniqueSortedValues(offerte.map(o => o.sede)) }
               ].filter(f => f.options.length > 0).map((filter, i) => (
                 <div key={i} className="flex items-center gap-3 flex-wrap">
-                  <span className="text-[9px] font-black uppercase tracking-[0.35em] text-black/50 dark:text-white/30 w-24 shrink-0">{filter.label}</span>
+                  <span className={`text-[9px] font-black uppercase tracking-[0.35em] w-24 shrink-0 ${metaTextClasses}`}>{filter.label}</span>
                   <div className="flex bg-black/8 dark:bg-white/5 p-1 flex-wrap gap-1">
                     <button
                       onClick={() => filter.setter('')}
-                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${!filter.value ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/70 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
+                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${!filter.value ? 'bg-black dark:bg-white text-white dark:text-black' : `${metaTextClasses} hover:text-black dark:hover:text-white`}`}
                     >
                       Tutti
                     </button>
@@ -358,7 +363,7 @@ function CareersPage() {
                       <button
                         key={opt}
                         onClick={() => filter.setter(opt === filter.value ? '' : opt)}
-                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${filter.value === opt ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/70 dark:text-white/40 hover:text-black dark:hover:text-white'}`}
+                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${filter.value === opt ? 'bg-black dark:bg-white text-white dark:text-black' : `${metaTextClasses} hover:text-black dark:hover:text-white`}`}
                       >
                         {opt}
                       </button>
@@ -398,19 +403,19 @@ function CareersPage() {
                               </span>
                             )}
                             {job.dipartimento && <span className="text-black/30 dark:text-white/15 text-[9px]">·</span>}
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-black/60 dark:text-white/30">{job.tipo}</span>
+                            <span className={`text-[9px] font-black uppercase tracking-[0.3em] ${metaTextClasses}`}>{job.tipo}</span>
                             <span className="text-black/30 dark:text-white/15 text-[9px]">·</span>
-                            <span className="text-[9px] font-black text-black/60 dark:text-white/30 uppercase tracking-[0.3em] flex items-center gap-1">
+                            <span className={`text-[9px] font-black uppercase tracking-[0.3em] flex items-center gap-1 ${metaTextClasses}`}>
                               <MapPinIcon className="w-3 h-3" />
                               {job.sede}
                             </span>
                           </div>
-                          <h3 className="text-2xl md:text-3xl font-black text-black dark:text-white mb-4 tracking-tight font-heading group-hover:text-primary transition-colors">{job.titolo}</h3>
+                          <h3 className={`text-2xl md:text-3xl font-black mb-4 tracking-tight font-heading group-hover:text-primary transition-colors ${primaryTextClasses}`}>{job.titolo}</h3>
                           <p
                             ref={(el) => {
                               jobDescriptionRefs.current[jobKey] = el;
                             }}
-                            className={`text-sm text-black/65 dark:text-white/50 font-medium max-w-2xl leading-relaxed ${expandedJobId === jobKey ? '' : 'line-clamp-2'}`}
+                            className={`text-sm font-medium max-w-2xl leading-relaxed ${secondaryTextClasses} ${expandedJobId === jobKey ? '' : 'line-clamp-2'}`}
                           >
                             {job.descrizione}
                           </p>
@@ -444,10 +449,10 @@ function CareersPage() {
             <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
               <BriefcaseIcon className="w-10 h-10 text-black/40 dark:text-white/15" />
               <div>
-                <p className="text-sm font-black uppercase tracking-widest text-black/50 dark:text-white/30 mb-2">
+                <p className={`text-sm font-black uppercase tracking-widest mb-2 ${metaTextClasses}`}>
                   Nessuna posizione trovata
                 </p>
-                <p className="text-xs text-black/40 dark:text-white/20 font-medium">
+                <p className={`text-xs font-medium ${metaTextClasses}`}>
                   Nessuna offerta corrisponde ai filtri selezionati.
                 </p>
               </div>
@@ -514,7 +519,7 @@ function CareersPage() {
                       <span className="flex items-center gap-2"><MapPinIcon className="w-3 h-3" /> {selectedJob.sede}</span>
                       <span className="flex items-center gap-2"><BriefcaseIcon className="w-3 h-3" /> {selectedJob.tipo}</span>
                     </div>
-                    <p className="text-sm text-black/80 dark:text-white/60 font-medium leading-relaxed">
+                    <p className={`text-sm font-medium leading-relaxed ${secondaryTextClasses}`}>
                       {selectedJob.descrizione}
                     </p>
                   </div>
@@ -526,7 +531,7 @@ function CareersPage() {
                       <CheckCircleIcon className="w-12 h-12 text-green-500" />
                     </div>
                     <h3 className="text-3xl md:text-4xl font-black font-heading mb-4">Candidatura Inviata</h3>
-                    <p className="text-black/80 dark:text-white/60 font-medium max-w-md mx-auto leading-relaxed">
+                    <p className={`font-medium max-w-md mx-auto leading-relaxed ${secondaryTextClasses}`}>
                       Grazie per il tuo interesse. Il nostro team HR valuterà il tuo profilo e ti contatterà presto.
                     </p>
                     <button
@@ -542,7 +547,7 @@ function CareersPage() {
                       <XMarkIcon className="w-12 h-12 text-red-500" />
                     </div>
                     <h3 className="text-3xl md:text-4xl font-black font-heading mb-4">Errore Invio</h3>
-                    <p className="text-black/80 dark:text-white/60 font-medium max-w-md mx-auto leading-relaxed mb-8">
+                    <p className={`font-medium max-w-md mx-auto leading-relaxed mb-8 ${secondaryTextClasses}`}>
                       Si è verificato un errore durante l'invio della candidatura. Riprova o contattaci direttamente.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -570,7 +575,7 @@ function CareersPage() {
                       <div key={f.id} className="bg-white dark:bg-black p-6 md:p-8 group focus-within:bg-stone-50 dark:focus-within:bg-white/5 transition-colors border-b border-black/10 dark:border-white/10">
                         <label
                           htmlFor={f.id}
-                          className={`block text-xs font-black uppercase mb-3 group-focus-within:text-primary transition-colors ${errors[f.id as keyof ApplicationFormData] ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}
+                            className={`block text-xs font-black uppercase mb-3 group-focus-within:text-primary transition-colors ${errors[f.id as keyof ApplicationFormData] ? 'text-red-500' : metaTextClasses}`}
                         >
                           {f.label}
                         </label>
@@ -587,15 +592,15 @@ function CareersPage() {
                       </div>
                     ))}
                     <div className="bg-white dark:bg-black p-6 md:p-8 group focus-within:bg-stone-50 dark:focus-within:bg-white/5 transition-colors">
-                      <label className={`block text-xs font-black uppercase mb-4 group-focus-within:text-primary transition-colors ${errors.cv ? 'text-red-500' : 'text-black/70 dark:text-white/60'}`}>
+                      <label className={`block text-xs font-black uppercase mb-4 group-focus-within:text-primary transition-colors ${errors.cv ? 'text-red-500' : metaTextClasses}`}>
                         Curriculum Vitae
                       </label>
 
                       <label className={`block border-2 border-dashed p-12 text-center group hover:border-primary transition-colors cursor-pointer ${errors.cv ? 'border-red-500' : 'border-black/10 dark:border-white/10'}`}>
-                        <span className="text-sm font-black uppercase tracking-widest transition-opacity block mb-2 text-black/80 dark:text-white/70 opacity-80 group-hover:opacity-100">
+                        <span className={`text-sm font-black uppercase tracking-widest transition-opacity block mb-2 opacity-80 group-hover:opacity-100 ${secondaryTextClasses}`}>
                           {selectedCvFile ? 'Cambia File' : 'Seleziona File'}
                         </span>
-                        <span className="text-xs font-bold text-black/60 dark:text-white/30 block">Max 5MB · PDF, DOCX</span>
+                        <span className={`text-xs font-bold block ${metaTextClasses}`}>Max 5MB · PDF, DOCX</span>
                         <input
                           type="file"
                           accept=".pdf,.doc,.docx"
@@ -616,7 +621,7 @@ function CareersPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm font-bold truncate text-black dark:text-white">{selectedCvFile.name}</p>
-                              <p className="text-[10px] text-black/60 dark:text-white/40 font-medium">
+                              <p className={`text-[10px] font-medium ${metaTextClasses}`}>
                                 {(selectedCvFile.size / 1024 / 1024).toFixed(2)} MB
                               </p>
                             </div>
@@ -627,7 +632,7 @@ function CareersPage() {
                               setValue('cv', null);
                               trigger('cv');
                             }}
-                            className="p-3 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-black/60 dark:text-white/40 hover:text-red-500 rounded-sm"
+                            className={`p-3 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors hover:text-red-500 rounded-sm ${metaTextClasses}`}
                           >
                             <XMarkIcon className="w-5 h-5" />
                           </button>
@@ -644,7 +649,7 @@ function CareersPage() {
 
             {(status === 'idle' || status === 'submitting') && (
               <div className="p-6 md:p-8 bg-white dark:bg-black border-t border-black/10 dark:border-white/5 flex flex-col md:flex-row gap-6 md:items-center justify-between shrink-0 mb-safe">
-                <p className="hidden md:block text-xs font-black uppercase tracking-widest text-black/60 dark:text-white/30">Invio candidatura conforme alla privacy</p>
+                <p className={`hidden md:block text-xs font-black uppercase tracking-widest ${metaTextClasses}`}>Invio candidatura conforme alla privacy</p>
                 <button
                   type="submit"
                   form="application-form"

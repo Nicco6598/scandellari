@@ -6,6 +6,7 @@ import {
     HomeIcon,
     ArrowRightIcon
 } from '@heroicons/react/24/outline';
+import { metaTextClasses, secondaryTextClasses } from '../components/utils/ColorStyles';
 
 const NotFoundPage: React.FC = () => {
     return (
@@ -67,7 +68,7 @@ const NotFoundPage: React.FC = () => {
 
                         {/* Description */}
                         <p
-                            className="text-base md:text-xl text-black/50 dark:text-white/40 max-w-2xl mx-auto font-medium leading-relaxed mb-16"
+                            className={`text-base md:text-xl max-w-2xl mx-auto font-medium leading-relaxed mb-16 ${secondaryTextClasses}`}
                             data-animate="fade-up"
                             data-animate-delay="0.4"
                         >
@@ -97,7 +98,7 @@ const NotFoundPage: React.FC = () => {
                             data-animate="fade"
                             data-animate-delay="0.6"
                         >
-                            <h2 className="text-xs font-black uppercase tracking-[0.4em] text-black/30 dark:text-white/20 mb-8">
+                            <h2 className={`text-xs font-black uppercase tracking-[0.4em] mb-8 ${metaTextClasses}`}>
                                 Link Utili
                             </h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -112,7 +113,7 @@ const NotFoundPage: React.FC = () => {
                                         to={link.to}
                                         className="group p-6 bg-white dark:bg-dark-surface border border-black/5 dark:border-white/5 hover:border-primary/30 transition-all"
                                     >
-                                        <span className="text-sm font-black uppercase tracking-tight text-black/60 dark:text-white/60 group-hover:text-primary transition-colors">
+                                        <span className={`text-sm font-black uppercase tracking-tight group-hover:text-primary transition-colors ${metaTextClasses}`}>
                                             {link.label}
                                         </span>
                                     </Link>

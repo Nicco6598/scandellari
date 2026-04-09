@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 import { logger } from '../utils/logger';
+import { metaTextClasses } from '../components/utils/ColorStyles';
 
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf-worker/pdf.worker.min.js';
 
@@ -165,7 +166,7 @@ const LazyPDFViewer: React.FC<LazyPDFViewerProps> = ({
                 <div className="flex flex-col items-center justify-center p-10 text-center space-y-4">
                     <XCircleIcon className="w-12 h-12 text-red-500" />
                     <p className="text-xs font-black uppercase tracking-widest text-red-500">{error}</p>
-                    <p className="text-[10px] text-black/40 dark:text-white/40">Verifica che il file PDF esista e sia accessibile.</p>
+                    <p className={`text-[10px] ${metaTextClasses}`}>Verifica che il file PDF esista e sia accessibile.</p>
                 </div>
             ) : (
                 <div style={slideStyle}>
@@ -185,7 +186,7 @@ const LazyPDFViewer: React.FC<LazyPDFViewerProps> = ({
                             <div className="flex items-center justify-center p-20">
                                 <div className="text-center space-y-4">
                                     <div className="w-8 h-8 border-2 border-primary border-t-transparent animate-spin mx-auto" />
-                                    <p className="text-xs font-black uppercase tracking-widest text-black/40 dark:text-white/40">Caricamento...</p>
+                                    <p className={`text-xs font-black uppercase tracking-widest ${metaTextClasses}`}>Caricamento...</p>
                                 </div>
                             </div>
                         }

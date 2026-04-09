@@ -6,6 +6,7 @@ import { CompetenzaData } from '../../types/supabaseTypes';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import gsap from 'gsap';
 import LoadingState from '../utils/LoadingState';
+import { metaTextClasses, primaryTextClasses, secondaryTextClasses } from '../utils/ColorStyles';
 
 type ServiceCardProps = {
   service: CompetenzaData;
@@ -84,22 +85,22 @@ function ServiceCard({ service, index }: ServiceCardProps) {
           </div>
         )}
 
-        <div ref={iconRef} className="text-xs font-black text-black/40 dark:text-white/60 uppercase tracking-[0.4em]">0{index + 1} /</div>
+        <div ref={iconRef} className={`text-xs font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>0{index + 1} /</div>
 
         <div className="space-y-6">
-          <h3 className="text-3xl font-black text-black dark:text-white tracking-tight leading-none font-heading group-hover:text-primary transition-colors">
+          <h3 className={`text-3xl font-black tracking-tight leading-none font-heading group-hover:text-primary transition-colors ${primaryTextClasses}`}>
             {service.titolo}
           </h3>
-          <p className="text-base text-black/75 dark:text-white/60 leading-relaxed font-medium">
+          <p className={`text-base leading-relaxed font-medium ${secondaryTextClasses}`}>
             {service.descrizioneBreve}
           </p>
         </div>
 
         <div className="flex items-center gap-3 mt-2">
-          <span className="text-xs font-black uppercase tracking-[0.3em] text-black/50 dark:text-white/50 group-hover:text-primary transition-colors">
+          <span className={`text-xs font-black uppercase tracking-[0.3em] group-hover:text-primary transition-colors ${metaTextClasses}`}>
             Scopri
           </span>
-          <ArrowRightIcon className="w-5 h-5 text-black/50 dark:text-white/50 group-hover:text-primary group-hover:translate-x-2 transition-all" />
+          <ArrowRightIcon className={`w-5 h-5 group-hover:text-primary group-hover:translate-x-2 transition-all ${metaTextClasses}`} />
         </div>
       </Link>
     </div>
@@ -148,7 +149,7 @@ function Services() {
             <div className="space-y-8" data-animate="fade-up" data-animate-distance="20">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+                <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                   Engineering & Solutions
                 </span>
               </div>
@@ -158,12 +159,12 @@ function Services() {
             </div>
           </div>
           <div className="flex flex-col gap-8 md:text-right">
-            <p className="text-base md:text-lg text-black/70 dark:text-white/60 max-w-xs font-medium leading-relaxed md:ml-auto">
+            <p className={`text-base md:text-lg max-w-xs font-medium leading-relaxed md:ml-auto ${secondaryTextClasses}`}>
               Dalla progettazione alla manutenzione, forniamo sistemi intelligenti per la mobilità nazionale su rotaia.
             </p>
             <Link
               to="/competenze"
-              className="text-[10px] font-black uppercase tracking-[0.3em] text-black/70 dark:text-white/60 hover:text-black dark:hover:text-white transition-colors group flex items-center gap-4 md:justify-end"
+              className={`text-[10px] font-black uppercase tracking-[0.3em] hover:text-black dark:hover:text-white transition-colors group flex items-center gap-4 md:justify-end ${metaTextClasses}`}
             >
               Esplora Competenze
               <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-2 text-primary" />

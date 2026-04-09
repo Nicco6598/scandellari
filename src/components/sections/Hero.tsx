@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
+import {
+  inverseMetaTextClasses,
+  inversePrimaryTextClasses,
+  inverseSecondaryTextClasses,
+} from '../utils/ColorStyles';
 
 // Import photos for the background slideshow
 import heroImg2 from '../../assets/images/Prima-pagina-foto-2.webp';
@@ -77,7 +82,7 @@ const MagneticCTA: React.FC<{ to: string; children: React.ReactNode }> = ({ to, 
     <Link
       ref={ctaRef}
       to={to}
-      className="text-xs font-black uppercase tracking-[0.3em] text-white dark:text-white hover:text-primary dark:hover:text-primary-light transition-colors flex items-center gap-4 group cursor-pointer"
+      className={`text-xs font-black uppercase tracking-[0.3em] hover:text-primary dark:hover:text-primary-light transition-colors flex items-center gap-4 group cursor-pointer ${inversePrimaryTextClasses}`}
     >
       {children}
     </Link>
@@ -176,7 +181,7 @@ const Hero: React.FC = () => {
         {/* Top Tagline */}
         <div className="flex items-center gap-4" data-animate="fade-right" data-animate-distance="20">
           <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-          <span className="text-xs font-bold text-white/50 uppercase tracking-[0.5em]">
+          <span className={`text-xs font-bold uppercase tracking-[0.5em] ${inverseMetaTextClasses}`}>
             FondatA nel 1945
           </span>
         </div>
@@ -185,7 +190,7 @@ const Hero: React.FC = () => {
         <div className="max-w-4xl">
           <h1
             ref={titleRef}
-            className="text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black text-white tracking-tighter leading-[0.8] mb-12 font-heading"
+            className={`text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black tracking-tighter leading-[0.8] mb-12 font-heading ${inversePrimaryTextClasses}`}
           >
             {titleLines.map((line, i) => (
               <div key={i} className="line-container overflow-hidden">
@@ -203,7 +208,7 @@ const Hero: React.FC = () => {
             data-animate-delay="0.15"
             className="grid md:grid-cols-2 gap-12 items-start"
           >
-            <p className="text-base md:text-lg text-white/70 leading-relaxed font-medium tracking-tight max-w-sm">
+            <p className={`text-base md:text-lg leading-relaxed font-medium tracking-tight max-w-sm ${inverseSecondaryTextClasses}`}>
               Sviluppiamo tecnologie all'avanguardia per l'infrastruttura ferroviaria nazionale. Eccellenza tecnica e innovazione costante al servizio della mobilità.
             </p>
 
@@ -237,13 +242,13 @@ const Hero: React.FC = () => {
             <img src={logoIso45001} alt="ISO 45001" width="80" height="30" className="h-6 md:h-8 object-contain" loading="lazy" decoding="async" />
           </div>
 
-          <div className="hidden lg:flex gap-16 text-xs font-bold text-white/40 uppercase tracking-[0.3em]">
+          <div className={`hidden lg:flex gap-16 text-xs font-bold uppercase tracking-[0.3em] ${inverseMetaTextClasses}`}>
             <div className="space-y-2">
-              <p className="text-white/20">Settore</p>
+              <p className={inverseMetaTextClasses}>Settore</p>
               <p>Infrastruttura / Segnalamento</p>
             </div>
             <div className="space-y-2">
-              <p className="text-white/20">Sede</p>
+              <p className={inverseMetaTextClasses}>Sede</p>
               <p>Treviglio, Italia</p>
             </div>
           </div>

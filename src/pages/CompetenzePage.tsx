@@ -14,6 +14,11 @@ import {
     XMarkIcon,
     ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
+import {
+    metaTextClasses,
+    primaryTextClasses,
+    secondaryTextClasses,
+} from '../components/utils/ColorStyles';
 
 const categoryLabels = {
     segnalamento: 'Segnalamento',
@@ -118,14 +123,14 @@ const CompetenzePage: React.FC = () => {
                             <div className="max-w-3xl">
                                 <div className="flex items-center gap-4 mb-12">
                                     <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/50 dark:text-white/60">
+                                    <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                                         Know-how Tecnico
                                     </span>
                                 </div>
                                 <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
                                     Sapere<br />Tecnico
                                 </h1>
-                                <p className="text-base md:text-xl text-black/75 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+                                <p className={`text-base md:text-xl max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
                                     Dal 1945 Scandellari sviluppa tecnologie avanzate per l'infrastruttura ferroviaria, garantendo i massimi standard di sicurezza e innovazione nazionale.
                                 </p>
                             </div>
@@ -150,7 +155,7 @@ const CompetenzePage: React.FC = () => {
                                     <div key={key} className="space-y-4">
                                         <button
                                             onClick={() => handleSelect(key)}
-                                            className={`text-base font-black uppercase tracking-[0.2em] transition-colors ${activeCategory === key ? 'text-primary' : 'text-black/50 dark:text-white/40 hover:text-primary dark:hover:text-white'
+                                            className={`text-base font-black uppercase tracking-[0.2em] transition-colors ${activeCategory === key ? 'text-primary' : `${metaTextClasses} hover:text-primary dark:hover:text-white`
                                                 }`}
                                         >
                                             {label}
@@ -165,7 +170,7 @@ const CompetenzePage: React.FC = () => {
                                                             onClick={() => handleSelect(key, c.id)}
                                                             className={`text-left text-sm font-bold py-1 transition-all ${activeCompetenzaId === c.id
                                                                 ? 'text-primary dark:text-white translate-x-2'
-                                                                : 'text-black/60 dark:text-white/50 hover:text-primary dark:hover:text-white'
+                                                                : `${metaTextClasses} hover:text-primary dark:hover:text-white`
                                                                 }`}
                                                         >
                                                             {c.titolo}
@@ -207,11 +212,11 @@ const CompetenzePage: React.FC = () => {
                                             </div>
 
                                             <div className="max-w-3xl">
-                                                <h2 className="text-3xl md:text-5xl font-black text-black dark:text-white tracking-tight mb-8 font-heading">
+                                                <h2 className={`text-3xl md:text-5xl font-black tracking-tight mb-8 font-heading ${primaryTextClasses}`}>
                                                     {activeCompetenza.titolo}
                                                 </h2>
                                                 <div
-                                                    className="text-sm md:text-lg text-black/80 dark:text-white/70 leading-relaxed font-medium prose dark:prose-invert max-w-none"
+                                                    className={`text-sm md:text-lg leading-relaxed font-medium prose dark:prose-invert max-w-none ${secondaryTextClasses}`}
                                                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(activeCompetenza.descrizioneLunga || activeCompetenza.descrizioneBreve || '') }}
                                                 />
                                             </div>
@@ -221,7 +226,7 @@ const CompetenzePage: React.FC = () => {
                                         <div className="grid md:grid-cols-2 gap-12 border-t border-black/5 dark:border-white/5 pt-16">
                                             {activeCompetenza.caratteristiche?.length ? (
                                                 <div className="space-y-8">
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40">Specifiche Tecniche</h3>
+                                                    <h3 className={`text-xs font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>Specifiche Tecniche</h3>
                                                     <ul className="space-y-4">
                                                         {activeCompetenza.caratteristiche.map((item, i) => (
                                                             <li key={i} className="flex gap-4 text-xs md:text-sm font-bold text-black dark:text-white">
@@ -235,7 +240,7 @@ const CompetenzePage: React.FC = () => {
 
                                             {activeCompetenza.applicazioni?.length ? (
                                                 <div className="space-y-8">
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40">Ambiti di Utilizzo</h3>
+                                                    <h3 className={`text-xs font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>Ambiti di Utilizzo</h3>
 
                                                     <ul className="space-y-4">
                                                         {activeCompetenza.applicazioni.map((item, i) => (
@@ -272,7 +277,7 @@ const CompetenzePage: React.FC = () => {
                                         {/* Related Projects */}
                                         {relatedProjects.length > 0 && (
                                             <div className="space-y-12 border-t border-black/5 dark:border-white/5 pt-16">
-                                                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 text-center">Progetti Correlati</h3>
+                                                <h3 className={`text-xs font-black uppercase tracking-[0.4em] text-center ${metaTextClasses}`}>Progetti Correlati</h3>
                                                 <div className="grid md:grid-cols-2 gap-px bg-gradient-to-br from-black/5 via-black/5 to-primary/5 dark:from-white/5 dark:via-white/5 dark:to-primary/10 border border-black/10 dark:border-white/5">
                                                     {relatedProjects.map(p => (
                                                             <Link
@@ -280,12 +285,12 @@ const CompetenzePage: React.FC = () => {
                                                                 to={`/progetti/${p.id}`}
                                                                 className="bg-white dark:bg-black p-8 group transition-all duration-300 hover:bg-primary/5 dark:hover:bg-dark-surface border border-transparent hover:border-primary/20 dark:hover:border-white/5"
                                                             >
-                                                                <span className="text-xs font-black text-black/50 dark:text-white/40 uppercase tracking-[0.4em] mb-4 block">{p.anno}</span>
-                                                                <h4 className="text-xl font-bold text-black dark:text-white mb-4 flex items-center gap-2 group-hover:text-primary transition-colors">
+                                                                <span className={`text-xs font-black uppercase tracking-[0.4em] mb-4 block ${metaTextClasses}`}>{p.anno}</span>
+                                                                <h4 className={`text-xl font-bold mb-4 flex items-center gap-2 group-hover:text-primary transition-colors ${primaryTextClasses}`}>
                                                                     {p.titolo}
                                                                     <ArrowTopRightOnSquareIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                                 </h4>
-                                                                <p className="text-xs text-black/65 dark:text-white/60 font-medium">{p.descrizione?.substring(0, 80)}...</p>
+                                                                <p className={`text-xs font-medium ${secondaryTextClasses}`}>{p.descrizione?.substring(0, 80)}...</p>
                                                             </Link>
                                                         ))}
                                                 </div>
@@ -316,7 +321,7 @@ const CompetenzePage: React.FC = () => {
                             <div key={key} className="space-y-6">
                                 <button
                                     onClick={() => handleSelect(key)}
-                                    className={`text-2xl font-black tracking-tighter text-left w-full transition-colors ${activeCategory === key ? 'text-primary' : 'text-black/70 dark:text-white/40 hover:text-primary dark:hover:text-white'
+                                    className={`text-2xl font-black tracking-tighter text-left w-full transition-colors ${activeCategory === key ? 'text-primary' : `${metaTextClasses} hover:text-primary dark:hover:text-white`
                                         }`}
                                 >
                                     {label}
@@ -328,7 +333,7 @@ const CompetenzePage: React.FC = () => {
                                                 <button
                                                     key={c.id}
                                                     onClick={() => handleSelect(key, c.id)}
-                                                    className={`text-left text-sm font-bold transition-colors ${activeCompetenzaId === c.id ? 'text-primary dark:text-white' : 'text-black/60 dark:text-white/50 hover:text-primary dark:hover:text-white'
+                                                    className={`text-left text-sm font-bold transition-colors ${activeCompetenzaId === c.id ? 'text-primary dark:text-white' : `${metaTextClasses} hover:text-primary dark:hover:text-white`
                                                         }`}
                                                 >
                                                     {c.titolo}

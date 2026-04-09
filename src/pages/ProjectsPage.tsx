@@ -21,6 +21,11 @@ import SEO from '../components/utils/SEO';
 import LoadingState from '../components/utils/LoadingState';
 import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../components/utils/ProjectImagePlaceholder';
 import { useInjectedHeadStyle } from '../hooks/useInjectedHeadStyle';
+import {
+    metaTextClasses,
+    primaryTextClasses,
+    secondaryTextClasses,
+} from '../components/utils/ColorStyles';
 
 type Coordinate = { lat: number; lng: number };
 type ProjectCoordinates = { points: Coordinate[]; route?: Coordinate[] };
@@ -188,19 +193,19 @@ function ProjectItemCard({ project, index }: ProjectItemCardProps) {
                                 <span className="text-black/30 dark:text-white/15 text-[9px]">·</span>
                             )}
                             {project.anno && (
-                                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-black/60 dark:text-white/30">
+                                <span className={`text-[9px] font-black uppercase tracking-[0.3em] ${metaTextClasses}`}>
                                     {project.anno}
                                 </span>
                             )}
                             <span className="text-black/30 dark:text-white/15 text-[9px]">·</span>
-                            <span className="text-[9px] font-black text-black/60 dark:text-white/30 uppercase tracking-[0.3em]">
+                            <span className={`text-[9px] font-black uppercase tracking-[0.3em] ${metaTextClasses}`}>
                                 {project.localita}
                             </span>
                         </div>
-                        <h3 className="text-3xl lg:text-4xl font-black text-black dark:text-white tracking-tighter leading-none font-heading group-hover:text-primary transition-colors duration-300">
+                        <h3 className={`text-3xl lg:text-4xl font-black tracking-tighter leading-none font-heading group-hover:text-primary transition-colors duration-300 ${primaryTextClasses}`}>
                             {project.titolo}
                         </h3>
-                        <p className="text-sm text-black/65 dark:text-white/50 font-medium leading-relaxed line-clamp-2">
+                        <p className={`text-sm font-medium leading-relaxed line-clamp-2 ${secondaryTextClasses}`}>
                             {project.descrizione}
                         </p>
                         {project.tecnologie && project.tecnologie.length > 0 && (
@@ -208,7 +213,7 @@ function ProjectItemCard({ project, index }: ProjectItemCardProps) {
                                 {project.tecnologie.slice(0, 3).map((tec, i) => (
                                     <span
                                         key={i}
-                                        className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 border border-black/20 dark:border-white/10 text-black/60 dark:text-white/30 group-hover:border-primary/20 group-hover:text-primary/60 transition-all"
+                                        className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 border border-black/20 dark:border-white/10 group-hover:border-primary/20 group-hover:text-primary/60 transition-all ${metaTextClasses}`}
                                     >
                                         {tec}
                                     </span>
@@ -217,10 +222,10 @@ function ProjectItemCard({ project, index }: ProjectItemCardProps) {
                         )}
                     </div>
                     <div className="flex items-center gap-3 mt-8 pt-6 border-t border-black/10 dark:border-white/5">
-                        <span className="text-xs font-black uppercase tracking-[0.3em] text-black/60 dark:text-white/30 group-hover:text-primary transition-colors">
+                        <span className={`text-xs font-black uppercase tracking-[0.3em] group-hover:text-primary transition-colors ${metaTextClasses}`}>
                             Scopri il progetto
                         </span>
-                        <ArrowRightIcon className="w-4 h-4 text-black/60 dark:text-white/30 group-hover:text-primary group-hover:translate-x-2 transition-all" />
+                        <ArrowRightIcon className={`w-4 h-4 group-hover:text-primary group-hover:translate-x-2 transition-all ${metaTextClasses}`} />
                     </div>
                 </div>
             </Link>
@@ -434,7 +439,7 @@ function ProjectsPage() {
                     >
                         <div className="flex items-center gap-4 mb-12">
                             <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                                 Portfolio Infrastrutturale
                             </span>
                         </div>
@@ -443,7 +448,7 @@ function ProjectsPage() {
                                 <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
                                     Grandi<br />Progetti
                                 </h1>
-                                <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+                                <p className={`text-base md:text-xl max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
                                     Un'eredità di eccellenza ingegneristica dal 1945. Esplora le opere che hanno definito l'infrastruttura ferroviaria italiana.
                                 </p>
                             </div>
@@ -451,7 +456,7 @@ function ProjectsPage() {
                                 <div className="text-7xl md:text-8xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums select-none">
                                     <AnimatedCounter to={progetti.length} duration={1200} />
                                 </div>
-                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/30 dark:text-white/30 mt-1">
+                                <div className={`text-[10px] font-black uppercase tracking-[0.4em] mt-1 ${metaTextClasses}`}>
                                     Opere totali
                                 </div>
                             </div>
@@ -472,7 +477,7 @@ function ProjectsPage() {
                                     onClick={() => setCategoriaAttiva(cat)}
                                     className={`px-5 py-3 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-2 ${categoriaAttiva === cat
                                         ? 'bg-black dark:bg-white text-white dark:text-black'
-                                        : 'text-black/60 dark:text-white/40 hover:text-black dark:hover:text-white'
+                                        : `${metaTextClasses} hover:text-black dark:hover:text-white`
                                         }`}
                                 >
                                     {cat === 'tutti' ? 'Tutti' : cat}
@@ -499,7 +504,7 @@ function ProjectsPage() {
                                     onClick={() => setVisualizzazione('lista')}
                                     className={`flex items-center gap-2 px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${visualizzazione === 'lista'
                                         ? 'bg-black dark:bg-white text-white dark:text-black shadow-lg'
-                                        : 'text-black/60 dark:text-white/40 hover:text-black dark:hover:text-white'
+                                        : `${metaTextClasses} hover:text-black dark:hover:text-white`
                                         }`}
                                 >
                                     <ListBulletIcon className="w-4 h-4" />
@@ -509,7 +514,7 @@ function ProjectsPage() {
                                     onClick={() => setVisualizzazione('mappa')}
                                     className={`flex items-center gap-2 px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${visualizzazione === 'mappa'
                                         ? 'bg-black dark:bg-white text-white dark:text-black shadow-lg'
-                                        : 'text-black/60 dark:text-white/40 hover:text-black dark:hover:text-white'
+                                        : `${metaTextClasses} hover:text-black dark:hover:text-white`
                                         }`}
                                 >
                                     <MapIcon className="w-4 h-4" />
@@ -526,10 +531,10 @@ function ProjectsPage() {
                                 <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
                                     <MagnifyingGlassIcon className="w-10 h-10 text-black/40 dark:text-white/15" />
                                     <div>
-                                        <p className="text-sm font-black uppercase tracking-widest text-black/50 dark:text-white/30 mb-2">
+                                        <p className={`text-sm font-black uppercase tracking-widest mb-2 ${metaTextClasses}`}>
                                             Nessun progetto trovato
                                         </p>
-                                        <p className="text-xs text-black/40 dark:text-white/20 font-medium">
+                                        <p className={`text-xs font-medium ${metaTextClasses}`}>
                                             Nessuna opera in questa categoria.
                                         </p>
                                     </div>
@@ -629,7 +634,7 @@ function ProjectsPage() {
                                                                     }}
                                                                     className="w-6 h-6 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-sm transition-colors"
                                                                 >
-                                                                    <ListBulletIcon className="w-3 h-3 rotate-180 text-black/60 dark:text-white/40 hover:text-black dark:hover:text-white" />
+                                                                    <ListBulletIcon className={`w-3 h-3 rotate-180 hover:text-black dark:hover:text-white ${metaTextClasses}`} />
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => {
@@ -638,7 +643,7 @@ function ProjectsPage() {
                                                                     }}
                                                                     className="w-6 h-6 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-sm transition-colors"
                                                                 >
-                                                                    <ArrowRightIcon className="w-3 h-3 text-black/60 dark:text-white/40 hover:text-black dark:hover:text-white" />
+                                                                    <ArrowRightIcon className={`w-3 h-3 hover:text-black dark:hover:text-white ${metaTextClasses}`} />
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -653,7 +658,7 @@ function ProjectsPage() {
                                                                 <h4 className="font-black uppercase text-base tracking-tighter leading-tight text-black dark:text-white mb-2">
                                                                     {p.titolo}
                                                                 </h4>
-                                                                <p className="text-[10px] font-bold text-black/60 dark:text-white/30 uppercase tracking-widest mb-4">
+                                                                <p className={`text-[10px] font-bold uppercase tracking-widest mb-4 ${metaTextClasses}`}>
                                                                     {p.localita} • {p.anno}
                                                                 </p>
                                                                 <Link
@@ -661,7 +666,7 @@ function ProjectsPage() {
                                                                     className="flex items-center justify-between group/link pt-4 border-t border-black/10 dark:border-white/10"
                                                                 >
                                                                     <span className="text-[10px] font-black uppercase tracking-widest text-black dark:text-white group-hover/link:text-primary transition-colors">Vedi Dettagli</span>
-                                                                    <ArrowRightIcon className="w-4 h-4 text-black/60 dark:text-white/40 group-hover/link:text-primary group-hover/link:translate-x-1 transition-all" />
+                                                                    <ArrowRightIcon className={`w-4 h-4 group-hover/link:text-primary group-hover/link:translate-x-1 transition-all ${metaTextClasses}`} />
                                                                 </Link>
                                                             </div>
                                                         );
@@ -675,7 +680,7 @@ function ProjectsPage() {
                                     {!isGeocodingDone && (
                                         <div className="absolute bottom-4 left-4 bg-white/90 dark:bg-black/90 backdrop-blur-sm px-4 py-2 flex items-center gap-3 border border-black/10 dark:border-white/10">
                                             <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/40">
+                                            <span className={`text-[9px] font-black uppercase tracking-widest ${metaTextClasses}`}>
                                                 Mappatura in corso
                                             </span>
                                             <span className="text-[9px] font-black text-primary tabular-nums">
@@ -692,7 +697,7 @@ function ProjectsPage() {
                                         <div className="absolute inset-4 border-2 border-primary/40 rotate-45" />
                                     </div>
                                     <div className="text-center space-y-2">
-                                        <span className="block text-[11px] font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 animate-pulse">
+                                        <span className={`block text-[11px] font-black uppercase tracking-[0.4em] animate-pulse ${metaTextClasses}`}>
                                             Mappatura Infrastrutture
                                         </span>
                                         <div className="flex items-center justify-center gap-4">
@@ -729,7 +734,7 @@ function ProjectsPage() {
                             <button
                                 key={cat}
                                 onClick={() => { setCategoriaAttiva(cat); setShowMobileFilters(false); }}
-                                className={`text-3xl font-black tracking-tighter text-left flex items-center gap-4 ${categoriaAttiva === cat ? 'text-primary' : 'text-black/50 dark:text-white/10'}`}
+                                className={`text-3xl font-black tracking-tighter text-left flex items-center gap-4 ${categoriaAttiva === cat ? 'text-primary' : metaTextClasses}`}
                             >
                                 {cat === 'tutti' ? 'Tutti i Progetti' : cat}
                                 <span className="text-base font-black opacity-50 tabular-nums">

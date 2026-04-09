@@ -12,6 +12,10 @@ import {
   SunIcon,
   MoonIcon
 } from '@heroicons/react/24/outline';
+import {
+  inverseMetaTextClasses,
+  metaTextClasses,
+} from '../utils/ColorStyles';
 
 import logoBlu from '../../assets/images/LogoBlu.svg';
 import logoBianco from '../../assets/images/LogoBianco.svg';
@@ -80,10 +84,10 @@ function MobileMenuPanel({ isOpen, onClose, theme, toggleTheme, location }: Mobi
   const mobileSubRowBase = 'w-full flex items-center justify-between gap-5 py-3 px-4 transition-colors duration-200';
 
   const mobileTopRowClass = (active: boolean) =>
-    `${mobileTopRowBase} ${active ? 'text-primary dark:text-primary-light' : 'text-black dark:text-white/80 hover:bg-black/5 hover:text-primary dark:hover:bg-white/5 dark:hover:text-white'}`;
+    `${mobileTopRowBase} ${active ? 'text-primary dark:text-primary-light' : `${metaTextClasses} hover:bg-black/5 hover:text-primary dark:hover:bg-white/5 dark:hover:text-white`}`;
 
   const mobileSubRowClass = (active: boolean) =>
-    `${mobileSubRowBase} ${active ? 'bg-black/5 dark:bg-white/5 text-primary dark:text-primary-light' : 'text-black/90 dark:text-white/70 hover:bg-black/5 hover:text-primary dark:hover:bg-white/5 dark:hover:text-white'}`;
+    `${mobileSubRowBase} ${active ? 'bg-black/5 dark:bg-white/5 text-primary dark:text-primary-light' : `${metaTextClasses} hover:bg-black/5 hover:text-primary dark:hover:bg-white/5 dark:hover:text-white`}`;
 
   const indicatorClass = (active: boolean) =>
     `h-6 w-[2px] shrink-0 ${active ? 'bg-primary' : 'bg-transparent'}`;
@@ -117,7 +121,7 @@ function MobileMenuPanel({ isOpen, onClose, theme, toggleTheme, location }: Mobi
           />
           <button
             onClick={onClose}
-            className="p-2 text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors"
+            className={`p-2 hover:text-black dark:hover:text-white transition-colors ${metaTextClasses}`}
             aria-label="Chiudi menu"
           >
             <XMarkIcon className="w-7 h-7" />
@@ -187,7 +191,7 @@ function MobileMenuPanel({ isOpen, onClose, theme, toggleTheme, location }: Mobi
 
         <div className="p-6 border-t border-black/10 dark:border-white/10 flex flex-col gap-6 shrink-0">
           <div className="flex flex-col gap-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-black/60 dark:text-white/60">
+            <span className={`text-[10px] font-black uppercase tracking-[0.25em] ${metaTextClasses}`}>
               Aspetto Sito
             </span>
             <button
@@ -202,11 +206,11 @@ function MobileMenuPanel({ isOpen, onClose, theme, toggleTheme, location }: Mobi
               <span className="absolute inset-0 grid grid-cols-2 pointer-events-none">
                 <span className="flex items-center justify-center gap-2 px-4">
                   <SunIcon className={`w-4 h-4 text-amber-600 transition-opacity ${theme === 'dark' ? 'opacity-45' : 'opacity-100'}`} />
-                  <span className={`text-[10px] font-black uppercase tracking-widest transition-opacity ${theme === 'dark' ? 'opacity-60 text-black/70 dark:text-white/70' : 'opacity-100 text-black dark:text-white'}`}>Chiaro</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest transition-opacity ${theme === 'dark' ? `opacity-60 ${metaTextClasses}` : 'opacity-100 text-black dark:text-white'}`}>Chiaro</span>
                 </span>
                 <span className="flex items-center justify-center gap-2 px-4">
                   <MoonIcon className={`w-4 h-4 transition-opacity ${theme === 'dark' ? 'text-zinc-200 opacity-100' : 'text-zinc-700 opacity-80'}`} />
-                  <span className={`text-[10px] font-black uppercase tracking-widest transition-opacity ${theme === 'dark' ? 'opacity-100 text-black dark:text-white' : 'opacity-60 text-black/70 dark:text-white/70'}`}>Scuro</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest transition-opacity ${theme === 'dark' ? 'opacity-100 text-black dark:text-white' : `opacity-60 ${metaTextClasses}`}`}>Scuro</span>
                 </span>
               </span>
             </button>
@@ -220,7 +224,7 @@ function MobileMenuPanel({ isOpen, onClose, theme, toggleTheme, location }: Mobi
             Contatti
           </Link>
 
-          <span className="text-[9px] font-black uppercase tracking-widest text-black/50 dark:text-white/50">
+          <span className={`text-[9px] font-black uppercase tracking-widest ${metaTextClasses}`}>
             © {new Date().getFullYear()} Scandellari
           </span>
         </div>
@@ -271,8 +275,8 @@ function MagneticLink({ children, to, active, forceLightText }: MagneticLinkProp
   const baseClass = "relative text-[11px] font-black uppercase tracking-[0.2em] transition-colors after:content-[''] after:absolute after:left-0 after:-bottom-2 after:h-[2px] after:w-full after:bg-current after:origin-left after:scale-x-0 after:transition-transform after:duration-300";
   const activeClass = active ? 'after:scale-x-100' : 'hover:after:scale-x-100';
   const colorClass = forceLightText
-    ? active ? 'text-white' : 'text-white/75 hover:text-white'
-    : active ? 'text-primary dark:text-primary-light' : 'text-black/80 dark:text-white/70 hover:text-primary dark:hover:text-white';
+    ? active ? 'text-white' : `${inverseMetaTextClasses} hover:text-white`
+    : active ? 'text-primary dark:text-primary-light' : `${metaTextClasses} hover:text-primary dark:hover:text-white`;
 
   return (
     <Link ref={linkRef} to={to} className={`${baseClass} ${activeClass} ${colorClass}`}>
@@ -328,8 +332,8 @@ function Header() {
 
   const desktopNavLinkClass = (active: boolean) =>
     `${desktopNavLinkBase} ${active ? 'after:scale-x-100' : 'hover:after:scale-x-100'} ${forceLightText
-      ? active ? 'text-white' : 'text-white/75 hover:text-white'
-      : active ? 'text-primary dark:text-primary-light' : 'text-black/80 dark:text-white/70 hover:text-primary dark:hover:text-white'
+      ? active ? 'text-white' : `${inverseMetaTextClasses} hover:text-white`
+      : active ? 'text-primary dark:text-primary-light' : `${metaTextClasses} hover:text-primary dark:hover:text-white`
     }`;
 
   return (
@@ -373,7 +377,7 @@ function Header() {
                               to={sub.path}
                               className={`block px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${isActivePath(sub.path)
                                 ? 'bg-primary text-white'
-                                : 'text-black dark:text-white/80 hover:bg-black/5 hover:text-primary dark:hover:bg-white/10 dark:hover:text-primary-light'
+                                : `${metaTextClasses} hover:bg-black/5 hover:text-primary dark:hover:bg-white/10 dark:hover:text-primary-light`
                               }`}
                             >
                               {sub.name}

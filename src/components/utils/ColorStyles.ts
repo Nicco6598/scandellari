@@ -30,8 +30,16 @@ export const secondaryBgClasses = "bg-stone-50 dark:bg-dark-surface";
 // Testo primario
 export const primaryTextClasses = "text-text-primary dark:text-white";
 
-// Testo secondario
-export const secondaryTextClasses = "text-text-secondary dark:text-gray-200";
+// Testo secondario per body copy, descrizioni e testi informativi
+export const secondaryTextClasses = "text-text-secondary dark:text-text-secondary-dark";
+
+// Testo meta per label, overline, microcopy e informazioni di supporto
+export const metaTextClasses = "text-text-light dark:text-text-light-dark";
+
+// Varianti inverse per superfici fotografiche o sfondi sempre scuri
+export const inversePrimaryTextClasses = "text-white";
+export const inverseSecondaryTextClasses = "text-white/80";
+export const inverseMetaTextClasses = "text-white/60";
 
 // Combinazioni comuni
 export const cardClasses = "bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-border rounded-xl shadow-sm dark:shadow-dark-card";

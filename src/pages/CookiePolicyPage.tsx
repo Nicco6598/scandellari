@@ -6,6 +6,7 @@ import {
   Cog6ToothIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
+import { metaTextClasses, secondaryTextClasses } from '../components/utils/ColorStyles';
 
 const CookiePolicyPage: React.FC = () => {
   return (
@@ -20,14 +21,14 @@ const CookiePolicyPage: React.FC = () => {
           >
             <div className="flex items-center gap-4 mb-12">
               <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+              <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                 Legal & Cookies
               </span>
             </div>
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
               Cookie<br />Policy
             </h1>
-            <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+            <p className={`text-base md:text-xl max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
               Informazioni estese sull'utilizzo dei cookie in questo sito web.
             </p>
           </div>
@@ -40,7 +41,7 @@ const CookiePolicyPage: React.FC = () => {
               <div className="p-8 bg-black/5 dark:bg-white/5 space-y-8">
                 <div className="text-xs font-black uppercase tracking-widest text-primary">Gestione</div>
                 <div className="space-y-4">
-                  <p className="text-xs text-black/40 dark:text-white/40 font-medium leading-loose">
+                  <p className={`text-xs font-medium leading-loose ${secondaryTextClasses}`}>
                     Puoi verificare e gestire le tue preferenze riguardanti i cookie direttamente dalle impostazioni del tuo browser o tramite il banner iniziale.
                   </p>
                 </div>
@@ -48,7 +49,7 @@ const CookiePolicyPage: React.FC = () => {
 
               <div className="p-8 border border-black dark:border-white space-y-6">
                 <h3 className="text-lg font-black font-heading">Cos'è un Cookie?</h3>
-                <p className="text-xs text-black/40 dark:text-white/40 font-medium leading-loose">
+                <p className={`text-xs font-medium leading-loose ${secondaryTextClasses}`}>
                   I cookie sono piccoli file di testo che i siti visitati dall'utente inviano al suo terminale, dove vengono memorizzati per essere poi ritrasmessi agli stessi siti alla successiva visita.
                 </p>
               </div>
@@ -76,7 +77,7 @@ const CookiePolicyPage: React.FC = () => {
               ].map((section, i) => (
                 <section key={i} className="space-y-6">
                   <h2 className="text-3xl font-black font-heading tracking-tight uppercase border-l-4 border-primary pl-6">{section.title}</h2>
-                  <p className="text-base text-black/50 dark:text-white/40 font-medium leading-relaxed max-w-2xl">{section.content}</p>
+                  <p className={`text-base font-medium leading-relaxed max-w-2xl ${secondaryTextClasses}`}>{section.content}</p>
                 </section>
               ))}
 

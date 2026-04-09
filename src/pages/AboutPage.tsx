@@ -13,6 +13,11 @@ import {
     WrenchScrewdriverIcon,
     BoltIcon,
 } from '@heroicons/react/24/outline';
+import {
+    metaTextClasses,
+    primaryTextClasses,
+    secondaryTextClasses,
+} from '../components/utils/ColorStyles';
 
 type FadeInProps = {
     children: ReactNode;
@@ -241,8 +246,8 @@ function StatCard({ icon: Icon, label, value, suffix = '', delay = 0 }: StatCard
             <MagneticCard>
                 <div ref={ref} className="bg-white dark:bg-black p-8 group hover:bg-stone-50 dark:hover:bg-dark-surface transition-all duration-300 border border-black/10 dark:border-white/5 hover:border-primary/30">
                     <Icon className="w-6 h-6 mb-4 text-primary group-hover:scale-110 transition-transform duration-300" />
-                    <div className="text-xs font-black uppercase tracking-widest text-black/60 dark:text-white/40 mb-2">{label}</div>
-                    <div className="text-4xl font-black text-black dark:text-white font-heading tabular-nums">
+                    <div className={`text-xs font-black uppercase tracking-widest mb-2 ${metaTextClasses}`}>{label}</div>
+                    <div className={`text-4xl font-black font-heading tabular-nums ${primaryTextClasses}`}>
                         {count}{suffix}
                     </div>
                 </div>
@@ -268,7 +273,7 @@ function AboutPage() {
                     <div className="border-b border-black/10 dark:border-white/5 pb-20">
                         <div className="flex items-center gap-4 mb-12">
                             <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                                 Storia & Visione
                             </span>
                         </div>
@@ -277,12 +282,12 @@ function AboutPage() {
                                 <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
                                     Ingegneria<br />dal 1945
                                 </h1>
-                                <p className="text-base md:text-xl text-black/80 dark:text-white/70 max-w-2xl font-medium leading-relaxed">
+                                <p className={`text-base md:text-xl max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
                                     Da oltre settant'anni, Scandellari Giacinto s.n.c. rappresenta un punto di riferimento nell'installazione di sistemi di segnalamento e sicurezza ferroviaria in Italia.
                                 </p>
                             </div>
                             <div className="shrink-0 text-right select-none">
-                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/50 dark:text-white/30 mb-2">Fondata nel</div>
+                                <div className={`text-[10px] font-black uppercase tracking-[0.4em] mb-2 ${metaTextClasses}`}>Fondata nel</div>
                                 <div className="text-8xl md:text-9xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums">
                                     {FOUNDING_YEAR}
                                 </div>
@@ -305,7 +310,7 @@ function AboutPage() {
                         <FadeIn delay={0}>
                             <div className="space-y-10">
                                 <h2 className="text-3xl font-black text-black dark:text-white tracking-tight uppercase font-heading">Chi Siamo</h2>
-                                <div className="space-y-6 text-sm md:text-base text-black/90 dark:text-white/80 font-medium leading-relaxed">
+                                <div className={`space-y-6 text-sm md:text-base font-medium leading-relaxed ${secondaryTextClasses}`}>
                                     <p>
                                         La Scandellari Giacinto s.n.c. opera nel settore ferroviario sin dal 1945, realizzando e installando impianti di segnalamento e sicurezza per la circolazione ferroviaria.
                                     </p>
@@ -321,7 +326,7 @@ function AboutPage() {
 
                         <FadeIn delay={0.15}>
                             <div className="space-y-3">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 mb-6">
+                                <h3 className={`text-[10px] font-black uppercase tracking-[0.4em] mb-6 ${metaTextClasses}`}>
                                     Aree di Specializzazione
                                 </h3>
                                 {specializzazioni.map((s) => (
@@ -343,7 +348,7 @@ function AboutPage() {
                                             <span className={`shrink-0 text-[8px] font-black uppercase tracking-widest px-2 py-1 border
                                                 ${s.highlight
                                                     ? 'border-primary/40 text-primary bg-primary/5'
-                                                    : 'border-black/10 dark:border-white/10 text-black/60 dark:text-white/30'
+                                                    : `border-black/10 dark:border-white/10 ${metaTextClasses}`
                                                 }`}>
                                                 {s.badge}
                                             </span>
@@ -355,7 +360,7 @@ function AboutPage() {
                                                     className={`text-[9px] font-black uppercase tracking-wider px-2 py-1
                                                         ${s.highlight
                                                             ? 'bg-primary/10 text-primary/80'
-                                                            : 'bg-black/8 dark:bg-white/5 text-black/60 dark:text-white/40'
+                                                            : `bg-black/8 dark:bg-white/5 ${metaTextClasses}`
                                                         }`}
                                                 >
                                                     {item}
@@ -374,7 +379,7 @@ function AboutPage() {
                         <FadeIn>
                             <div className="flex items-center gap-4 mb-4">
                                 <div className="w-8 h-[1px] bg-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40">
+                                <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                                     La Nostra Storia
                                 </span>
                             </div>
@@ -393,7 +398,7 @@ function AboutPage() {
                                             onClick={() => setActiveTimeline(activeTimeline === i ? null : i)}
                                         >
                                             <div className="hidden md:flex w-36 shrink-0 justify-end pr-10 pt-6">
-                                                <span className={`text-sm font-black tabular-nums transition-colors duration-300 ${activeTimeline === i ? 'text-primary' : 'text-black/50 dark:text-white/20 group-hover:text-black/70 dark:group-hover:text-white/50'}`}>
+                                                <span className={`text-sm font-black tabular-nums transition-colors duration-300 ${activeTimeline === i ? 'text-primary' : `${metaTextClasses} group-hover:text-black dark:group-hover:text-white`}`}>
                                                     {step.year}
                                                 </span>
                                             </div>
@@ -408,7 +413,7 @@ function AboutPage() {
                                             </div>
 
                                             <div className="flex-grow pb-4 pl-6">
-                                                <span className={`md:hidden text-[10px] font-black uppercase tracking-widest mb-1 block transition-colors ${activeTimeline === i ? 'text-primary' : 'text-black/60 dark:text-white/30'}`}>
+                                                <span className={`md:hidden text-[10px] font-black uppercase tracking-widest mb-1 block transition-colors ${activeTimeline === i ? 'text-primary' : metaTextClasses}`}>
                                                     {step.year}
                                                 </span>
                                                 <div className={`border transition-all duration-500 ${activeTimeline === i
@@ -422,11 +427,11 @@ function AboutPage() {
                                                             </h3>
                                                             <div className={`shrink-0 w-5 h-5 mt-1 transition-transform duration-300 ${activeTimeline === i ? 'rotate-180' : 'rotate-0'}`}>
                                                                 <svg viewBox="0 0 20 20" fill="none" className="w-full h-full">
-                                                                    <path d="M5 7l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTimeline === i ? 'text-primary' : 'text-black/30 dark:text-white/30'} />
+                                                                    <path d="M5 7l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTimeline === i ? 'text-primary' : metaTextClasses} />
                                                                 </svg>
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-black/80 dark:text-white/60 font-medium leading-relaxed mt-2">
+                                                        <p className={`text-sm font-medium leading-relaxed mt-2 ${secondaryTextClasses}`}>
                                                             {step.desc}
                                                         </p>
                                                         <div className={`overflow-hidden transition-all duration-500 ease-in-out ${activeTimeline === i ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
@@ -453,7 +458,7 @@ function AboutPage() {
                             <h2 className="text-3xl md:text-4xl font-black text-black dark:text-white tracking-tighter font-heading mb-6">
                                 Le Nostre Competenze
                             </h2>
-                            <p className="text-sm md:text-base text-black/80 dark:text-white/70 max-w-2xl font-medium leading-relaxed">
+                            <p className={`text-sm md:text-base max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
                                 Offriamo un'ampia gamma di servizi specializzati per l'infrastruttura ferroviaria nazionale.
                             </p>
                         </div>
@@ -463,7 +468,7 @@ function AboutPage() {
                             <FadeIn key={comp.text} delay={i * 0.04}>
                                 <div className="bg-white dark:bg-dark-surface border border-black/10 dark:border-white/5 hover:border-primary/30 p-6 md:p-8 flex gap-4 items-start group transition-all duration-300 h-full">
                                     <comp.icon className="w-5 h-5 text-primary shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-300" />
-                                    <p className="text-sm md:text-base text-black/90 dark:text-white/80 font-medium leading-relaxed">
+                                    <p className={`text-sm md:text-base font-medium leading-relaxed ${secondaryTextClasses}`}>
                                         {comp.text}
                                     </p>
                                 </div>
@@ -478,7 +483,7 @@ function AboutPage() {
                             <h2 className="text-3xl md:text-4xl font-black text-black dark:text-white tracking-tighter font-heading mb-6">
                                 Collaborazioni Strategiche
                             </h2>
-                            <p className="text-sm md:text-base text-black/80 dark:text-white/70 max-w-2xl font-medium leading-relaxed">
+                            <p className={`text-sm md:text-base max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
                                 Lavoriamo a stretto contatto con i maggiori player del settore ferroviario per garantire i più alti standard di qualità.
                             </p>
                         </div>
@@ -488,7 +493,7 @@ function AboutPage() {
                             <FadeIn key={p} delay={i * 0.03}>
                                 <div className="aspect-video bg-white dark:bg-dark-surface flex items-center justify-center p-6 group transition-all duration-300 hover:bg-stone-50 dark:hover:bg-black relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                    <span className="text-[10px] md:text-xs font-black uppercase tracking-wider text-center text-black/70 dark:text-white/40 group-hover:text-primary transition-colors duration-300 relative z-10 leading-relaxed">
+                                    <span className={`text-[10px] md:text-xs font-black uppercase tracking-wider text-center group-hover:text-primary transition-colors duration-300 relative z-10 leading-relaxed ${metaTextClasses}`}>
                                         {p}
                                     </span>
                                 </div>

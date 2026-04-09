@@ -21,6 +21,12 @@ import PDFThumbnail from '../components/utils/PDFThumbnail';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import {
+    inverseSecondaryTextClasses,
+    metaTextClasses,
+    primaryTextClasses,
+    secondaryTextClasses,
+} from '../components/utils/ColorStyles';
 
 const LazyPDFViewer = lazy(() => import('./LazyPDFViewer'));
 
@@ -112,7 +118,7 @@ function CertificationsPage() {
                     <div className="border-b border-black/10 dark:border-white/5 pb-20" data-animate="fade-up" data-animate-distance="20">
                         <div className="flex items-center gap-4 mb-12">
                             <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-black/70 dark:text-white/60">
+                            <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                                 Standard & Conformità
                             </span>
                         </div>
@@ -121,7 +127,7 @@ function CertificationsPage() {
                                 <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading mb-12">
                                     Qualità<br />Certificata
                                 </h1>
-                                <p className="text-base md:text-xl text-black/70 dark:text-white/60 max-w-2xl font-medium leading-relaxed">
+                                <p className={`text-base md:text-xl max-w-2xl font-medium leading-relaxed ${secondaryTextClasses}`}>
                                     Operiamo secondo i più alti parametri di sicurezza e sostenibilità, garantiti da processi certificati e monitorati costantemente.
                                 </p>
                             </div>
@@ -129,7 +135,7 @@ function CertificationsPage() {
                                 <div className="text-7xl md:text-8xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums select-none">
                                     <AnimatedCounter to={certifications.length} duration={1200} />
                                 </div>
-                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/50 dark:text-white/30 mt-1">
+                                <div className={`text-[10px] font-black uppercase tracking-[0.4em] mt-1 ${metaTextClasses}`}>
                                     Certificazioni
                                 </div>
                             </div>
@@ -153,8 +159,8 @@ function CertificationsPage() {
                                             <item.icon className="w-6 h-6 group-hover:text-white transition-colors" />
                                         </div>
                                         <div>
-                                            <h3 className="font-black text-black dark:text-white uppercase text-xs tracking-widest mb-1">{item.title}</h3>
-                                            <p className="text-sm text-black/70 dark:text-white/60 font-medium">{item.desc}</p>
+                                            <h3 className={`font-black uppercase text-xs tracking-widest mb-1 ${primaryTextClasses}`}>{item.title}</h3>
+                                            <p className={`text-sm font-medium ${secondaryTextClasses}`}>{item.desc}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -166,9 +172,9 @@ function CertificationsPage() {
                             <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/10 pointer-events-none" />
                             <div className="relative z-10">
                                 <h3 className="text-2xl font-black mb-6 font-heading">Politica Aziendale</h3>
-                                <p className="text-sm opacity-80 mb-10 leading-relaxed font-medium">
+                            <p className={`text-sm mb-10 leading-relaxed font-medium ${inverseSecondaryTextClasses}`}>
                                     Il nostro documento programmatico che definisce la visione strategica su qualità, ambiente e sicurezza.
-                                </p>
+                            </p>
                                 <button
                                     onClick={() => openCertification(POLITICA_CERT)}
                                     className="inline-flex items-center gap-4 text-xs font-black uppercase tracking-[0.3em] group hover:text-primary transition-colors"
@@ -191,7 +197,7 @@ function CertificationsPage() {
                                     <button
                                         key={cat}
                                         onClick={() => setActiveCategory(cat)}
-                                        className={`px-6 py-3 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCategory === cat ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-black/70 dark:text-white/40'}` }
+                                        className={`px-6 py-3 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCategory === cat ? 'bg-black dark:bg-white text-white dark:text-black' : metaTextClasses}` }
                                     >
                                         {cat === 'all' ? 'Tutte' : cat}
                                     </button>
@@ -235,16 +241,16 @@ function CertificationsPage() {
                                         {String(index + 1).padStart(2, '0')}
                                     </span>
                                     <div className="text-[9px] font-black uppercase tracking-[0.35em] text-primary mb-3">{cert.category}</div>
-                                    <h3 className="text-xl font-black text-black dark:text-white mb-3 tracking-tighter leading-tight group-hover:text-primary transition-colors duration-300">{cert.title}</h3>
-                                    <p className="text-xs text-black/60 dark:text-white/40 font-medium mb-5 leading-relaxed line-clamp-2">{cert.description}</p>
+                                    <h3 className={`text-xl font-black mb-3 tracking-tighter leading-tight group-hover:text-primary transition-colors duration-300 ${primaryTextClasses}`}>{cert.title}</h3>
+                                    <p className={`text-xs font-medium mb-5 leading-relaxed line-clamp-2 ${secondaryTextClasses}`}>{cert.description}</p>
                                     <div className="mt-auto pt-6 border-t border-black/10 dark:border-white/5 space-y-4">
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
-                                                <div className="text-[9px] font-black uppercase tracking-[0.3em] text-black/50 dark:text-white/30 mb-0.5">Ente</div>
-                                                <div className="text-xs font-bold text-black/70 dark:text-white/60 leading-tight">{cert.issuer}</div>
+                                                <div className={`text-[9px] font-black uppercase tracking-[0.3em] mb-0.5 ${metaTextClasses}`}>Ente</div>
+                                                <div className={`text-xs font-bold leading-tight ${secondaryTextClasses}`}>{cert.issuer}</div>
                                             </div>
                                             <div className="text-right shrink-0">
-                                                <div className="text-[9px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 mb-0.5">Scadenza</div>
+                                                <div className={`text-[9px] font-black uppercase tracking-[0.3em] mb-0.5 ${metaTextClasses}`}>Scadenza</div>
                                                 <div className="text-xs font-black text-black dark:text-white">{cert.expiryDate}</div>
                                             </div>
                                         </div>
@@ -268,7 +274,7 @@ function CertificationsPage() {
                         {/* Header */}
                         <div className="flex justify-between items-center p-6 md:p-8 border-b border-black/10 dark:border-white/5 shrink-0">
                             <div className="flex-1 min-w-0 mr-4">
-                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 mb-2">
+                                <div className={`text-[10px] font-black uppercase tracking-[0.4em] mb-2 ${metaTextClasses}`}>
                                     {selectedCertification.category}
                                 </div>
                                 <h3 className="text-lg md:text-xl font-black uppercase tracking-tight text-black dark:text-white truncate">
@@ -279,7 +285,7 @@ function CertificationsPage() {
                                 {isPolitica && (
                                     <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-black/10 dark:border-white/10">
                                         <ShieldCheckIcon className="w-3.5 h-3.5 text-primary" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-black/60 dark:text-white/40">
+                                        <span className={`text-[9px] font-black uppercase tracking-widest ${metaTextClasses}`}>
                                             Solo visualizzazione
                                         </span>
                                     </div>
@@ -287,11 +293,11 @@ function CertificationsPage() {
                                 {/* Hint sfoglia se multi pagina */}
                                 {isMultiPage && (
                                     <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-black/10 dark:border-white/10">
-                                        <ArrowLeftIcon className="w-3 h-3 text-black/50 dark:text-white/30" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-black/50 dark:text-white/30">
+                                        <ArrowLeftIcon className={`w-3 h-3 ${metaTextClasses}`} />
+                                        <span className={`text-[9px] font-black uppercase tracking-widest ${metaTextClasses}`}>
                                             Scorri o trascina
                                         </span>
-                                        <ArrowRightIcon className="w-3 h-3 text-black/50 dark:text-white/30" />
+                                        <ArrowRightIcon className={`w-3 h-3 ${metaTextClasses}`} />
                                     </div>
                                 )}
                                 <button
