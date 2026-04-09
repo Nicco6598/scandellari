@@ -1,7 +1,7 @@
 type LoadingStateProps = {
   description?: string;
   label: string;
-  variant?: 'page' | 'section';
+  variant?: 'overlay' | 'page' | 'section';
 };
 
 function LoadingState({
@@ -10,6 +10,43 @@ function LoadingState({
   variant = 'page',
 }: LoadingStateProps) {
   const isPage = variant === 'page';
+  const isOverlay = variant === 'overlay';
+
+  if (isOverlay) {
+    return (
+      <div
+        className="fixed inset-0 z-[8800] bg-stone-50/88 backdrop-blur-sm dark:bg-black/88"
+        aria-live="polite"
+        role="status"
+      >
+        <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden bg-black/5 dark:bg-white/5">
+          <div className="h-full w-1/3 animate-pulse bg-primary shadow-[0_0_20px_rgba(37,99,235,0.45)]" />
+        </div>
+
+        <div className="flex min-h-screen items-center justify-center px-6 py-20">
+          <div className="w-full max-w-2xl border border-black/10 bg-white/80 p-8 md:p-12 dark:border-white/10 dark:bg-white/[0.05]">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="h-[1px] w-12 bg-primary shadow-[0_0_8px_rgba(37,99,235,0.35)]" />
+              <span className="text-[10px] font-black uppercase tracking-[0.35em] text-black/60 dark:text-white/40">
+                Caricamento
+              </span>
+            </div>
+
+            <div className="mb-5 h-10 w-full max-w-sm animate-pulse bg-black/5 dark:bg-white/5" />
+            <div className="mb-3 h-4 w-full max-w-xl animate-pulse bg-black/5 dark:bg-white/5" />
+            <div className="mb-8 h-4 w-full max-w-lg animate-pulse bg-black/5 dark:bg-white/5" />
+
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-black/65 dark:text-white/45">
+              {label}
+            </p>
+            <p className="mt-3 max-w-xl text-sm font-medium leading-relaxed text-black/60 dark:text-white/45">
+              {description}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section

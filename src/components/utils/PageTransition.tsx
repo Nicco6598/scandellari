@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import gsap from 'gsap';
@@ -6,9 +6,9 @@ import gsap from 'gsap';
 const PageTransition: React.FC = () => {
     const overlayRef = useRef<HTMLDivElement>(null);
     const lineRef = useRef<HTMLDivElement>(null);
+    const isFirstRenderRef = useRef(true);
     const location = useLocation();
     const { theme } = useTheme();
-    const [isFirst, setIsFirst] = useState(true);
 
     useLayoutEffect(() => {
         const overlay = overlayRef.current;
@@ -17,46 +17,42 @@ const PageTransition: React.FC = () => {
 
         const bgColor = theme === 'dark' ? '#000000' : '#f5f5f4';
 
-        if (isFirst) {
-            setIsFirst(false);
-            // Prima visita: overlay già visibile, lo togliamo subito
-            gsap.set(overlay, { display: 'block', opacity: 1, backgroundColor: bgColor });
+        if (isFirstRenderRef.current) {
+            isFirstRenderRef.current = false;
+            gsap.set(overlay, { display: 'none', opacity: 0, backgroundColor: bgColor });
             gsap.set(line, { scaleY: 0, opacity: 0 });
-            gsap.to(overlay, {
-                opacity: 0,
-                duration: 0.3,
-                ease: 'power2.in',
-                onComplete: () => {
-                    gsap.set(overlay, { display: 'none' });
-                }
-            });
             return;
         }
 
-        // Navigazione: overlay già visibile (copre la nuova pagina), poi anima e scompare
         const tl = gsap.timeline();
 
-        tl.set(overlay, { display: 'block', opacity: 1, backgroundColor: bgColor })
-          .set(line, { scaleY: 0, opacity: 1 })
-          .to(line, {
-              scaleY: 1,
-              duration: 0.35,
-              ease: 'expo.inOut'
+        tl.set(overlay, { display: 'block', opacity: 0, backgroundColor: bgColor })
+          .set(line, { scaleY: 0.2, opacity: 0, transformOrigin: 'center center' })
+          .to(overlay, {
+              opacity: 0.18,
+              duration: 0.18,
+              ease: 'power2.out'
           })
           .to(line, {
+              opacity: 1,
+              scaleY: 1,
+              duration: 0.28,
+              ease: 'expo.out'
+          }, 0)
+          .to(line, {
               opacity: 0,
-              duration: 0.15,
+              duration: 0.16,
               ease: 'power2.in'
           })
           .to(overlay, {
               opacity: 0,
-              duration: 0.25,
-              ease: 'power2.in',
+              duration: 0.28,
+              ease: 'power2.inOut',
               onComplete: () => {
                   gsap.set(overlay, { display: 'none' });
                   gsap.set(line, { scaleY: 0 });
               }
-          });
+          }, '<');
 
         return () => { tl.kill(); };
     }, [location.pathname, theme]);
@@ -65,7 +61,7 @@ const PageTransition: React.FC = () => {
         <div
             ref={overlayRef}
             className="fixed inset-0 z-[9000] pointer-events-none"
-            style={{ display: 'block', opacity: 1 }}
+            style={{ display: 'none', opacity: 0 }}
             aria-hidden="true"
         >
             <div
