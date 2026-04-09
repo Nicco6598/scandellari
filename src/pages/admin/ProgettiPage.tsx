@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { progettiService } from '../../supabase/services';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { ProgettoData } from '../../types/supabaseTypes';
 
@@ -14,15 +12,12 @@ const ProgettiPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchProgetti = async () => {
       try {
         const data = await progettiService.getAllProjects();
         setProgetti(data);
-        const uniqueCategories = Array.from(new Set(data.map(p => p.categoria)));
-        setCategories(uniqueCategories);
       } catch (error) {
         logger.error('Error fetching projects', error);
       } finally {
@@ -33,14 +28,20 @@ const ProgettiPage: React.FC = () => {
     fetchProgetti();
   }, []);
 
-  const filteredProjects = progetti.filter(
-    project =>
-      (searchTerm === '' ||
-        project.titolo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (project.localita && project.localita.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        project.categoria.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (activeCategory === null || project.categoria === activeCategory)
-  );
+  const categories = useMemo(() => Array.from(new Set(progetti.map((project) => project.categoria))), [progetti]);
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredProjects = useMemo(() => {
+    return progetti.filter((project) => {
+      const matchesSearch =
+        normalizedSearchTerm === '' ||
+        project.titolo.toLowerCase().includes(normalizedSearchTerm) ||
+        project.localita?.toLowerCase().includes(normalizedSearchTerm) ||
+        project.categoria.toLowerCase().includes(normalizedSearchTerm);
+
+      const matchesCategory = activeCategory === null || project.categoria === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [activeCategory, normalizedSearchTerm, progetti]);
 
   const missingProjectImagesCount = useMemo(() => {
     return progetti.filter((p) => !p.immagini || p.immagini.length === 0).length;
@@ -51,26 +52,11 @@ const ProgettiPage: React.FC = () => {
 
     try {
       await progettiService.deleteProject(id);
-      setProgetti(progetti.filter(project => project.id !== id));
+      setProgetti((currentProjects) => currentProjects.filter((project) => project.id !== id));
       setConfirmDelete(null);
     } catch (error) {
       logger.error("Error deleting project", error);
     }
-  };
-
-  const formatDate = (dateValue: any): string => {
-    try {
-      if (typeof dateValue === 'object' && 'toDate' in dateValue) {
-        return format(dateValue.toDate(), 'dd/MM/yyyy', { locale: it });
-      } else if (dateValue instanceof Date) {
-        return format(dateValue, 'dd/MM/yyyy', { locale: it });
-      } else if (typeof dateValue === 'string') {
-        return format(new Date(dateValue), 'dd/MM/yyyy', { locale: it });
-      }
-    } catch (error) {
-      logger.error('Error formatting date', error);
-    }
-    return 'N/D';
   };
 
   return (

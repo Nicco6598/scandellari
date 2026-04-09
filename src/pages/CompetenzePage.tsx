@@ -15,6 +15,13 @@ import {
     ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 
+const categoryLabels = {
+    segnalamento: 'Segnalamento',
+    realizzazione: 'Realizzazioni',
+    oleodinamica: 'Sistemi Oleodinamici',
+    manutenzione: 'Manutenzione'
+} as const;
+
 const CompetenzePage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -24,13 +31,6 @@ const CompetenzePage: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-    const categories = useMemo(() => ({
-        segnalamento: "Segnalamento",
-        realizzazione: "Realizzazioni",
-        oleodinamica: "Sistemi Oleodinamici",
-        manutenzione: "Manutenzione"
-    }), []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -52,8 +52,35 @@ const CompetenzePage: React.FC = () => {
     }, []);
 
     const activeCategory = categoriaParam || 'oleodinamica';
-    const activeCompetenzaId = location.hash.substring(1) || (competenze.find(c => c.categoria?.toLowerCase() === activeCategory)?.id || null);
-    const activeCompetenza = competenze.find(c => c.id === activeCompetenzaId) || competenze.find(c => c.categoria?.toLowerCase() === activeCategory);
+    const competenzeByCategory = useMemo(() => {
+        const groups = new Map<string, CompetenzaData[]>();
+        for (const competenza of competenze) {
+            const categoryKey = competenza.categoria?.toLowerCase();
+            if (!categoryKey) continue;
+            const current = groups.get(categoryKey) ?? [];
+            current.push(competenza);
+            groups.set(categoryKey, current);
+        }
+        return groups;
+    }, [competenze]);
+    const competenzaById = useMemo(() => {
+        const map = new Map<string, CompetenzaData>();
+        for (const competenza of competenze) {
+            if (competenza.id) {
+                map.set(competenza.id, competenza);
+            }
+        }
+        return map;
+    }, [competenze]);
+    const relatedProjects = useMemo(() => {
+        return progetti
+            .filter((project) => project.categoria?.toLowerCase() === activeCategory)
+            .slice(0, 2);
+    }, [activeCategory, progetti]);
+    const categoryCompetences = competenzeByCategory.get(activeCategory) ?? [];
+    const fallbackCompetenza = categoryCompetences[0] ?? null;
+    const activeCompetenzaId = location.hash.substring(1) || fallbackCompetenza?.id || null;
+    const activeCompetenza = (activeCompetenzaId ? competenzaById.get(activeCompetenzaId) : null) ?? fallbackCompetenza;
 
     const handleSelect = (cat: string, id?: string) => {
         navigate(`/competenze/${cat}${id ? `#${id}` : ''}`);
@@ -119,7 +146,7 @@ const CompetenzePage: React.FC = () => {
                         {/* Sidebar Navigation */}
                         <aside className="hidden lg:block w-72 shrink-0">
                             <div className="sticky top-32 space-y-12">
-                                {Object.entries(categories).map(([key, label]) => (
+                                {Object.entries(categoryLabels).map(([key, label]) => (
                                     <div key={key} className="space-y-4">
                                         <button
                                             onClick={() => handleSelect(key)}
@@ -131,8 +158,7 @@ const CompetenzePage: React.FC = () => {
 
                                         {activeCategory === key && (
                                             <div className="flex flex-col gap-3 pl-4 border-l border-black/5 dark:border-white/5">
-                                                {competenze
-                                                    .filter(c => c.categoria?.toLowerCase() === key)
+                                                {(competenzeByCategory.get(key) ?? [])
                                                     .map(c => (
                                                         <button
                                                             key={c.id}
@@ -244,14 +270,11 @@ const CompetenzePage: React.FC = () => {
                                         )}
 
                                         {/* Related Projects */}
-                                        {progetti.filter(p => p.categoria?.toLowerCase() === activeCategory).length > 0 && (
+                                        {relatedProjects.length > 0 && (
                                             <div className="space-y-12 border-t border-black/5 dark:border-white/5 pt-16">
                                                 <h3 className="text-xs font-black uppercase tracking-[0.4em] text-black/60 dark:text-white/40 text-center">Progetti Correlati</h3>
                                                 <div className="grid md:grid-cols-2 gap-px bg-gradient-to-br from-black/5 via-black/5 to-primary/5 dark:from-white/5 dark:via-white/5 dark:to-primary/10 border border-black/10 dark:border-white/5">
-                                                    {progetti
-                                                        .filter(p => p.categoria?.toLowerCase() === activeCategory)
-                                                        .slice(0, 2)
-                                                        .map(p => (
+                                                    {relatedProjects.map(p => (
                                                             <Link
                                                                 key={p.id}
                                                                 to={`/progetti/${p.id}`}
@@ -289,7 +312,7 @@ const CompetenzePage: React.FC = () => {
                         </button>
                     </div>
                     <div className="flex-grow overflow-y-auto space-y-12">
-                        {Object.entries(categories).map(([key, label]) => (
+                        {Object.entries(categoryLabels).map(([key, label]) => (
                             <div key={key} className="space-y-6">
                                 <button
                                     onClick={() => handleSelect(key)}
@@ -300,8 +323,7 @@ const CompetenzePage: React.FC = () => {
                                 </button>
                                 {activeCategory === key && (
                                     <div className="flex flex-col gap-4 pl-4 border-l-2 border-primary/30">
-                                        {competenze
-                                            .filter(c => c.categoria?.toLowerCase() === key)
+                                        {(competenzeByCategory.get(key) ?? [])
                                             .map(c => (
                                                 <button
                                                     key={c.id}

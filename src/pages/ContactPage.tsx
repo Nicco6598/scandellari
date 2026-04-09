@@ -11,6 +11,7 @@ import { useTheme } from '../context/ThemeContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import gsap from 'gsap';
 import * as z from 'zod';
+import { useInjectedHeadStyle } from '../hooks/useInjectedHeadStyle';
 import {
     MapPinIcon,
     PhoneIcon,
@@ -92,13 +93,7 @@ function MagneticLink({ href, children, className = '' }: MagneticLinkProps) {
 function ContactPage() {
     const { theme } = useTheme();
     const [status, setStatus] = useState<SubmissionStatus>('idle');
-
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.textContent = maplibreCss;
-        document.head.appendChild(style);
-        return () => { document.head.removeChild(style); };
-    }, []);
+    useInjectedHeadStyle(maplibreCss);
     const [viewState, setViewState] = useState({
         ...companyCoords,
         zoom: 13

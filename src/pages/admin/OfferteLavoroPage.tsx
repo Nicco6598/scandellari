@@ -4,8 +4,6 @@ import { Link } from 'react-router-dom';
 import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { offerteService } from '../../supabase/services';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { OffertaLavoroData } from '../../types/supabaseTypes';
 
@@ -15,15 +13,12 @@ const OfferteLavoroPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [activeTipo, setActiveTipo] = useState<string | null>(null);
-  const [tipiOfferta, setTipiOfferta] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchOfferte = async () => {
       try {
         const data = await offerteService.getAllOfferte();
         setOfferte(data);
-        const uniqueTipi = Array.from(new Set(data.map(o => o.tipo)));
-        setTipiOfferta(uniqueTipi);
       } catch (error) {
         logger.error('Errore nel recupero delle offerte di lavoro', error);
       } finally {
@@ -34,15 +29,21 @@ const OfferteLavoroPage: React.FC = () => {
     fetchOfferte();
   }, []);
 
-  const filteredOfferte = offerte.filter(
-    offerta =>
-      (searchTerm === '' ||
-        offerta.titolo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        offerta.dipartimento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        offerta.sede.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        offerta.tipo.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (activeTipo === null || offerta.tipo === activeTipo)
-  );
+  const tipiOfferta = useMemo(() => Array.from(new Set(offerte.map((offerta) => offerta.tipo))), [offerte]);
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredOfferte = useMemo(() => {
+    return offerte.filter((offerta) => {
+      const matchesSearch =
+        normalizedSearchTerm === '' ||
+        offerta.titolo.toLowerCase().includes(normalizedSearchTerm) ||
+        offerta.dipartimento.toLowerCase().includes(normalizedSearchTerm) ||
+        offerta.sede.toLowerCase().includes(normalizedSearchTerm) ||
+        offerta.tipo.toLowerCase().includes(normalizedSearchTerm);
+
+      const matchesType = activeTipo === null || offerta.tipo === activeTipo;
+      return matchesSearch && matchesType;
+    });
+  }, [activeTipo, normalizedSearchTerm, offerte]);
 
   const filteredCount = useMemo(() => filteredOfferte.length, [filteredOfferte.length]);
 
@@ -51,26 +52,11 @@ const OfferteLavoroPage: React.FC = () => {
 
     try {
       await offerteService.deleteOfferta(id);
-      setOfferte(offerte.filter(offerta => offerta.id !== id));
+      setOfferte((currentOfferte) => currentOfferte.filter((offerta) => offerta.id !== id));
       setConfirmDelete(null);
     } catch (error) {
       logger.error('Errore eliminazione offerta', error);
     }
-  };
-
-  const formatDate = (dateValue: any): string => {
-    try {
-      if (typeof dateValue === 'object' && 'toDate' in dateValue) {
-        return format(dateValue.toDate(), 'dd/MM/yyyy', { locale: it });
-      } else if (dateValue instanceof Date) {
-        return format(dateValue, 'dd/MM/yyyy', { locale: it });
-      } else if (typeof dateValue === 'string') {
-        return format(new Date(dateValue), 'dd/MM/yyyy', { locale: it });
-      }
-    } catch (error) {
-      logger.error('Error formatting date', error);
-    }
-    return 'N/D';
   };
 
   return (

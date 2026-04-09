@@ -13,9 +13,10 @@ import lightboxCss from "yet-another-react-lightbox/styles.css?inline";
 import {
     ArrowLeftIcon,
     ArrowRightIcon,
-    PhotoIcon,
 } from '@heroicons/react/24/outline';
 import LoadingState from '../components/utils/LoadingState';
+import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../components/utils/ProjectImagePlaceholder';
+import { useInjectedHeadStyle } from '../hooks/useInjectedHeadStyle';
 
 type Coordinate = { lat: number; lng: number };
 type RouteFeatureCollection = {
@@ -54,13 +55,7 @@ async function geocodePartDetail(part: string): Promise<Coordinate | null> {
 function ProjectDetailPage() {
     const { theme } = useTheme();
     const { id } = useParams<{ id: string }>();
-
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.textContent = maplibreCss + lightboxCss;
-        document.head.appendChild(style);
-        return () => { document.head.removeChild(style); };
-    }, []);
+    useInjectedHeadStyle(maplibreCss + lightboxCss);
 
     const [progetto, setProgetto] = useState<ProgettoData | null>(null);
     const [progettiCorrelati, setProgettiCorrelati] = useState<ProgettoData[]>([]);
@@ -173,6 +168,7 @@ function ProjectDetailPage() {
             }]
         };
     }, [routePoints]);
+    const primaryImage = getPrimaryProjectImage(progetto ?? {});
 
     const openLightbox = (index: number) => {
         setLightboxIndex(index);
@@ -307,16 +303,14 @@ function ProjectDetailPage() {
                     <div className="grid lg:grid-cols-12 gap-16">
                         <div className="lg:col-span-8 space-y-20">
                             <div className="aspect-[21/9] bg-gray-100 dark:bg-dark-elevated overflow-hidden">
-                                {progetto.immagini?.[0]?.url ? (
+                                {primaryImage?.url ? (
                                     <img
-                                        src={progetto.immagini[0].url}
+                                        src={primaryImage.url}
                                         alt={progetto.titolo}
                                         className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center opacity-10">
-                                        <PhotoIcon className="w-32 h-32" />
-                                    </div>
+                                    <ProjectImagePlaceholder project={progetto} variant="feature" />
                                 )}
                             </div>
 

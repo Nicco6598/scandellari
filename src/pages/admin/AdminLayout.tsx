@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { preventDoubleTapZoom } from '../../utils/mobileUtils';
 import { logger } from '../../utils/logger';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 // --- Icon Components ---
 const DashboardIcon = () => <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
@@ -41,6 +42,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title = "Admin Pane
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  useBodyScrollLock(sidebarOpen);
 
   // Previeni il double-tap zoom su mobile
   useEffect(() => {
@@ -52,26 +54,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title = "Admin Pane
     setSidebarOpen(false);
     setUserMenuOpen(false);
   }, [location.pathname]);
-
-  // Scroll lock for mobile sidebar
-  useEffect(() => {
-    if (sidebarOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
-    }
-  }, [sidebarOpen]);
 
   // Close user menu when clicking outside
   useEffect(() => {

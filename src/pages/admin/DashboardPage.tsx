@@ -10,6 +10,30 @@ import { formatDistance } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useAuth } from '../../context/AuthContext';
 
+const getTimestampValue = (value?: string | Date) => {
+  if (!value) return Number.NEGATIVE_INFINITY;
+  const date = typeof value === 'string' ? new Date(value) : value;
+  return Number.isNaN(date.getTime()) ? Number.NEGATIVE_INFINITY : date.getTime();
+};
+
+const getMostRecentItem = <T extends { created_at?: string | Date; updated_at?: string | Date }>(items: T[]) => {
+  return items.reduce<T | undefined>((latest, current) => {
+    if (!latest) return current;
+    const latestValue = getTimestampValue(latest.updated_at || latest.created_at);
+    const currentValue = getTimestampValue(current.updated_at || current.created_at);
+    return currentValue > latestValue ? current : latest;
+  }, undefined);
+};
+
+const countBy = <T,>(items: T[], getKey: (item: T) => string) => {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const key = getKey(item);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+};
+
 // --- Icon Components ---
 const ProjectIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>;
 const SkillIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
@@ -29,32 +53,32 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activityFilter, setActivityFilter] = useState<'all' | 'content' | 'access'>('all');
-  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
+
+  const loadDashboardData = async (reason: 'initial' | 'refresh') => {
+    if (reason === 'initial') setLoading(true);
+    if (reason === 'refresh') setRefreshing(true);
+
+    try {
+      const [progettiData, competenzeData, offerteData, activities] = await Promise.all([
+        progettiService.getAllProjects(),
+        competenzeService.getAllCompetenze(),
+        offerteService.getAllOfferte(),
+        activityService.getRecentActivities(15)
+      ]);
+      setProgetti(progettiData);
+      setCompetenze(competenzeData);
+      setOfferte(offerteData);
+      setRecentActivities(activities);
+    } catch (error) {
+      logger.error('Error fetching dashboard data', error);
+    } finally {
+      if (reason === 'initial') setLoading(false);
+      if (reason === 'refresh') setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async (reason: 'initial' | 'refresh') => {
-      if (reason === 'initial') setLoading(true);
-      if (reason === 'refresh') setRefreshing(true);
-      try {
-        const [progettiData, competenzeData, offerteData, activities] = await Promise.all([
-          progettiService.getAllProjects(),
-          competenzeService.getAllCompetenze(),
-          offerteService.getAllOfferte(),
-          activityService.getRecentActivities(15)
-        ]);
-        setProgetti(progettiData);
-        setCompetenze(competenzeData);
-        setOfferte(offerteData);
-        setRecentActivities(activities);
-        setLastRefreshAt(new Date());
-      } catch (error) {
-        logger.error('Error fetching dashboard data', error);
-      } finally {
-        if (reason === 'initial') setLoading(false);
-        if (reason === 'refresh') setRefreshing(false);
-      }
-    };
-    fetchData('initial');
+    void loadDashboardData('initial');
   }, []);
 
   const formatRelativeTime = (timestamp: string): string => {
@@ -75,30 +99,15 @@ const DashboardPage: React.FC = () => {
   };
 
   const latestProgetto = useMemo(() => {
-    const sorted = [...progetti].sort((a, b) => {
-      const aDate = new Date((a.updated_at || a.created_at || 0) as any).getTime();
-      const bDate = new Date((b.updated_at || b.created_at || 0) as any).getTime();
-      return bDate - aDate;
-    });
-    return sorted[0];
+    return getMostRecentItem(progetti);
   }, [progetti]);
 
   const latestCompetenza = useMemo(() => {
-    const sorted = [...competenze].sort((a, b) => {
-      const aDate = new Date((a.updated_at || a.created_at || 0) as any).getTime();
-      const bDate = new Date((b.updated_at || b.created_at || 0) as any).getTime();
-      return bDate - aDate;
-    });
-    return sorted[0];
+    return getMostRecentItem(competenze);
   }, [competenze]);
 
   const latestOfferta = useMemo(() => {
-    const sorted = [...offerte].sort((a, b) => {
-      const aDate = new Date((a.updated_at || a.created_at || 0) as any).getTime();
-      const bDate = new Date((b.updated_at || b.created_at || 0) as any).getTime();
-      return bDate - aDate;
-    });
-    return sorted[0];
+    return getMostRecentItem(offerte);
   }, [offerte]);
 
   const missingProjectImagesCount = useMemo(() => {
@@ -110,20 +119,17 @@ const DashboardPage: React.FC = () => {
   }, [competenze]);
 
   const topProjectCategories = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const p of progetti) counts.set(p.categoria, (counts.get(p.categoria) ?? 0) + 1);
+    const counts = countBy(progetti, (project) => project.categoria);
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
   }, [progetti]);
 
   const topSkillCategories = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const c of competenze) counts.set(c.categoria, (counts.get(c.categoria) ?? 0) + 1);
+    const counts = countBy(competenze, (skill) => skill.categoria);
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
   }, [competenze]);
 
   const offersByType = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const o of offerte) counts.set(o.tipo, (counts.get(o.tipo) ?? 0) + 1);
+    const counts = countBy(offerte, (offer) => offer.tipo);
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [offerte]);
 
@@ -468,30 +474,11 @@ const DashboardPage: React.FC = () => {
               <div className="p-6 border-b border-black/5 dark:border-white/5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-black uppercase tracking-widest text-black dark:text-white">Attività</h3>
-                  <button
-                    onClick={async () => {
-                      setRefreshing(true);
-                      try {
-                        const [progettiData, competenzeData, offerteData, activities] = await Promise.all([
-                          progettiService.getAllProjects(),
-                          competenzeService.getAllCompetenze(),
-                          offerteService.getAllOfferte(),
-                          activityService.getRecentActivities(15)
-                        ]);
-                        setProgetti(progettiData);
-                        setCompetenze(competenzeData);
-                        setOfferte(offerteData);
-                        setRecentActivities(activities);
-                        setLastRefreshAt(new Date());
-                      } catch (error) {
-                        logger.error('Error fetching dashboard data', error);
-                      } finally {
-                        setRefreshing(false);
-                      }
-                    }}
-                    disabled={refreshing}
-                    className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-white px-3 py-2 transition-all border border-primary flex items-center disabled:opacity-50"
-                  >
+                <button
+                  onClick={() => { void loadDashboardData('refresh'); }}
+                  disabled={refreshing}
+                  className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-white px-3 py-2 transition-all border border-primary flex items-center disabled:opacity-50"
+                >
                     <RefreshIcon /> Aggiorna
                   </button>
                 </div>

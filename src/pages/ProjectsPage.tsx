@@ -19,6 +19,8 @@ import {
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import SEO from '../components/utils/SEO';
 import LoadingState from '../components/utils/LoadingState';
+import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../components/utils/ProjectImagePlaceholder';
+import { useInjectedHeadStyle } from '../hooks/useInjectedHeadStyle';
 
 type Coordinate = { lat: number; lng: number };
 type ProjectCoordinates = { points: Coordinate[]; route?: Coordinate[] };
@@ -117,11 +119,14 @@ type ProjectItemCardProps = {
 function ProjectItemCard({ project, index }: ProjectItemCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const imageRef = useRef<HTMLDivElement>(null);
+    const primaryImage = getPrimaryProjectImage(project);
 
     useEffect(() => {
         const card = cardRef.current;
         const image = imageRef.current;
         if (!card || !image) return;
+        const visual = image.querySelector<HTMLElement>('[data-project-visual], img');
+        if (!visual) return;
 
         const handleMouseMove = (e: MouseEvent) => {
             const rect = card.getBoundingClientRect();
@@ -129,12 +134,12 @@ function ProjectItemCard({ project, index }: ProjectItemCardProps) {
             const y = (e.clientY - rect.top) / rect.height - 0.5;
 
             gsap.to(card, { y: y * -15, duration: 0.3, ease: 'power2.out' });
-            gsap.to(image.querySelector('img'), { x: x * 20, y: y * 20, duration: 0.4, ease: 'power2.out' });
+            gsap.to(visual, { x: x * 20, y: y * 20, duration: 0.4, ease: 'power2.out' });
         };
 
         const handleMouseLeave = () => {
             gsap.to(card, { y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)' });
-            gsap.to(image.querySelector('img'), { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)' });
+            gsap.to(visual, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)' });
         };
 
         card.addEventListener('mousemove', handleMouseMove);
@@ -157,19 +162,18 @@ function ProjectItemCard({ project, index }: ProjectItemCardProps) {
             </span>
             <Link to={`/progetti/${project.id}`} className="flex flex-col md:flex-row relative z-10">
                 <div ref={imageRef} className="md:w-2/5 aspect-[4/3] md:aspect-auto bg-black/5 dark:bg-dark-elevated relative overflow-hidden">
-                    {project.immagini?.[0]?.url ? (
+                    {primaryImage?.url ? (
                         <>
                             <img
-                                src={project.immagini[0].url}
+                                src={primaryImage.url}
                                 alt={project.titolo || ''}
+                                data-project-visual
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                             />
                             <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-primary/5 group-hover:opacity-0 transition-opacity duration-500" />
                         </>
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-16 h-16 border border-black/20 dark:border-white/10" />
-                        </div>
+                        <ProjectImagePlaceholder project={project} />
                     )}
                 </div>
                 <div className="md:w-3/5 p-8 md:p-12 flex flex-col justify-between">
@@ -226,13 +230,7 @@ function ProjectItemCard({ project, index }: ProjectItemCardProps) {
 
 function ProjectsPage() {
     const { theme } = useTheme();
-
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.textContent = maplibreCss;
-        document.head.appendChild(style);
-        return () => { document.head.removeChild(style); };
-    }, []);
+    useInjectedHeadStyle(maplibreCss);
 
     const [progetti, setProgetti] = useState<ProgettoData[]>([]);
     const [categorie, setCategorie] = useState<string[]>(['tutti']);
@@ -245,6 +243,7 @@ function ProjectsPage() {
     const [selectedGroup, setSelectedGroup] = useState<SelectedGroup | null>(null);
     const [activeProjectIndex, setActiveProjectIndex] = useState(0);
     const mapContainerRef = useRef<HTMLDivElement>(null);
+    const geocodedProjectIdsRef = useRef<Set<string>>(new Set());
 
     const [viewState, setViewState] = useState({
         longitude: 12.5,
@@ -277,6 +276,7 @@ function ProjectsPage() {
                 ));
                 setProgetti(projData);
                 setCategorie(['tutti', ...new Set(categoryNames)]);
+                geocodedProjectIdsRef.current.clear();
             } catch (err) {
                 logger.error('Impossibile caricare i progetti.');
             } finally {
@@ -304,7 +304,10 @@ function ProjectsPage() {
         let isMounted = true;
 
         if (visualizzazione === 'mappa' && progettiFiltrati.length > 0) {
-            const projectsToProcess = progettiFiltrati.filter(p => !projectCoordinates[p.id || ''] && p.localita);
+            const projectsToProcess = progettiFiltrati.filter((project) => {
+                const projectId = project.id ?? '';
+                return Boolean(project.localita) && !geocodedProjectIdsRef.current.has(projectId);
+            });
             if (projectsToProcess.length === 0) return;
 
             setGeocodingPhase({ current: 0, total: projectsToProcess.length });
@@ -316,16 +319,25 @@ function ProjectsPage() {
                 for (const chunk of chunks) {
                     if (!isMounted) break;
                     const results = await Promise.allSettled(chunk.map(p => geocodeProject(p)));
+                    const coordinatesBatch: Record<string, ProjectCoordinates> = {};
 
                     results.forEach((result) => {
-                        if (!isMounted) return;
-                        if (result.status === 'fulfilled') {
-                            const { id, result: coords } = result.value;
-                            setProjectCoordinates(prev => ({ ...prev, [id]: coords }));
+                        if (!isMounted || result.status !== 'fulfilled') {
+                            processedCount++;
+                            return;
                         }
+
+                        const { id, result: coords } = result.value;
+                        coordinatesBatch[id] = coords;
+                        geocodedProjectIdsRef.current.add(id);
                         processedCount++;
-                        setGeocodingPhase(prev => ({ ...prev, current: processedCount }));
                     });
+
+                    if (Object.keys(coordinatesBatch).length > 0) {
+                        setProjectCoordinates((prev) => ({ ...prev, ...coordinatesBatch }));
+                    }
+
+                    setGeocodingPhase((prev) => ({ ...prev, current: processedCount }));
 
                     // Piccolo delay tra i batch per rispettare rate limit Nominatim
                     if (isMounted) await new Promise(r => setTimeout(r, 300));
@@ -351,19 +363,23 @@ function ProjectsPage() {
     }, [projectCoordinates, progettiFiltrati, viewState.zoom, visualizzazione]);
 
     const groupedMarkers = useMemo(() => {
-        const coordsMap: Record<string, MarkerGroup> = {};
+        const coordsMap = new globalThis.Map<string, MarkerGroup & { projectIds: Set<string> }>();
+
         progettiFiltrati.forEach((progetto) => {
             const coords = projectCoordinates[progetto.id ?? ''];
             if (coords?.points) {
                 coords.points.forEach((pt) => {
                     const key = `${pt.lat.toFixed(5)},${pt.lng.toFixed(5)}`;
-                    if (!coordsMap[key]) coordsMap[key] = { lat: pt.lat, lng: pt.lng, projects: [] };
-                    const group = coordsMap[key];
-                    if (!group.projects.find(({ id }) => id === progetto.id)) group.projects.push(progetto);
+                    const group = coordsMap.get(key) ?? { lat: pt.lat, lng: pt.lng, projects: [], projectIds: new Set<string>() };
+                    if (!group.projectIds.has(progetto.id ?? '')) {
+                        group.projects.push(progetto);
+                        group.projectIds.add(progetto.id ?? '');
+                    }
+                    coordsMap.set(key, group);
                 });
             }
         });
-        return Object.values(coordsMap);
+        return [...coordsMap.values()].map(({ projectIds, ...group }) => group);
     }, [progettiFiltrati, projectCoordinates]);
 
     const lineGeoJSON = useMemo<LineFeatureCollection>(() => {

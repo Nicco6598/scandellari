@@ -1,6 +1,5 @@
 import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 // Plugin that injects preload for the first hero image, defers non-critical CSS,
 // and removes modulepreload for heavy lazy chunks (maplibre, supabase, pdfjs)
@@ -48,7 +47,10 @@ function buildOptimizationPlugin(): Plugin {
 }
 
 export default defineConfig({
-    plugins: [react(), tsconfigPaths(), buildOptimizationPlugin()],
+    plugins: [react(), buildOptimizationPlugin()],
+    resolve: {
+        tsconfigPaths: true,
+    },
     define: {
         'process.env': {},
         'global': 'window',

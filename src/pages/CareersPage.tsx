@@ -19,6 +19,7 @@ import {
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
 import { trackEvent } from '../components/utils/Analytics';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = [
@@ -51,6 +52,9 @@ const applicationSchema = z.object({
 
 type ApplicationFormData = z.infer<typeof applicationSchema>;
 
+const getUniqueSortedValues = (items: Array<string | undefined>) =>
+  Array.from(new Set(items.filter((value): value is string => Boolean(value)))).sort();
+
 function CareersPage() {
   const [offerte, setOfferte] = useState<OffertaLavoroData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,18 +85,41 @@ function CareersPage() {
   const [filterDipartimento, setFilterDipartimento] = useState('');
   const [filterTipo, setFilterTipo] = useState('');
   const [filterSede, setFilterSede] = useState('');
+  useBodyScrollLock(isModalOpen);
 
-  const filteredOfferte = offerte.filter(job => {
-    const matchDip = !filterDipartimento || job.dipartimento === filterDipartimento;
-    const matchTipo = !filterTipo || job.tipo === filterTipo;
-    const matchSede = !filterSede || job.sede === filterSede;
-    return matchDip && matchTipo && matchSede;
-  });
+  const filteredOfferte = useMemo(() => {
+    return offerte.filter((job) => {
+      const matchDip = !filterDipartimento || job.dipartimento === filterDipartimento;
+      const matchTipo = !filterTipo || job.tipo === filterTipo;
+      const matchSede = !filterSede || job.sede === filterSede;
+      return matchDip && matchTipo && matchSede;
+    });
+  }, [offerte, filterDipartimento, filterTipo, filterSede]);
 
   const filteredJobKeys = useMemo(
     () => filteredOfferte.map((job, index) => job.id ?? `job-${index}`),
     [filteredOfferte]
   );
+  const filteredJobKeysSet = useMemo(() => new Set(filteredJobKeys), [filteredJobKeys]);
+  const syncTruncatedDescriptions = () => {
+    setIsJobDescriptionTruncated((prev) => {
+      const next = { ...prev };
+      let changed = false;
+
+      for (const key of filteredJobKeys) {
+        if (expandedJobId === key) continue;
+        const el = jobDescriptionRefs.current[key];
+        if (!el) continue;
+        const truncated = el.scrollHeight - el.clientHeight > 1;
+        if (next[key] !== truncated) {
+          next[key] = truncated;
+          changed = true;
+        }
+      }
+
+      return changed ? next : prev;
+    });
+  };
 
   useEffect(() => {
     setIsJobDescriptionTruncated((prev) => {
@@ -100,7 +127,7 @@ function CareersPage() {
       let changed = false;
 
       for (const key of Object.keys(next)) {
-        if (!filteredJobKeys.includes(key)) {
+        if (!filteredJobKeysSet.has(key)) {
           delete next[key];
           changed = true;
         }
@@ -111,29 +138,13 @@ function CareersPage() {
 
     const refs = jobDescriptionRefs.current;
     for (const key of Object.keys(refs)) {
-      if (!filteredJobKeys.includes(key)) delete refs[key];
+      if (!filteredJobKeysSet.has(key)) delete refs[key];
     }
-  }, [filteredJobKeys]);
+  }, [filteredJobKeysSet]);
 
   useLayoutEffect(() => {
     const rafId = window.requestAnimationFrame(() => {
-      setIsJobDescriptionTruncated((prev) => {
-        const next = { ...prev };
-        let changed = false;
-
-        for (const key of filteredJobKeys) {
-          if (expandedJobId === key) continue;
-          const el = jobDescriptionRefs.current[key];
-          if (!el) continue;
-          const truncated = el.scrollHeight - el.clientHeight > 1;
-          if (next[key] !== truncated) {
-            next[key] = truncated;
-            changed = true;
-          }
-        }
-
-        return changed ? next : prev;
-      });
+      syncTruncatedDescriptions();
     });
 
     return () => window.cancelAnimationFrame(rafId);
@@ -147,23 +158,7 @@ function CareersPage() {
       if (rafId != null) return;
       rafId = window.requestAnimationFrame(() => {
         rafId = null;
-        setIsJobDescriptionTruncated((prev) => {
-          const next = { ...prev };
-          let changed = false;
-
-          for (const key of filteredJobKeys) {
-            if (expandedJobId === key) continue;
-            const el = jobDescriptionRefs.current[key];
-            if (!el) continue;
-            const truncated = el.scrollHeight - el.clientHeight > 1;
-            if (next[key] !== truncated) {
-              next[key] = truncated;
-              changed = true;
-            }
-          }
-
-          return changed ? next : prev;
-        });
+        syncTruncatedDescriptions();
       });
     });
 
@@ -247,26 +242,6 @@ function CareersPage() {
       trackApplicationSubmit(false);
     }
   };
-
-  // Scroll Lock when modal is open
-  useEffect(() => {
-    if (isModalOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
-    }
-  }, [isModalOpen]);
 
   useEffect(() => {
     setExpandedJobId(null);
@@ -365,10 +340,10 @@ function CareersPage() {
 
             {/* Filtri pill */}
             <div className="flex flex-col gap-4">
-              {[
-                { label: 'Dipartimento', value: filterDipartimento, setter: setFilterDipartimento, options: Array.from(new Set(offerte.map(o => o.dipartimento).filter(Boolean))).sort() },
-                { label: 'Contratto', value: filterTipo, setter: setFilterTipo, options: Array.from(new Set(offerte.map(o => o.tipo).filter(Boolean))).sort() },
-                { label: 'Sede', value: filterSede, setter: setFilterSede, options: Array.from(new Set(offerte.map(o => o.sede).filter(Boolean))).sort() }
+              {[ 
+                { label: 'Dipartimento', value: filterDipartimento, setter: setFilterDipartimento, options: getUniqueSortedValues(offerte.map(o => o.dipartimento)) },
+                { label: 'Contratto', value: filterTipo, setter: setFilterTipo, options: getUniqueSortedValues(offerte.map(o => o.tipo)) },
+                { label: 'Sede', value: filterSede, setter: setFilterSede, options: getUniqueSortedValues(offerte.map(o => o.sede)) }
               ].filter(f => f.options.length > 0).map((filter, i) => (
                 <div key={i} className="flex items-center gap-3 flex-wrap">
                   <span className="text-[9px] font-black uppercase tracking-[0.35em] text-black/50 dark:text-white/30 w-24 shrink-0">{filter.label}</span>

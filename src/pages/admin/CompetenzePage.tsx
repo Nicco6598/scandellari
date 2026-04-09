@@ -4,8 +4,6 @@ import { Link } from 'react-router-dom';
 import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { competenzeService } from '../../supabase/services';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { CompetenzaData } from '../../types/supabaseTypes';
 
@@ -15,15 +13,12 @@ const CompetenzePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCompetenze = async () => {
       try {
         const data = await competenzeService.getAllCompetenze();
         setCompetenze(data);
-        const uniqueCategories = Array.from(new Set(data.map(c => c.categoria)));
-        setCategories(uniqueCategories);
       } catch (error) {
         logger.error('Errore nel recupero delle competenze', error);
       } finally {
@@ -34,13 +29,19 @@ const CompetenzePage: React.FC = () => {
     fetchCompetenze();
   }, []);
 
-  const filteredCompetenze = competenze.filter(
-    competenza =>
-      (searchTerm === '' ||
-        competenza.titolo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        competenza.categoria.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (activeCategory === null || competenza.categoria === activeCategory)
-  );
+  const categories = useMemo(() => Array.from(new Set(competenze.map((competenza) => competenza.categoria))), [competenze]);
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredCompetenze = useMemo(() => {
+    return competenze.filter((competenza) => {
+      const matchesSearch =
+        normalizedSearchTerm === '' ||
+        competenza.titolo.toLowerCase().includes(normalizedSearchTerm) ||
+        competenza.categoria.toLowerCase().includes(normalizedSearchTerm);
+
+      const matchesCategory = activeCategory === null || competenza.categoria === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [activeCategory, competenze, normalizedSearchTerm]);
 
   const missingCompetenzaImagesCount = useMemo(() => {
     return competenze.filter((c) => (!c.immagini || c.immagini.length === 0) && !c.immagine?.url).length;
@@ -51,26 +52,11 @@ const CompetenzePage: React.FC = () => {
 
     try {
       await competenzeService.deleteCompetenza(id);
-      setCompetenze(competenze.filter(competenza => competenza.id !== id));
+      setCompetenze((currentCompetenze) => currentCompetenze.filter((competenza) => competenza.id !== id));
       setConfirmDelete(null);
     } catch (error) {
       logger.error('Errore eliminazione competenza', error);
     }
-  };
-
-  const formatDate = (dateValue: any): string => {
-    try {
-      if (typeof dateValue === 'object' && 'toDate' in dateValue) {
-        return format(dateValue.toDate(), 'dd/MM/yyyy', { locale: it });
-      } else if (dateValue instanceof Date) {
-        return format(dateValue, 'dd/MM/yyyy', { locale: it });
-      } else if (typeof dateValue === 'string') {
-        return format(new Date(dateValue), 'dd/MM/yyyy', { locale: it });
-      }
-    } catch (error) {
-      logger.error('Error formatting date', error);
-    }
-    return 'N/D';
   };
 
   return (

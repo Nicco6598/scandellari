@@ -20,6 +20,7 @@ import {
 import PDFThumbnail from '../components/utils/PDFThumbnail';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 const LazyPDFViewer = lazy(() => import('./LazyPDFViewer'));
 
@@ -44,6 +45,7 @@ function CertificationsPage() {
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [loading, setLoading] = useState<boolean>(true);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
+    useBodyScrollLock(Boolean(selectedCertification));
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 500);
@@ -80,24 +82,6 @@ function CertificationsPage() {
         if (page < 1 || page > numPages) return;
         setPageNumber(page);
     }, [numPages]);
-
-    // Scroll lock
-    useEffect(() => {
-        if (selectedCertification) {
-            const scrollY = window.scrollY;
-            document.body.style.position = 'fixed';
-            document.body.style.top = `-${scrollY}px`;
-            document.body.style.width = '100%';
-            document.body.style.overflow = 'hidden';
-        } else {
-            const scrollY = document.body.style.top;
-            document.body.style.position = '';
-            document.body.style.top = '';
-            document.body.style.width = '';
-            document.body.style.overflow = '';
-            if (scrollY) window.scrollTo(0, parseInt(scrollY || '0') * -1);
-        }
-    }, [selectedCertification]);
 
     const isPolitica = selectedCertification?.id === POLITICA_ID;
     const isMultiPage = numPages !== null && numPages > 1;

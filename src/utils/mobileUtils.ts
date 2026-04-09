@@ -6,8 +6,8 @@ export const preventDoubleTapZoom = () => {
   if (typeof document === 'undefined') return;
 
   // Applica solo una volta
-  if ((window as any).__preventedDoubleTapZoom) return;
-  (window as any).__preventedDoubleTapZoom = true;
+  if (window.__preventedDoubleTapZoom) return;
+  window.__preventedDoubleTapZoom = true;
 
   // Trova tutti gli elementi di input e seleziona che potrebbero scatenare il double-tap zoom
   const targetElements = document.querySelectorAll(
@@ -38,4 +38,10 @@ export const preventDoubleTapZoom = () => {
       e.preventDefault();
     }
   }, { passive: false });
-}; 
+};
+
+declare global {
+  interface Window {
+    __preventedDoubleTapZoom?: boolean;
+  }
+}

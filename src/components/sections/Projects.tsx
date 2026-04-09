@@ -6,6 +6,7 @@ import { logger } from '../../utils/logger';
 import { ProgettoData } from '../../types/supabaseTypes';
 import gsap from 'gsap';
 import LoadingState from '../utils/LoadingState';
+import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../utils/ProjectImagePlaceholder';
 
 type ProjectCardProps = {
   project: ProgettoData;
@@ -15,6 +16,7 @@ type ProjectCardProps = {
 function ProjectCard({ project, index }: ProjectCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
+  const primaryImage = getPrimaryProjectImage(project);
 
   useEffect(() => {
     const card = cardRef.current;
@@ -70,9 +72,9 @@ function ProjectCard({ project, index }: ProjectCardProps) {
     >
       <Link to={`/progetti/${project.id}`} className="block space-y-10">
         <div ref={imageRef} className="aspect-[4/5] md:aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-dark-surface relative border border-black/5 dark:border-white/5 group-hover:border-primary/30 transition-all duration-700" data-animate="scale">
-          {project.immagini && project.immagini[0]?.url ? (
+          {primaryImage?.url ? (
             <img
-              src={project.immagini[0].url}
+              src={primaryImage.url}
               alt={project.titolo ?? ''}
               width="800"
               height="500"
@@ -82,7 +84,7 @@ function ProjectCard({ project, index }: ProjectCardProps) {
               className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[10px] font-black uppercase tracking-widest opacity-20">Image Placeholder</div>
+            <ProjectImagePlaceholder project={project} />
           )}
           <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-primary/5 opacity-60 group-hover:opacity-0 transition-opacity duration-700" />
         </div>
