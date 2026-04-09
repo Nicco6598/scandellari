@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import gsap from 'gsap';
+import { useMagneticHover } from '../../hooks/useMagneticHover';
 
 import logoBlu from '../../assets/images/LogoBlu.svg';
 import logoBianco from '../../assets/images/LogoBianco.svg';
@@ -23,41 +23,12 @@ type MagneticLinkProps = {
 
 function MagneticLink({ to, children, className = '' }: MagneticLinkProps) {
   const linkRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    const link = linkRef.current;
-    if (!link) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = link.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-
-      gsap.to(link, {
-        x: x * 0.1,
-        y: y * 0.1,
-        duration: 0.2,
-        ease: 'power2.out'
-      });
-    };
-
-    const handleMouseLeave = () => {
-      gsap.to(link, {
-        x: 0,
-        y: 0,
-        duration: 0.4,
-        ease: 'elastic.out(1, 0.5)'
-      });
-    };
-
-    link.addEventListener('mousemove', handleMouseMove);
-    link.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      link.removeEventListener('mousemove', handleMouseMove);
-      link.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
+  useMagneticHover(linkRef, {
+    moveDuration: 0.2,
+    resetDuration: 0.4,
+    xFactor: 0.1,
+    yFactor: 0.1,
+  });
 
   return (
     <Link ref={linkRef} to={to} className={className}>

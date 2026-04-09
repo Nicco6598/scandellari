@@ -1,66 +1,30 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
 import { progettiService } from '../supabase/services';
 import { ProgettoData } from '../types/supabaseTypes';
-import Map, { Marker, Popup, NavigationControl, Source, Layer } from 'react-map-gl/maplibre';
-import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
 import { useTheme } from '../context/ThemeContext';
-import Lightbox from "yet-another-react-lightbox";
-import lightboxCss from "yet-another-react-lightbox/styles.css?inline";
 import {
     ArrowLeftIcon,
     ArrowRightIcon,
 } from '@heroicons/react/24/outline';
 import LoadingState from '../components/utils/LoadingState';
+import DeferredLightbox from '../components/utils/DeferredLightbox';
 import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../components/utils/ProjectImagePlaceholder';
-import { useInjectedHeadStyle } from '../hooks/useInjectedHeadStyle';
 import {
     metaTextClasses,
     primaryTextClasses,
     secondaryTextClasses,
 } from '../components/utils/ColorStyles';
+import { Coordinate, resolveProjectLocation } from '../utils/projectLocationUtils';
 
-type Coordinate = { lat: number; lng: number };
-type RouteFeatureCollection = {
-    type: 'FeatureCollection';
-    features: Array<{
-        type: 'Feature';
-        geometry: { type: 'LineString'; coordinates: Array<[number, number]> };
-        properties: Record<string, never>;
-    }>;
-};
-type NominatimResponse = Array<{ lat: string; lon: string }>;
-type OsrmResponse = {
-    routes?: Array<{ geometry: { coordinates: Array<[number, number]> } }>;
-};
-
-const detailGeoCache: Record<string, Coordinate> = {};
-
-async function geocodePartDetail(part: string): Promise<Coordinate | null> {
-    if (detailGeoCache[part]) return detailGeoCache[part];
-    try {
-        const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(part + ', Italia')}&limit=1`
-        );
-        const data: NominatimResponse = await res.json();
-        if (data?.length > 0) {
-            const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-            detailGeoCache[part] = coord;
-            return coord;
-        }
-    } catch (e) {
-        logger.error('Geocoding error', e);
-    }
-    return null;
-}
+const ProjectDetailMap = lazy(() => import('../components/maps/ProjectDetailMap'));
 
 function ProjectDetailPage() {
     const { theme } = useTheme();
     const { id } = useParams<{ id: string }>();
-    useInjectedHeadStyle(maplibreCss + lightboxCss);
 
     const [progetto, setProgetto] = useState<ProgettoData | null>(null);
     const [progettiCorrelati, setProgettiCorrelati] = useState<ProgettoData[]>([]);
@@ -70,25 +34,12 @@ function ProjectDetailPage() {
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const [mapPoints, setMapPoints] = useState<Coordinate[]>([]);
     const [routePoints, setRoutePoints] = useState<Coordinate[]>([]);
-    const mapContainerRef = useRef<HTMLDivElement>(null);
 
     const [viewState, setViewState] = useState({
         longitude: 12.5,
         latitude: 42.5,
         zoom: 10
     });
-
-    // Scroll lock sulla mappa
-    useEffect(() => {
-        const el = mapContainerRef.current;
-        if (!el || mapPoints.length === 0) return;
-        const handler = (e: WheelEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-        };
-        el.addEventListener('wheel', handler, { passive: false });
-        return () => el.removeEventListener('wheel', handler);
-    }, [mapPoints]);
 
     useEffect(() => {
         const fetchProject = async () => {
@@ -100,22 +51,17 @@ function ProjectDetailPage() {
                 setLoading(false);
 
                 if (data?.categoria) {
-                    progettiService.getAllProjects().then(allProjects => {
-                        const related = allProjects
-                            .filter(p => p.categoria?.toLowerCase() === data.categoria?.toLowerCase() && p.id !== data.id)
-                            .slice(0, 3);
-                        setProgettiCorrelati(related);
-                    });
+                    progettiService
+                        .getProjectsByCategory(data.categoria, 3, data.id)
+                        .then(setProgettiCorrelati)
+                        .catch((relatedError) => {
+                            logger.error('Errore caricamento progetti correlati', relatedError);
+                        });
                 }
 
                 if (data?.localita) {
-                    const parts = data.localita.split(/[-/]/).map(item => item.trim());
-
-                    // Tutte le parti in parallelo — nessun delay artificiale
-                    const results = await Promise.allSettled(parts.map(part => geocodePartDetail(part)));
-                    const coords = results
-                        .filter((r): r is PromiseFulfilledResult<Coordinate> => r.status === 'fulfilled' && r.value !== null)
-                        .map(r => r.value);
+                    const locationData = await resolveProjectLocation(data);
+                    const coords = locationData.points;
 
                     if (coords.length > 0) {
                         setMapPoints(coords);
@@ -126,29 +72,7 @@ function ProjectDetailPage() {
                             zoom: coords.length > 1 ? 7 : 10
                         }));
 
-                        if (coords.length >= 2) {
-                            try {
-                                const osrmPath = coords.map(c => `${c.lng},${c.lat}`).join(';');
-                                const routeRes = await fetch(
-                                    `https://router.project-osrm.org/route/v1/driving/${osrmPath}?overview=full&geometries=geojson`
-                                );
-                                const routeData: OsrmResponse = await routeRes.json();
-                                if (routeData.routes?.[0]) {
-                                    setRoutePoints(
-                                        routeData.routes[0].geometry.coordinates.map(([lng, lat]) => ({
-                                            lng,
-                                            lat
-                                        }))
-                                    );
-                                } else {
-                                    setRoutePoints(coords);
-                                }
-                            } catch (e) {
-                                setRoutePoints(coords);
-                            }
-                        } else {
-                            setRoutePoints(coords);
-                        }
+                        setRoutePoints(locationData.route ?? coords);
                     }
                 }
             } catch (err) {
@@ -159,20 +83,6 @@ function ProjectDetailPage() {
         fetchProject();
     }, [id]);
 
-    const lineGeoJSON = useMemo<RouteFeatureCollection | null>(() => {
-        if (routePoints.length < 2) return null;
-        return {
-            type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                geometry: {
-                    type: 'LineString',
-                    coordinates: routePoints.map((pt) => [pt.lng, pt.lat] as [number, number])
-                },
-                properties: {}
-            }]
-        };
-    }, [routePoints]);
     const primaryImage = getPrimaryProjectImage(progetto ?? {});
 
     const openLightbox = (index: number) => {
@@ -230,78 +140,20 @@ function ProjectDetailPage() {
                     </div>
 
                     {/* Map Integration */}
-                    <div
-                        ref={mapContainerRef}
-                        className="mt-12 w-full h-80 bg-black/8 dark:bg-dark-surface border border-black/10 dark:border-white/5 overflow-hidden relative"
-                    >
-                        {mapPoints.length > 0 ? (
-                            <Map
-                                {...viewState}
-                                onMove={evt => setViewState(evt.viewState)}
-                                style={{ width: '100%', height: '100%' }}
-                                mapStyle={theme === 'dark'
-                                    ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-                                    : "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-                                }
-                                attributionControl={false}
-                            >
-                                <NavigationControl position="top-right" />
-                                {lineGeoJSON && (
-                                    <Source id="routes" type="geojson" data={lineGeoJSON}>
-                                        <Layer
-                                            id="routes-layer"
-                                            type="line"
-                                            paint={{
-                                                'line-color': theme === 'dark' ? '#3b82f6' : '#2563eb',
-                                                'line-width': 4,
-                                                'line-opacity': 0.8
-                                            }}
-                                        />
-                                    </Source>
-                                )}
-                                {mapPoints.map((pt, i) => (
-                                    <Fragment key={`${pt.lat}-${pt.lng}`}>
-                                        <Marker
-                                            longitude={pt.lng}
-                                            latitude={pt.lat}
-                                            anchor="center"
-                                        >
-                                            <div className="relative group cursor-pointer flex items-center justify-center">
-                                                <div className="absolute w-8 h-8 border border-primary/30 scale-0 group-hover:scale-110 transition-transform duration-500" />
-                                                <div className="w-3 h-3 bg-white dark:bg-black border-[1.5px] border-primary z-10 transition-all duration-300 group-hover:bg-primary group-hover:border-white group-hover:rotate-45" />
-                                            </div>
-                                        </Marker>
-                                        <Popup
-                                            longitude={pt.lng}
-                                            latitude={pt.lat}
-                                            anchor="top"
-                                            offset={15}
-                                            closeButton={false}
-                                            className="maplibre-popup-custom"
-                                            >
-                                                <div className="p-3 min-w-[120px] bg-white dark:bg-dark-surface border border-black/10 dark:border-white/10 shadow-xl">
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">
-                                                    Località {i + 1}
-                                                </span>
-                                                <h4 className="font-black uppercase text-[10px] tracking-tight text-black dark:text-white leading-tight">
-                                                    {progetto.localita.split(/[-/]/)[i]?.trim() || progetto.localita}
-                                                </h4>
-                                                </div>
-                                            </Popup>
-                                    </Fragment>
-                                ))}
-                            </Map>
-                        ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center space-y-4 animate-pulse">
-                                <div className="w-8 h-8 border border-black/10 dark:border-white/10 rotate-45 flex items-center justify-center">
-                                    <div className="w-2 h-2 bg-primary/20" />
-                                </div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-black/40 dark:text-white/20">
-                                    Acquisizione coordinate...
-                                </span>
-                            </div>
+                    <Suspense
+                        fallback={(
+                            <div className="mt-12 w-full h-80 bg-black/8 dark:bg-dark-surface border border-black/10 dark:border-white/5 overflow-hidden relative animate-pulse" />
                         )}
-                    </div>
+                    >
+                        <ProjectDetailMap
+                            localita={progetto.localita}
+                            mapPoints={mapPoints}
+                            routePoints={routePoints}
+                            theme={theme}
+                            viewState={viewState}
+                            onViewStateChange={setViewState}
+                        />
+                    </Suspense>
                 </section>
 
                 <main className="container mx-auto max-w-7xl px-6">
@@ -447,7 +299,7 @@ function ProjectDetailPage() {
                     )}
                 </main>
 
-                <Lightbox
+                <DeferredLightbox
                     open={isLightboxOpen}
                     close={() => setIsLightboxOpen(false)}
                     index={lightboxIndex}

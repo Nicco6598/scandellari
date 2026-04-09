@@ -4,7 +4,6 @@ import { useMobileMenu } from '../../context/MobileMenuContext';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { createPortal } from 'react-dom';
-import gsap from 'gsap';
 import {
   XMarkIcon,
   Bars3Icon,
@@ -12,6 +11,7 @@ import {
   SunIcon,
   MoonIcon
 } from '@heroicons/react/24/outline';
+import { useMagneticHover } from '../../hooks/useMagneticHover';
 import {
   inverseMetaTextClasses,
   metaTextClasses,
@@ -236,41 +236,7 @@ function MobileMenuPanel({ isOpen, onClose, theme, toggleTheme, location }: Mobi
 
 function MagneticLink({ children, to, active, forceLightText }: MagneticLinkProps) {
   const linkRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    const link = linkRef.current;
-    if (!link) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = link.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-      
-      gsap.to(link, {
-        x: x * 0.15,
-        y: y * 0.15,
-        duration: 0.3,
-        ease: 'power2.out'
-      });
-    };
-
-    const handleMouseLeave = () => {
-      gsap.to(link, {
-        x: 0,
-        y: 0,
-        duration: 0.5,
-        ease: 'elastic.out(1, 0.5)'
-      });
-    };
-
-    link.addEventListener('mousemove', handleMouseMove);
-    link.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      link.removeEventListener('mousemove', handleMouseMove);
-      link.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
+  useMagneticHover(linkRef, { xFactor: 0.15, yFactor: 0.15 });
 
   const baseClass = "relative text-[11px] font-black uppercase tracking-[0.2em] transition-colors after:content-[''] after:absolute after:left-0 after:-bottom-2 after:h-[2px] after:w-full after:bg-current after:origin-left after:scale-x-0 after:transition-transform after:duration-300";
   const activeClass = active ? 'after:scale-x-100' : 'hover:after:scale-x-100';

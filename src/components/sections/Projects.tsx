@@ -4,10 +4,10 @@ import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { progettiService } from '../../supabase/services';
 import { logger } from '../../utils/logger';
 import { ProgettoData } from '../../types/supabaseTypes';
-import gsap from 'gsap';
 import LoadingState from '../utils/LoadingState';
 import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../utils/ProjectImagePlaceholder';
 import { metaTextClasses, primaryTextClasses, secondaryTextClasses } from '../utils/ColorStyles';
+import { useCardParallaxHover } from '../../hooks/useCardParallaxHover';
 
 type ProjectCardProps = {
   project: ProgettoData;
@@ -18,53 +18,16 @@ function ProjectCard({ project, index }: ProjectCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
   const primaryImage = getPrimaryProjectImage(project);
-
-  useEffect(() => {
-    const card = cardRef.current;
-    const image = imageRef.current;
-    if (!card || !image) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = card.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-
-      gsap.to(card, {
-        y: y * -20,
-        duration: 0.4,
-        ease: 'power2.out'
-      });
-
-      gsap.to(image, {
-        x: x * 15,
-        y: y * 15,
-        duration: 0.5,
-        ease: 'power2.out'
-      });
-    };
-
-    const handleMouseLeave = () => {
-      gsap.to(card, {
-        y: 0,
-        duration: 0.6,
-        ease: 'elastic.out(1, 0.5)'
-      });
-      gsap.to(image, {
-        x: 0,
-        y: 0,
-        duration: 0.6,
-        ease: 'elastic.out(1, 0.5)'
-      });
-    };
-
-    card.addEventListener('mousemove', handleMouseMove);
-    card.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      card.removeEventListener('mousemove', handleMouseMove);
-      card.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
+  useCardParallaxHover(cardRef, {
+    childRef: imageRef,
+    childMoveDuration: 0.5,
+    childResetDuration: 0.6,
+    childX: 15,
+    childY: 15,
+    liftY: 20,
+    moveDuration: 0.4,
+    resetDuration: 0.6,
+  });
 
   return (
     <div
@@ -122,9 +85,12 @@ function Projects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const data = await progettiService.getAllProjects();
-        setTotalProjects(data.length);
-        setProjects(data.slice(0, 4));
+        const [featuredProjects, projectsCount] = await Promise.all([
+          progettiService.getFeaturedProjects(4),
+          progettiService.getProjectsCount(),
+        ]);
+        setProjects(featuredProjects);
+        setTotalProjects(projectsCount);
       } catch (err) {
         logger.error('Fetch error', err);
       } finally {

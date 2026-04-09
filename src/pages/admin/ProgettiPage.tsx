@@ -4,7 +4,39 @@ import { logger } from '../../utils/logger';
 import AdminLayout from './AdminLayout';
 import { progettiService } from '../../supabase/services';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
-import { ProgettoData } from '../../types/supabaseTypes';
+import { CoordinateInfo, ProgettoData } from '../../types/supabaseTypes';
+import { geocodeLocalita } from '../../utils/projectLocationUtils';
+
+type BackfillProgress = {
+  current: number;
+  total: number;
+  title: string;
+};
+
+const sanitizeCoordinates = (value?: CoordinateInfo[] | null): CoordinateInfo[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter((item): item is CoordinateInfo => (
+    typeof item?.lat === 'number' && typeof item?.lng === 'number'
+  ));
+};
+
+const getPersistedProjectLocation = (project: ProgettoData) => {
+  const points = sanitizeCoordinates(project.coordinate_punti ?? project.coordinatePunti);
+  const route = sanitizeCoordinates(project.coordinate_percorso ?? project.coordinatePercorso);
+
+  return {
+    points,
+    route,
+  };
+};
+
+const needsCoordinateBackfill = (project: ProgettoData) => {
+  if (!project.id || !project.localita?.trim()) return false;
+
+  const { points, route } = getPersistedProjectLocation(project);
+  return points.length === 0 || route.length === 0;
+};
 
 const ProgettiPage: React.FC = () => {
   const [progetti, setProgetti] = useState<ProgettoData[]>([]);
@@ -12,6 +44,10 @@ const ProgettiPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isBackfillingCoordinates, setIsBackfillingCoordinates] = useState(false);
+  const [backfillProgress, setBackfillProgress] = useState<BackfillProgress | null>(null);
+  const [backfillSummary, setBackfillSummary] = useState<string | null>(null);
+  const [backfillError, setBackfillError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProgetti = async () => {
@@ -47,6 +83,12 @@ const ProgettiPage: React.FC = () => {
     return progetti.filter((p) => !p.immagini || p.immagini.length === 0).length;
   }, [progetti]);
 
+  const projectsNeedingCoordinateBackfill = useMemo(() => {
+    return progetti.filter(needsCoordinateBackfill);
+  }, [progetti]);
+
+  const missingProjectCoordinatesCount = projectsNeedingCoordinateBackfill.length;
+
   const handleDeleteProgetto = async (id: string) => {
     if (!id) return;
 
@@ -59,18 +101,102 @@ const ProgettiPage: React.FC = () => {
     }
   };
 
+  const handleCoordinateBackfill = async () => {
+    if (projectsNeedingCoordinateBackfill.length === 0) {
+      setBackfillSummary('Tutti i progetti con località hanno già coordinate e percorso persistiti.');
+      setBackfillError(null);
+      return;
+    }
+
+    setIsBackfillingCoordinates(true);
+    setBackfillError(null);
+    setBackfillSummary(null);
+
+    let updatedProjects = 0;
+    const failures: string[] = [];
+
+    try {
+      for (let index = 0; index < projectsNeedingCoordinateBackfill.length; index += 1) {
+        const project = projectsNeedingCoordinateBackfill[index];
+        setBackfillProgress({
+          current: index + 1,
+          total: projectsNeedingCoordinateBackfill.length,
+          title: project.titolo,
+        });
+
+        try {
+          const coordinates = await geocodeLocalita(project.localita);
+          if (coordinates.points.length === 0) {
+            failures.push(`${project.titolo}: nessuna coordinata trovata`);
+            continue;
+          }
+
+          const route = coordinates.route?.length ? coordinates.route : coordinates.points;
+          const updatedProject = await progettiService.updateProjectLocationData(project.id!, {
+            coordinate_punti: coordinates.points,
+            coordinate_percorso: route,
+          });
+
+          updatedProjects += 1;
+
+          setProgetti((currentProjects) => currentProjects.map((currentProject) => (
+            currentProject.id === updatedProject.id
+              ? {
+                  ...currentProject,
+                  coordinate_punti: updatedProject.coordinate_punti ?? coordinates.points,
+                  coordinate_percorso: updatedProject.coordinate_percorso ?? route,
+                  updated_at: updatedProject.updated_at,
+                }
+              : currentProject
+          )));
+
+          await new Promise((resolve) => setTimeout(resolve, 350));
+        } catch (error) {
+          logger.error(`Errore backfill coordinate per progetto ${project.titolo}`, error);
+          failures.push(`${project.titolo}: errore aggiornamento`);
+        }
+      }
+
+      const failedCount = failures.length;
+      const summaryParts = [`Aggiornati ${updatedProjects} progetti`];
+      if (failedCount > 0) {
+        summaryParts.push(`${failedCount} non completati`);
+      }
+
+      setBackfillSummary(summaryParts.join(' - '));
+      setBackfillError(
+        failedCount > 0
+          ? `Backfill parziale. Verifica: ${failures.slice(0, 3).join(' | ')}${failedCount > 3 ? ' | ...' : ''}`
+          : null
+      );
+    } finally {
+      setIsBackfillingCoordinates(false);
+      setBackfillProgress(null);
+    }
+  };
+
   return (
     <AdminLayout title="Gestione Progetti">
       <div className="px-4 sm:px-6 lg:px-8 py-8 bg-stone-50 dark:bg-black min-h-screen">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-black/5 dark:border-white/5">
           <h1 className="text-2xl font-black uppercase tracking-tight text-black dark:text-white">Gestione Progetti</h1>
-          <Link
-            to="/admin/progetti/nuovo"
-            className="px-6 py-3 bg-primary text-white hover:bg-white hover:text-primary dark:bg-primary-700 dark:text-black dark:hover:bg-black/80 dark:hover:text-primary text-xs font-black uppercase tracking-widest transition-all border border-primary dark:border-primary-700"
-          >
-            + Nuovo
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleCoordinateBackfill}
+              disabled={isBackfillingCoordinates || missingProjectCoordinatesCount === 0}
+              className="px-4 py-3 border border-black/10 dark:border-white/10 text-xs font-black uppercase tracking-widest text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all disabled:opacity-40"
+            >
+              {isBackfillingCoordinates ? 'Backfill coordinate...' : 'Backfill coordinate'}
+            </button>
+            <Link
+              to="/admin/progetti/nuovo"
+              className="px-6 py-3 bg-primary text-white hover:bg-white hover:text-primary dark:bg-primary-700 dark:text-black dark:hover:bg-black/80 dark:hover:text-primary text-xs font-black uppercase tracking-widest transition-all border border-primary dark:border-primary-700"
+            >
+              + Nuovo
+            </Link>
+          </div>
         </div>
 
         {/* Filters */}
@@ -82,6 +208,9 @@ const ProgettiPage: React.FC = () => {
             <div className="inline-flex items-center px-3 py-2 border border-black/10 dark:border-white/10 bg-white dark:bg-black text-[10px] font-black uppercase tracking-widest text-black/70 dark:text-white/70">
               Mostrati: {filteredProjects.length}
             </div>
+            <div className="inline-flex items-center px-3 py-2 border border-sky-600/25 bg-sky-500/10 text-sky-900 dark:text-sky-200 text-[10px] font-black uppercase tracking-widest">
+              {missingProjectCoordinatesCount} da geocodare
+            </div>
             {missingProjectImagesCount > 0 && (
               <div className="inline-flex items-center px-3 py-2 border border-amber-600/25 bg-amber-500/10 text-amber-900 dark:text-amber-200 text-[10px] font-black uppercase tracking-widest">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,6 +220,37 @@ const ProgettiPage: React.FC = () => {
               </div>
             )}
           </div>
+          {(backfillProgress || backfillSummary || backfillError) && (
+            <div className="mb-4 space-y-3">
+              {backfillProgress && (
+                <div className="border border-sky-600/20 bg-sky-500/10 p-4">
+                  <div className="flex items-center justify-between gap-4 text-[10px] font-black uppercase tracking-widest text-sky-900 dark:text-sky-200">
+                    <span>Backfill in corso</span>
+                    <span>{backfillProgress.current} / {backfillProgress.total}</span>
+                  </div>
+                  <div className="mt-3 h-2 bg-sky-900/10 dark:bg-sky-100/10 overflow-hidden">
+                    <div
+                      className="h-full bg-sky-600 transition-all"
+                      style={{ width: `${(backfillProgress.current / backfillProgress.total) * 100}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 text-xs text-sky-900 dark:text-sky-100">
+                    {backfillProgress.title}
+                  </div>
+                </div>
+              )}
+              {backfillSummary && (
+                <div className="border border-emerald-600/20 bg-emerald-500/10 p-4 text-[11px] font-bold tracking-wide text-emerald-900 dark:text-emerald-200">
+                  {backfillSummary}
+                </div>
+              )}
+              {backfillError && (
+                <div className="border border-orange-600/20 bg-orange-500/10 p-4 text-[11px] font-bold tracking-wide text-orange-900 dark:text-orange-200">
+                  {backfillError}
+                </div>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <input
@@ -143,6 +303,8 @@ const ProgettiPage: React.FC = () => {
                   {filteredProjects.map((project) => (
                     (() => {
                       const hasImages = !!project.immagini && project.immagini.length > 0;
+                      const { points, route } = getPersistedProjectLocation(project);
+                      const hasPersistedLocation = points.length > 0 && route.length > 0;
                       return (
                     <tr key={project.id} className="border-b border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
                       <td className="px-6 py-4 text-sm font-medium text-black dark:text-white">
@@ -154,6 +316,11 @@ const ProgettiPage: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86l-8.02 14A1.5 1.5 0 003.57 20h16.86a1.5 1.5 0 001.3-2.14l-8.02-14a1.5 1.5 0 00-2.6 0z" />
                               </svg>
                               Senza immagini
+                            </span>
+                          )}
+                          {!hasPersistedLocation && project.localita?.trim() && (
+                            <span className="inline-flex items-center px-2 py-0.5 border border-sky-600/25 bg-sky-500/10 text-sky-900 dark:text-sky-200 text-[10px] font-black uppercase tracking-widest">
+                              Coordinate mancanti
                             </span>
                           )}
                         </div>
@@ -198,6 +365,8 @@ const ProgettiPage: React.FC = () => {
               {filteredProjects.map((project) => (
                 (() => {
                   const hasImages = !!project.immagini && project.immagini.length > 0;
+                  const { points, route } = getPersistedProjectLocation(project);
+                  const hasPersistedLocation = points.length > 0 && route.length > 0;
                   return (
                 <div key={project.id} className="p-4">
                   <div className="flex justify-between items-start mb-3">
@@ -209,6 +378,11 @@ const ProgettiPage: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86l-8.02 14A1.5 1.5 0 003.57 20h16.86a1.5 1.5 0 001.3-2.14l-8.02-14a1.5 1.5 0 00-2.6 0z" />
                           </svg>
                           Senza immagini
+                        </div>
+                      )}
+                      {!hasPersistedLocation && project.localita?.trim() && (
+                        <div className="mt-2 inline-flex items-center px-2 py-1 border border-sky-600/25 bg-sky-500/10 text-sky-900 dark:text-sky-200 text-[10px] font-black uppercase tracking-widest">
+                          Coordinate mancanti
                         </div>
                       )}
                     </div>

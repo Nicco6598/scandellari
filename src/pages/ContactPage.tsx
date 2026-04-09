@@ -1,19 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
 import SEO from '../components/utils/SEO';
 import { trackFormSubmit } from '../components/utils/Analytics';
-import Map, { Marker, Popup, NavigationControl } from 'react-map-gl/maplibre';
-import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?inline';
 import { useForm } from 'react-hook-form';
 import { useTheme } from '../context/ThemeContext';
 import { zodResolver } from '@hookform/resolvers/zod';
-import gsap from 'gsap';
 import * as z from 'zod';
-import { useInjectedHeadStyle } from '../hooks/useInjectedHeadStyle';
 import {
-    MapPinIcon,
     PhoneIcon,
     EnvelopeIcon,
     ArrowRightIcon,
@@ -25,8 +20,10 @@ import {
     primaryTextClasses,
     secondaryTextClasses,
 } from '../components/utils/ColorStyles';
+import { useMagneticHover } from '../hooks/useMagneticHover';
 
 const companyCoords = { longitude: 9.59088, latitude: 45.51263 };
+const CompanyMap = lazy(() => import('../components/maps/CompanyMap'));
 
 const contactSchema = z.object({
     name: z.string().min(2, 'Il nome deve contenere almeno 2 caratteri'),
@@ -64,29 +61,12 @@ const contactFields: ContactField[] = [
 
 function MagneticLink({ href, children, className = '' }: MagneticLinkProps) {
     const linkRef = useRef<HTMLAnchorElement>(null);
-
-    useEffect(() => {
-        const link = linkRef.current;
-        if (!link) return;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            const rect = link.getBoundingClientRect();
-            const x = e.clientX - rect.left - rect.width / 2;
-            const y = e.clientY - rect.top - rect.height / 2;
-            gsap.to(link, { x: x * 0.1, y: y * 0.1, duration: 0.2, ease: 'power2.out' });
-        };
-
-        const handleMouseLeave = () => {
-            gsap.to(link, { x: 0, y: 0, duration: 0.4, ease: 'elastic.out(1, 0.5)' });
-        };
-
-        link.addEventListener('mousemove', handleMouseMove);
-        link.addEventListener('mouseleave', handleMouseLeave);
-        return () => {
-            link.removeEventListener('mousemove', handleMouseMove);
-            link.removeEventListener('mouseleave', handleMouseLeave);
-        };
-    }, []);
+    useMagneticHover(linkRef, {
+        moveDuration: 0.2,
+        resetDuration: 0.4,
+        xFactor: 0.1,
+        yFactor: 0.1,
+    });
 
     return (
         <a ref={linkRef} href={href} className={className}>
@@ -98,11 +78,30 @@ function MagneticLink({ href, children, className = '' }: MagneticLinkProps) {
 function ContactPage() {
     const { theme } = useTheme();
     const [status, setStatus] = useState<SubmissionStatus>('idle');
-    useInjectedHeadStyle(maplibreCss);
+    const mapSectionRef = useRef<HTMLDivElement>(null);
+    const [shouldLoadMap, setShouldLoadMap] = useState(false);
     const [viewState, setViewState] = useState({
         ...companyCoords,
         zoom: 13
     });
+
+    useEffect(() => {
+        const element = mapSectionRef.current;
+        if (!element || shouldLoadMap) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting) return;
+                setShouldLoadMap(true);
+                observer.disconnect();
+            },
+            { rootMargin: '200px 0px' }
+        );
+
+        observer.observe(element);
+
+        return () => observer.disconnect();
+    }, [shouldLoadMap]);
 
     const {
         register,
@@ -205,44 +204,22 @@ function ContactPage() {
                             </div>
 
                             {/* Map */}
-                            <div className="aspect-square bg-black/8 dark:bg-dark-surface border border-black/10 dark:border-white/5 overflow-hidden group hover:border-primary/30 transition-all relative">
-                                <Map
-                                    {...viewState}
-                                    onMove={evt => setViewState(evt.viewState)}
-                                    style={{ width: '100%', height: '100%' }}
-                                    mapStyle={theme === 'dark' 
-                                        ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-                                        : "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-                                    }
-                                    attributionControl={false}
-                                >
-                                    <NavigationControl position="top-right" />
-                                    <Marker
-                                        longitude={companyCoords.longitude}
-                                        latitude={companyCoords.latitude}
-                                        anchor="center"
+                            <div ref={mapSectionRef}>
+                                {shouldLoadMap ? (
+                                    <Suspense
+                                        fallback={(
+                                            <div className="aspect-square bg-black/8 dark:bg-dark-surface border border-black/10 dark:border-white/5 overflow-hidden relative animate-pulse" />
+                                        )}
                                     >
-                                        <div className="relative group cursor-pointer flex items-center justify-center">
-                                            {/* Hover square ripple */}
-                                            <div className="absolute w-10 h-10 border border-primary/30 scale-0 group-hover:scale-110 transition-transform duration-500" />
-                                            {/* Technical Square Marker (larger for headquarters) */}
-                                            <div className="w-5 h-5 bg-white dark:bg-black border-2 border-primary z-10 transition-all duration-300 group-hover:bg-primary group-hover:border-white group-hover:rotate-45 shadow-[0_0_15px_rgba(37,99,235,0.3)]" />
-                                        </div>
-                                    </Marker>
-                                    <Popup
-                                        longitude={companyCoords.longitude}
-                                        latitude={companyCoords.latitude}
-                                        anchor="top"
-                                        offset={15}
-                                        closeButton={false}
-                                        className="maplibre-popup-custom"
-                                    >
-                                        <div className="p-4 min-w-[180px] bg-white dark:bg-dark-surface border border-black/10 dark:border-white/10 shadow-xl">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">Sede Operativa</span>
-                                            <h4 className="font-black uppercase text-xs tracking-tight text-black dark:text-white">Scandellari Giacinto s.n.c.</h4>
-                                        </div>
-                                    </Popup>
-                                </Map>
+                                        <CompanyMap
+                                            theme={theme}
+                                            viewState={viewState}
+                                            onViewStateChange={setViewState}
+                                        />
+                                    </Suspense>
+                                ) : (
+                                    <div className="aspect-square bg-black/8 dark:bg-dark-surface border border-black/10 dark:border-white/5 overflow-hidden relative animate-pulse" />
+                                )}
                             </div>
                         </div>
 

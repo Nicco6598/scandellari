@@ -25,6 +25,13 @@ interface ThemeProviderProps {
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   // Check if the user had already saved a preference
   const getInitialTheme = (): Theme => {
+    if (typeof document !== 'undefined') {
+      const rootTheme = document.documentElement.dataset.theme;
+      if (rootTheme === 'light' || rootTheme === 'dark') {
+        return rootTheme;
+      }
+    }
+
     if (typeof window !== 'undefined' && window.localStorage) {
       const storedTheme = window.localStorage.getItem('theme') as Theme | null;
       if (storedTheme) {
@@ -49,6 +56,10 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
+    root.style.backgroundColor = theme === 'dark' ? '#000000' : '#f5f5f4';
+    document.body.style.setProperty('--app-bg', theme === 'dark' ? '#000000' : '#f5f5f4');
     
     if (typeof window !== 'undefined') {
       localStorage.setItem('theme', theme);
