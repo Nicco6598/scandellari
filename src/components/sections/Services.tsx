@@ -4,9 +4,9 @@ import { competenzeService } from '../../supabase/services';
 import { logger } from '../../utils/logger';
 import { CompetenzaData } from '../../types/supabaseTypes';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
-import gsap from 'gsap';
 import LoadingState from '../utils/LoadingState';
 import { metaTextClasses, primaryTextClasses, secondaryTextClasses } from '../utils/ColorStyles';
+import { useCardParallaxHover } from '../../hooks/useCardParallaxHover';
 
 type ServiceCardProps = {
   service: CompetenzaData;
@@ -26,44 +26,12 @@ function ServiceCard({ service, index }: ServiceCardProps) {
   const iconRef = useRef<HTMLDivElement>(null);
 
   const isSpecialization = service.titolo?.includes('MOT') || service.titolo?.includes('Oleodinamici Ferroviari');
-
-  useEffect(() => {
-    const card = cardRef.current;
-    const icon = iconRef.current;
-    if (!card || !icon) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = card.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-
-      gsap.to(card, {
-        y: y * -10,
-        duration: 0.3,
-        ease: 'power2.out'
-      });
-
-      gsap.to(icon, {
-        x: x * 20,
-        y: y * 20,
-        duration: 0.4,
-        ease: 'power2.out'
-      });
-    };
-
-    const handleMouseLeave = () => {
-      gsap.to(card, { y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)' });
-      gsap.to(icon, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)' });
-    };
-
-    card.addEventListener('mousemove', handleMouseMove);
-    card.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      card.removeEventListener('mousemove', handleMouseMove);
-      card.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
+  useCardParallaxHover(cardRef, {
+    childRef: iconRef,
+    childX: 20,
+    childY: 20,
+    liftY: 10,
+  });
 
   return (
     <div
@@ -109,17 +77,12 @@ function ServiceCard({ service, index }: ServiceCardProps) {
 
 function Services() {
   const [services, setServices] = useState<CompetenzaData[]>([]);
-  const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const data = await competenzeService.getAllCompetenze();
-        const featuredServices = FEATURED_SERVICE_TITLES.flatMap((title) => {
-          const service = data.find((competenza) => competenza.titolo === title);
-          return service ? [service] : [];
-        });
-
+        const featuredServices = await competenzeService.getCompetenzeByTitles(FEATURED_SERVICE_TITLES);
         setServices(featuredServices);
       } catch (err) {
         logger.error('❌ Error fetching services:', err);

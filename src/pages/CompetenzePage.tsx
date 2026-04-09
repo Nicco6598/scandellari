@@ -4,10 +4,9 @@ import Layout from '../components/layout/Layout';
 import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
 import { competenzeService, progettiService } from '../supabase/services';
 import { CompetenzaData, ProgettoData } from '../types/supabaseTypes';
-import Lightbox from 'yet-another-react-lightbox';
-import 'yet-another-react-lightbox/styles.css';
 import SEO from '../components/utils/SEO';
 import LoadingState from '../components/utils/LoadingState';
+import DeferredLightbox from '../components/utils/DeferredLightbox';
 import {
     WrenchScrewdriverIcon,
     FunnelIcon,
@@ -36,17 +35,14 @@ const CompetenzePage: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const activeCategory = categoriaParam || 'oleodinamica';
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [compRes, projRes] = await Promise.all([
-                    competenzeService.getAllCompetenze(),
-                    progettiService.getAllProjects()
-                ]);
+                const compRes = await competenzeService.getAllCompetenze();
                 setCompetenze(compRes);
-                setProgetti(projRes);
             } catch (_err) {
                 // silently fail
             } finally {
@@ -56,7 +52,29 @@ const CompetenzePage: React.FC = () => {
         fetchData();
     }, []);
 
-    const activeCategory = categoriaParam || 'oleodinamica';
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchRelatedProjects = async () => {
+            try {
+                const related = await progettiService.getProjectsByCategory(activeCategory, 2);
+                if (isMounted) {
+                    setProgetti(related);
+                }
+            } catch (_err) {
+                if (isMounted) {
+                    setProgetti([]);
+                }
+            }
+        };
+
+        fetchRelatedProjects();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [activeCategory]);
+
     const competenzeByCategory = useMemo(() => {
         const groups = new Map<string, CompetenzaData[]>();
         for (const competenza of competenze) {
@@ -347,7 +365,7 @@ const CompetenzePage: React.FC = () => {
                 </div>
 
                 {/* Lightbox */}
-                <Lightbox
+                <DeferredLightbox
                     open={lightboxIndex !== null}
                     close={() => setLightboxIndex(null)}
                     index={lightboxIndex || 0}

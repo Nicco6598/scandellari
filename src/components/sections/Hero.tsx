@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
+import { useMagneticHover } from '../../hooks/useMagneticHover';
 import {
   inverseMetaTextClasses,
   inversePrimaryTextClasses,
@@ -33,50 +34,15 @@ const heroImages = [
   { src: heroImg6, mobileSrc: heroImg6Mobile },
 ];
 
-const tabs = [
-  { id: 'signals', label: 'Segnalamento', path: '/competenze/segnalamento' },
-  { id: 'oleo', label: 'Oleodinamica', path: '/competenze/oleodinamica' },
-  { id: 'infra', label: 'Infrastrutture', path: '/competenze/infrastrutture' },
-];
-
 // ─── Magnetic CTA Button ────────────────────────────────────────────────────
 const MagneticCTA: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => {
   const ctaRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    const cta = ctaRef.current;
-    if (!cta) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = cta.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-
-      gsap.to(cta, {
-        x: x * 0.2,
-        y: y * 0.2,
-        duration: 0.3,
-        ease: 'power2.out'
-      });
-    };
-
-    const handleMouseLeave = () => {
-      gsap.to(cta, {
-        x: 0,
-        y: 0,
-        duration: 0.6,
-        ease: 'elastic.out(1, 0.5)'
-      });
-    };
-
-    cta.addEventListener('mousemove', handleMouseMove);
-    cta.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      cta.removeEventListener('mousemove', handleMouseMove);
-      cta.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
+  useMagneticHover(ctaRef, {
+    moveDuration: 0.3,
+    resetDuration: 0.6,
+    xFactor: 0.2,
+    yFactor: 0.2,
+  });
 
   return (
     <Link
@@ -92,53 +58,47 @@ const MagneticCTA: React.FC<{ to: string; children: React.ReactNode }> = ({ to, 
 const Hero: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const bgRef = useRef<HTMLDivElement>(null);
 
-  // Background breath animation
   useEffect(() => {
-    if (!bgRef.current) return;
-    
-    const tl = gsap.timeline({ repeat: -1, yoyo: true });
-    tl.to(bgRef.current, {
-      scale: 1.05,
-      duration: 8,
-      ease: 'sine.inOut'
-    });
-    
-    return () => { tl.kill(); };
-  }, []);
+    const startSlideshow = () => {
+      setCurrentImageIndex((prev) => prev);
+      return window.setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+      }, 7000);
+    };
 
-  // Preload first hero image for faster LCP (mobile-aware)
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.type = 'image/webp';
-    link.href = isMobile ? heroImg2Mobile : heroImg2;
-    document.head.prepend(link);
-    return () => { document.head.removeChild(link); };
+    let intervalId = 0;
+    let timeoutId = 0;
+
+    timeoutId = window.setTimeout(() => {
+      intervalId = startSlideshow();
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (intervalId) window.clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
+    const nextImage = heroImages[(currentImageIndex + 1) % heroImages.length];
+    const preload = new Image();
+    const src = window.innerWidth < 768 ? nextImage.mobileSrc : nextImage.src;
+    preload.decoding = 'async';
+    preload.src = src;
+  }, [currentImageIndex]);
 
   useEffect(() => {
     if (!titleRef.current) return;
 
     const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
 
-    tl.to(titleRef.current.querySelectorAll('.char'), {
+    tl.to(titleRef.current.querySelectorAll('.title-segment'), {
       opacity: 1,
       y: 0,
-      duration: 1.0,
-      stagger: 0.02,
-      delay: 0.3
+      duration: 0.85,
+      stagger: 0.12,
+      delay: 0.2
     });
 
     return () => {
@@ -147,28 +107,28 @@ const Hero: React.FC = () => {
   }, []);
 
   const titleLines = ["Ingegneria", "Ferroviaria"];
+  const currentImage = heroImages[currentImageIndex];
+  const isInitialImage = currentImageIndex === 0;
 
   return (
     <section className="relative w-full h-[100vh] flex flex-col items-center bg-stone-50 dark:bg-dark font-sans overflow-hidden">
       {/* Background Slideshow - Full Screen for impact */}
-      <div ref={bgRef} className="absolute inset-0 z-0 bg-black scale-100">
+      <div className="absolute inset-0 z-0 bg-black">
         <div className="absolute inset-0">
-          {heroImages.map(({ src, mobileSrc }, i) => (
-            <img
-              key={i}
-              src={src}
-              srcSet={`${mobileSrc} 640w, ${src} 1280w`}
-              sizes="(max-width: 767px) 100vw, 100vw"
-              alt=""
-              aria-hidden="true"
-              width="1280"
-              height="854"
-              loading={i === 0 ? 'eager' : 'lazy'}
-              fetchPriority={i === 0 ? 'high' : 'low'}
-              decoding={i === 0 ? 'sync' : 'async'}
-              className={`absolute inset-0 w-full h-full object-cover grayscale brightness-[0.4] transition-opacity duration-[2000ms] ease-linear ${i === currentImageIndex ? 'opacity-100' : 'opacity-0'}`}
-            />
-          ))}
+          <img
+            key={currentImageIndex}
+            src={currentImage.src}
+            srcSet={`${currentImage.mobileSrc} 640w, ${currentImage.src} 1280w`}
+            sizes="(max-width: 767px) 100vw, 100vw"
+            alt=""
+            aria-hidden="true"
+            width="1280"
+            height="854"
+            loading={isInitialImage ? 'eager' : 'lazy'}
+            fetchPriority={isInitialImage ? 'high' : 'low'}
+            decoding={isInitialImage ? 'sync' : 'async'}
+            className="absolute inset-0 h-full w-full object-cover grayscale brightness-[0.4] transition-opacity duration-700 ease-out"
+          />
         </div>
 
         {/* Protection Overlays for Text & Header with subtle accent */}
@@ -194,11 +154,9 @@ const Hero: React.FC = () => {
           >
             {titleLines.map((line, i) => (
               <div key={i} className="line-container overflow-hidden">
-                {line.split('').map((char, j) => (
-                  <span key={j} className="char inline-block opacity-0 translate-y-20">
-                    {char === ' ' ? '\u00A0' : char}
-                  </span>
-                ))}
+                <span className="title-segment inline-block opacity-0 translate-y-12">
+                  {line}
+                </span>
               </div>
             ))}
           </h1>

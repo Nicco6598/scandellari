@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { ElementType, ReactNode } from 'react';
 import Layout from '../components/layout/Layout';
 import SEO from '../components/utils/SEO';
-import gsap from 'gsap';
 import {
     BuildingOffice2Icon,
     UserGroupIcon,
@@ -18,6 +17,7 @@ import {
     primaryTextClasses,
     secondaryTextClasses,
 } from '../components/utils/ColorStyles';
+import { useCardParallaxHover } from '../hooks/useCardParallaxHover';
 
 type FadeInProps = {
     children: ReactNode;
@@ -211,29 +211,7 @@ function FadeIn({ children, delay = 0, className = '' }: FadeInProps) {
 
 function MagneticCard({ children, className = '' }: MagneticCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const card = cardRef.current;
-        if (!card) return;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            const rect = card.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / rect.width - 0.5;
-            const y = (e.clientY - rect.top) / rect.height - 0.5;
-            gsap.to(card, { y: y * -12, duration: 0.3, ease: 'power2.out' });
-        };
-
-        const handleMouseLeave = () => {
-            gsap.to(card, { y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)' });
-        };
-
-        card.addEventListener('mousemove', handleMouseMove);
-        card.addEventListener('mouseleave', handleMouseLeave);
-        return () => {
-            card.removeEventListener('mousemove', handleMouseMove);
-            card.removeEventListener('mouseleave', handleMouseLeave);
-        };
-    }, []);
+    useCardParallaxHover(cardRef, { liftY: 12 });
 
     return <div ref={cardRef} className={className}>{children}</div>;
 }
