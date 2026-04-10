@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { competenzeService } from '../../supabase/services';
+import { publicCompetenzeService } from '../../supabase/publicData';
 import { logger } from '../../utils/logger';
 import { CompetenzaData } from '../../types/supabaseTypes';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
@@ -82,7 +82,7 @@ function Services() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const featuredServices = await competenzeService.getCompetenzeByTitles(FEATURED_SERVICE_TITLES);
+        const featuredServices = await publicCompetenzeService.getCompetenzeByTitles(FEATURED_SERVICE_TITLES);
         setServices(featuredServices);
       } catch (err) {
         logger.error('❌ Error fetching services:', err);

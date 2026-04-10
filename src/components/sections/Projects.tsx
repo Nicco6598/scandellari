@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
-import { progettiService } from '../../supabase/services';
+import { publicProgettiService } from '../../supabase/publicData';
 import { logger } from '../../utils/logger';
 import { ProgettoData } from '../../types/supabaseTypes';
 import LoadingState from '../utils/LoadingState';
 import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../utils/ProjectImagePlaceholder';
 import { metaTextClasses, primaryTextClasses, secondaryTextClasses } from '../utils/ColorStyles';
 import { useCardParallaxHover } from '../../hooks/useCardParallaxHover';
+import { getResponsiveImageProps } from '../../utils/imageTransforms';
 
 type ProjectCardProps = {
   project: ProgettoData;
@@ -18,6 +19,12 @@ function ProjectCard({ project, index }: ProjectCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
   const primaryImage = getPrimaryProjectImage(project);
+  const imageProps = getResponsiveImageProps(primaryImage, {
+    widths: [480, 720, 960, 1280],
+    sizes: '(min-width: 768px) 40vw, 100vw',
+    quality: 68,
+  });
+
   useCardParallaxHover(cardRef, {
     childRef: imageRef,
     childMoveDuration: 0.5,
@@ -32,13 +39,15 @@ function ProjectCard({ project, index }: ProjectCardProps) {
   return (
     <div
       ref={cardRef}
-      className="group"
+      className="group h-full"
     >
-      <Link to={`/progetti/${project.id}`} className="block space-y-10">
+      <Link to={`/progetti/${project.id}`} className="flex h-full flex-col justify-between space-y-10">
         <div ref={imageRef} className="aspect-[4/5] md:aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-dark-surface relative border border-black/5 dark:border-white/5 group-hover:border-primary/30 transition-all duration-700" data-animate="scale">
           {primaryImage?.url ? (
             <img
-              src={primaryImage.url}
+              src={imageProps.src}
+              srcSet={imageProps.srcSet}
+              sizes={imageProps.sizes}
               alt={project.titolo ?? ''}
               width="800"
               height="500"
@@ -86,8 +95,8 @@ function Projects() {
     const fetchProjects = async () => {
       try {
         const [featuredProjects, projectsCount] = await Promise.all([
-          progettiService.getFeaturedProjects(4),
-          progettiService.getProjectsCount(),
+          publicProgettiService.getFeaturedProjects(4),
+          publicProgettiService.getProjectsCount(),
         ]);
         setProjects(featuredProjects);
         setTotalProjects(projectsCount);
@@ -140,10 +149,15 @@ function Projects() {
         {/* Projects Grid */}
         <div 
           data-animate-stagger
-          className="grid md:grid-cols-2 gap-x-24 gap-y-32"
+          className="grid md:grid-cols-2 gap-px border border-black/8 dark:border-white/6 bg-black/8 dark:bg-white/6"
         >
           {projects.map((project, index) => (
-            <ProjectCard key={project.id} project={project} index={index} />
+            <div
+              key={project.id}
+              className="bg-stone-50 dark:bg-black px-6 py-10 md:px-8 md:py-12 lg:px-10 lg:py-14"
+            >
+              <ProjectCard project={project} index={index} />
+            </div>
           ))}
         </div>
       </div>

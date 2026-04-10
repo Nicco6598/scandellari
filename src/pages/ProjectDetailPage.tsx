@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
-import { progettiService } from '../supabase/services';
+import { publicProgettiService } from '../supabase/publicData';
 import { ProgettoData } from '../types/supabaseTypes';
 import { useTheme } from '../context/ThemeContext';
 import {
@@ -19,6 +19,7 @@ import {
     secondaryTextClasses,
 } from '../components/utils/ColorStyles';
 import { Coordinate, resolveProjectLocation } from '../utils/projectLocationUtils';
+import { getOptimizedImageUrl, getResponsiveImageProps } from '../utils/imageTransforms';
 
 const ProjectDetailMap = lazy(() => import('../components/maps/ProjectDetailMap'));
 
@@ -46,12 +47,12 @@ function ProjectDetailPage() {
             if (!id) return;
             try {
                 setLoading(true);
-                const data = await progettiService.getProjectById(id);
+                const data = await publicProgettiService.getProjectById(id);
                 setProgetto(data);
                 setLoading(false);
 
                 if (data?.categoria) {
-                    progettiService
+                    publicProgettiService
                         .getProjectsByCategory(data.categoria, 3, data.id)
                         .then(setProgettiCorrelati)
                         .catch((relatedError) => {
@@ -84,6 +85,11 @@ function ProjectDetailPage() {
     }, [id]);
 
     const primaryImage = getPrimaryProjectImage(progetto ?? {});
+    const primaryImageProps = getResponsiveImageProps(primaryImage, {
+        widths: [640, 960, 1280, 1600],
+        sizes: '(min-width: 1280px) 66vw, 100vw',
+        quality: 66,
+    });
 
     const openLightbox = (index: number) => {
         setLightboxIndex(index);
@@ -162,8 +168,13 @@ function ProjectDetailPage() {
                             <div className="aspect-[21/9] bg-gray-100 dark:bg-dark-elevated overflow-hidden">
                                 {primaryImage?.url ? (
                                     <img
-                                        src={primaryImage.url}
+                                        src={primaryImageProps.src}
+                                        srcSet={primaryImageProps.srcSet}
+                                        sizes={primaryImageProps.sizes}
                                         alt={progetto.titolo}
+                                        loading="eager"
+                                        decoding="async"
+                                        fetchPriority="high"
                                         className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                                     />
                                 ) : (
@@ -190,9 +201,17 @@ function ProjectDetailPage() {
                                                 className="aspect-[4/3] bg-gray-100 dark:bg-dark-elevated cursor-crosshair overflow-hidden group"
                                             >
                                                 <img
-                                                    src={img.url}
+                                                    src={getOptimizedImageUrl(img, { width: 720, quality: 62 })}
+                                                    srcSet={getResponsiveImageProps(img, {
+                                                        widths: [320, 480, 720],
+                                                        sizes: '(min-width: 768px) 22vw, 50vw',
+                                                        quality: 62,
+                                                    }).srcSet}
+                                                    sizes="(min-width: 768px) 22vw, 50vw"
                                                     className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-700"
                                                     alt="Project detail"
+                                                    loading="lazy"
+                                                    decoding="async"
                                                 />
                                             </div>
                                         ))}

@@ -349,13 +349,16 @@ const CompetenzaFormPage: React.FC = () => {
                   )}
                 </div>
                 <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
-                <span className="text-black/60 dark:text-white/60">
+                  <span className="text-black/60 dark:text-white/60">
                     Massimo {MAX_IMAGES} immagini
                   </span>
                   <span className="text-orange-600 dark:text-orange-500">
                     {MAX_IMAGES - (existingImages.length + selectedFiles.length)} rimanenti
                   </span>
                 </div>
+                <p className="mt-4 text-[11px] leading-relaxed text-black/55 dark:text-white/55">
+                  Le nuove immagini vengono ottimizzate automaticamente prima dell&apos;upload per ridurre il peso sul frontend.
+                </p>
               </div>
             </div>
           </div>
