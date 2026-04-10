@@ -76,7 +76,7 @@ function ProjectImagePlaceholder({
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="h-px w-10 bg-primary/70 shadow-[0_0_12px_rgba(37,99,235,0.35)]" />
-            <span className="text-[10px] font-black uppercase tracking-[0.34em] text-black/65 dark:text-white/72">
+            <span className="rounded-full border border-black/10 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.34em] text-black/75 shadow-sm backdrop-blur-sm dark:border-primary-light/40 dark:bg-black/35 dark:text-primary-lighter dark:shadow-[0_0_0_1px_rgba(147,197,253,0.12)]">
               {year}
             </span>
           </div>

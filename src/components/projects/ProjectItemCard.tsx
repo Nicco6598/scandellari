@@ -59,7 +59,7 @@ function ProjectItemCard({ index, project }: ProjectItemCardProps) {
           <div className="space-y-5">
             <div className="flex items-center gap-3 flex-wrap">
               {project.categoria ? (
-                <span className="text-[9px] font-black uppercase tracking-[0.35em] text-primary">
+                <span className="text-[9px] font-black uppercase tracking-[0.35em] text-primary-dark dark:text-primary-lighter">
                   {project.categoria}
                 </span>
               ) : null}
