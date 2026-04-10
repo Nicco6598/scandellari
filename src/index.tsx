@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
+import 'lenis/dist/lenis.css';
 import './index.css';
 import App from './App';
 

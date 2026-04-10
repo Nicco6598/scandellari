@@ -6,7 +6,7 @@
 
 @layer base {
   html {
-    @apply scroll-smooth;
+    scroll-behavior: auto;
   }
 
   body {
@@ -277,15 +277,21 @@
   color: white;
 }
 
-/* SOLUZIONE DEFINITIVA: Prevenire scroll multipli */
-html {
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-}
-
+/* Prevenire overflow orizzontale senza bloccare i controller di scroll runtime */
+html,
 body {
   overflow-x: hidden !important;
-  overflow-y: auto !important;
+  overflow-y: auto;
+}
+
+/* Mantiene compatibile Lenis con le regole globali del layout */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+html.lenis.lenis-stopped {
+  overflow: clip !important;
 }
 
 /* RIMOSSO: Regole troppo ampie che causavano doppi scroll */

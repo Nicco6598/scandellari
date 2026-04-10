@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import gsap from 'gsap';
 
 const PageTransition: React.FC = () => {
     const overlayRef = useRef<HTMLDivElement>(null);
@@ -16,45 +15,59 @@ const PageTransition: React.FC = () => {
         if (!overlay || !line) return;
 
         const bgColor = theme === 'dark' ? '#000000' : '#f5f5f4';
+        let isDisposed = false;
+        let timeline: { kill: () => void } | undefined;
 
-        if (isFirstRenderRef.current) {
-            isFirstRenderRef.current = false;
-            gsap.set(overlay, { display: 'none', opacity: 0, backgroundColor: bgColor });
-            gsap.set(line, { scaleY: 0, opacity: 0 });
-            return;
-        }
+        const initializeTransition = async () => {
+            const { default: gsap } = await import('gsap');
+            if (isDisposed) return;
 
-        const tl = gsap.timeline();
+            if (isFirstRenderRef.current) {
+                isFirstRenderRef.current = false;
+                gsap.set(overlay, { display: 'none', opacity: 0, backgroundColor: bgColor });
+                gsap.set(line, { scaleY: 0, opacity: 0 });
+                return;
+            }
 
-        tl.set(overlay, { display: 'block', opacity: 0, backgroundColor: bgColor })
-          .set(line, { scaleY: 0.2, opacity: 0, transformOrigin: 'center center' })
-          .to(overlay, {
-              opacity: 0.18,
-              duration: 0.18,
-              ease: 'power2.out'
-          })
-          .to(line, {
-              opacity: 1,
-              scaleY: 1,
-              duration: 0.28,
-              ease: 'expo.out'
-          }, 0)
-          .to(line, {
-              opacity: 0,
-              duration: 0.16,
-              ease: 'power2.in'
-          })
-          .to(overlay, {
-              opacity: 0,
-              duration: 0.28,
-              ease: 'power2.inOut',
-              onComplete: () => {
-                  gsap.set(overlay, { display: 'none' });
-                  gsap.set(line, { scaleY: 0 });
-              }
-          }, '<');
+            const tl = gsap.timeline();
+            timeline = tl;
 
-        return () => { tl.kill(); };
+            tl
+                .set(overlay, { display: 'block', opacity: 0, backgroundColor: bgColor })
+                .set(line, { scaleY: 0.2, opacity: 0, transformOrigin: 'center center' })
+                .to(overlay, {
+                    opacity: 0.18,
+                    duration: 0.18,
+                    ease: 'power2.out'
+                })
+                .to(line, {
+                    opacity: 1,
+                    scaleY: 1,
+                    duration: 0.28,
+                    ease: 'expo.out'
+                }, 0)
+                .to(line, {
+                    opacity: 0,
+                    duration: 0.16,
+                    ease: 'power2.in'
+                })
+                .to(overlay, {
+                    opacity: 0,
+                    duration: 0.28,
+                    ease: 'power2.inOut',
+                    onComplete: () => {
+                        gsap.set(overlay, { display: 'none' });
+                        gsap.set(line, { scaleY: 0 });
+                    }
+                }, '<');
+        };
+
+        void initializeTransition();
+
+        return () => {
+            isDisposed = true;
+            timeline?.kill();
+        };
     }, [location.pathname, theme]);
 
     return (
