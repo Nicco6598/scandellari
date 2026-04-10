@@ -8,6 +8,7 @@ function buildOptimizationPlugin(): Plugin {
     let heroImageMobile = '';
     return {
         name: 'build-optimization',
+        enforce: 'post',
         generateBundle(_options, bundle) {
             for (const fileName of Object.keys(bundle)) {
                 if (fileName.includes('Prima-pagina-foto-2-mobile') && fileName.endsWith('.webp')) {
@@ -18,30 +19,32 @@ function buildOptimizationPlugin(): Plugin {
                 }
             }
         },
-        transformIndexHtml(html) {
-            // Inject responsive hero image preload (mobile gets smaller file)
-            const preloads: string[] = [];
-            if (heroImageMobile) {
-                preloads.push(`<link rel="preload" as="image" type="image/webp" href="${heroImageMobile}" media="(max-width: 767px)" fetchpriority="high">`);
-            }
-            if (heroImageDesktop) {
-                preloads.push(`<link rel="preload" as="image" type="image/webp" href="${heroImageDesktop}" media="(min-width: 768px)" fetchpriority="high">`);
-            }
-            if (preloads.length > 0) {
-                html = html.replace('</head>', `  ${preloads.join('\n  ')}\n</head>`);
-            }
-            // Make non-critical CSS non-blocking using media="print" trick
-            html = html.replace(
-                /(<link rel="stylesheet" crossorigin href="([^"]*(?:lightbox|CertificationsPage)[^"]*\.css)">)/g,
-                '<link rel="stylesheet" crossorigin href="$2" media="print" onload="this.media=\'all\'">'
-            );
-            // Remove modulepreload for heavy lazy chunks — browser will load them on demand
-            // This saves unnecessary downloads on initial page load
-            html = html.replace(
-                /<link rel="modulepreload" crossorigin href="[^"]*(?:maplibre|react-map|supabase|pdf-core|react-pdf)[^"]*\.js">\n?/g,
-                ''
-            );
-            return html;
+        transformIndexHtml: {
+            order: 'post',
+            handler(html) {
+                // Inject responsive hero image preload (mobile gets smaller file)
+                const preloads: string[] = [];
+                if (heroImageMobile) {
+                    preloads.push(`<link rel="preload" as="image" type="image/webp" href="${heroImageMobile}" media="(max-width: 767px)" fetchpriority="high">`);
+                }
+                if (heroImageDesktop) {
+                    preloads.push(`<link rel="preload" as="image" type="image/webp" href="${heroImageDesktop}" media="(min-width: 768px)" fetchpriority="high">`);
+                }
+                if (preloads.length > 0) {
+                    html = html.replace('</head>', `  ${preloads.join('\n  ')}\n</head>`);
+                }
+                // Make non-critical CSS non-blocking using media="print" trick
+                html = html.replace(
+                    /(<link rel="stylesheet" crossorigin href="([^"]*(?:lightbox|CertificationsPage)[^"]*\.css)">)/g,
+                    '<link rel="stylesheet" crossorigin href="$2" media="print" onload="this.media=\'all\'">'
+                );
+                // Remove non-critical modulepreloads that are only needed for admin/forms/lightbox flows.
+                html = html.replace(
+                    /\s*<link rel="modulepreload" crossorigin href="[^"]*(?:forms|lightbox|AuthContext)[^"]*">\s*/g,
+                    '\n'
+                );
+                return html;
+            },
         },
     };
 }
@@ -68,6 +71,13 @@ export default defineConfig({
     },
     build: {
         outDir: 'build',
+        modulePreload: {
+            resolveDependencies: (_url, deps) =>
+                deps.filter(
+                    (dep) =>
+                        !/(?:maplibre|react-map|supabase|pdf-core|react-pdf|motion|lenis|gsap|ScrollTrigger)/.test(dep)
+                ),
+        },
         // Target modern browsers for smaller output
         target: 'es2020',
         // Enable CSS code splitting
@@ -76,17 +86,14 @@ export default defineConfig({
         chunkSizeWarningLimit: 1100,
         rollupOptions: {
             output: {
-                // Manual chunk splitting to separate heavy vendor libs
+                // Keep only truly cross-route libraries in named chunks.
+                // Route-local heavy libs like maplibre/pdfjs/gsap/supabase are
+                // better left to Vite so they stay attached to the lazy routes
+                // that actually need them.
                 manualChunks: (id) => {
-                    if (id.includes('pdfjs-dist')) return 'pdf-core';
-                    if (id.includes('react-pdf')) return 'react-pdf';
-                    if (id.includes('maplibre-gl')) return 'maplibre-core';
-                    if (id.includes('react-map-gl')) return 'react-map';
-                    if (id.includes('@supabase')) return 'supabase';
                     if (id.includes('yet-another-react-lightbox')) return 'lightbox';
                     if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) return 'forms';
                     if (id.includes('react-phone-number-input')) return 'phone-input';
-                    if (id.includes('gsap') || id.includes('lenis')) return 'motion';
                 },
             },
         },

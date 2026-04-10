@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { categorieService, progettiService } from '../supabase/services';
+import { publicCategorieService, publicProgettiService } from '../supabase/publicData';
 import { ProgettoData } from '../types/supabaseTypes';
 import { logger } from '../utils/logger';
 
@@ -15,8 +15,8 @@ export function useProjectsCatalog() {
         setLoading(true);
 
         const [projectData, categoryData] = await Promise.all([
-          progettiService.getAllProjects(),
-          categorieService.getAllCategorie(),
+          publicProgettiService.getAllProjects(),
+          publicCategorieService.getAllCategorie(),
         ]);
 
         const categoryNames = categoryData.flatMap(({ nome }) => (

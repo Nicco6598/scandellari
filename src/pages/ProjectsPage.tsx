@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, startTransition, Suspense, useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useTheme } from '../context/ThemeContext';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
@@ -107,38 +107,60 @@ function ProjectsPage() {
             categories={categories}
             categoryCounts={categoryCounts}
             onOpenMobileFilters={() => setShowMobileFilters(true)}
-            onSelectCategory={setActiveCategory}
-            onSelectView={setView}
+            onSelectCategory={(category) => {
+              startTransition(() => {
+                setActiveCategory(category);
+              });
+            }}
+            onSelectView={(nextView) => {
+              startTransition(() => {
+                setView(nextView);
+              });
+            }}
             view={view}
           />
 
           {view === 'lista' ? (
-            <ProjectsList
-              activeCategory={activeCategory}
-              onResetFilters={() => setActiveCategory('tutti')}
-              projects={filteredProjects}
-            />
-          ) : (
-            <Suspense
-              fallback={(
-                <div className="h-[70vh] bg-black/5 dark:bg-dark-surface overflow-hidden border border-black/5 dark:border-white/5 rounded-sm relative animate-pulse" />
-              )}
-            >
-              <ProjectsMapPanel
-                activeProjectIndex={activeProjectIndex}
-                geocodingPhase={geocodingPhase}
-                groupedMarkers={groupedMarkers}
-                hasAnyCoords={hasAnyCoords}
-                isGeocodingDone={isGeocodingDone}
-                lineGeoJSON={lineGeoJSON}
-                onViewStateChange={setViewState}
-                selectedGroup={selectedGroup}
-                setActiveProjectIndex={setActiveProjectIndex}
-                setSelectedGroup={setSelectedGroup}
-                theme={theme}
-                viewState={viewState}
+            <section aria-labelledby="projects-list-heading">
+              <h2 id="projects-list-heading" className="sr-only">
+                Elenco dei progetti filtrati
+              </h2>
+              <ProjectsList
+                activeCategory={activeCategory}
+                onResetFilters={() => {
+                  startTransition(() => {
+                    setActiveCategory('tutti');
+                  });
+                }}
+                projects={filteredProjects}
               />
-            </Suspense>
+            </section>
+          ) : (
+            <section aria-labelledby="projects-map-heading">
+              <h2 id="projects-map-heading" className="sr-only">
+                Mappa dei progetti filtrati
+              </h2>
+              <Suspense
+                fallback={(
+                  <div className="h-[70vh] bg-black/5 dark:bg-dark-surface overflow-hidden border border-black/5 dark:border-white/5 rounded-sm relative animate-pulse" />
+                )}
+              >
+                <ProjectsMapPanel
+                  activeProjectIndex={activeProjectIndex}
+                  geocodingPhase={geocodingPhase}
+                  groupedMarkers={groupedMarkers}
+                  hasAnyCoords={hasAnyCoords}
+                  isGeocodingDone={isGeocodingDone}
+                  lineGeoJSON={lineGeoJSON}
+                  onViewStateChange={setViewState}
+                  selectedGroup={selectedGroup}
+                  setActiveProjectIndex={setActiveProjectIndex}
+                  setSelectedGroup={setSelectedGroup}
+                  theme={theme}
+                  viewState={viewState}
+                />
+              </Suspense>
+            </section>
           )}
         </main>
 

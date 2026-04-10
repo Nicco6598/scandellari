@@ -92,24 +92,23 @@ function MobileMenuPanel({ isOpen, onClose, theme, toggleTheme, location }: Mobi
   const indicatorClass = (active: boolean) =>
     `h-6 w-[2px] shrink-0 ${active ? 'bg-primary' : 'bg-transparent'}`;
 
+  if (!isOpen) return null;
+
   return createPortal(
     <div
       className="fixed inset-0 z-[200]"
-      style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
-      aria-hidden={!isOpen}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menu di navigazione"
     >
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-500"
-        style={{ opacity: isOpen ? 1 : 0 }}
         onClick={onClose}
       />
 
       <div
         className="absolute inset-y-0 right-0 w-full sm:w-[460px] bg-white dark:bg-black shadow-[0_20px_60px_rgba(0,0,0,0.3)] border-l border-black/10 dark:border-white/10 flex flex-col"
-        style={{
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)',
-        }}
+        style={{ transition: 'transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)' }}
       >
         <div className="p-6 flex items-center justify-between shrink-0">
           <img

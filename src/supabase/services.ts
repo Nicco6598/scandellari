@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ProgettoData, CompetenzaData, OffertaLavoroData, ImmagineInfo } from '../types/supabaseTypes';
 import { activityService } from './activityService';
 import { logger } from '../utils/logger';
+import { optimizeImageUpload } from '../utils/optimizeImageUpload';
 
 type TimestampFields = {
   created_at?: string | Date;
@@ -530,14 +531,19 @@ export const progettiService = {
 
   // Upload a *single* image and return its public URL and path
   uploadImage: async (file: File, folder: string = 'progetti'): Promise<ImmagineInfo> => {
-    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const optimizedFile = await optimizeImageUpload(file);
+    const cleanFileName = optimizedFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const filename = `${folder}/${uuidv4()}-${cleanFileName}`;
 
     logger.log(`Tentativo upload: ${filename}`);
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('images')
-      .upload(filename, file, { cacheControl: '3600', upsert: false });
+      .upload(filename, optimizedFile, {
+        cacheControl: '31536000',
+        contentType: optimizedFile.type || file.type,
+        upsert: false,
+      });
 
     if (uploadError) {
         logger.error(`Errore uploadImage (Upload - ${filename}):`, uploadError);
@@ -750,14 +756,19 @@ export const competenzeService = {
 
   // Upload a *single* image and return its public URL and path
   uploadImage: async (file: File, folder: string = 'competenze'): Promise<ImmagineInfo> => {
-    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const optimizedFile = await optimizeImageUpload(file);
+    const cleanFileName = optimizedFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const filename = `${folder}/${uuidv4()}-${cleanFileName}`;
 
     logger.log(`Tentativo upload: ${filename}`);
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('images')
-      .upload(filename, file, { cacheControl: '3600', upsert: false });
+      .upload(filename, optimizedFile, {
+        cacheControl: '31536000',
+        contentType: optimizedFile.type || file.type,
+        upsert: false,
+      });
 
     if (uploadError) {
         logger.error(`Errore uploadImage (Upload - ${filename}):`, uploadError);

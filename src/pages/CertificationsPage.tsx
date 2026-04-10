@@ -17,7 +17,6 @@ import {
     ArrowRightIcon,
     ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
-import PDFThumbnail from '../components/utils/PDFThumbnail';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
@@ -28,6 +27,7 @@ import {
     secondaryTextClasses,
 } from '../components/utils/ColorStyles';
 
+const PDFThumbnail = lazy(() => import('../components/utils/PDFThumbnail'));
 const LazyPDFViewer = lazy(() => import('./LazyPDFViewer'));
 
 const POLITICA_ID = 'politica-aziendale';
@@ -226,7 +226,13 @@ function CertificationsPage() {
                                     onClick={() => openCertification(cert)}
                                 >
                                     <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105 origin-top">
-                                        <PDFThumbnail pdfUrl={cert.pdfUrl} />
+                                        <Suspense fallback={
+                                            <div className="flex h-full w-full items-center justify-center bg-black/5 dark:bg-black/40">
+                                                <div className="w-6 h-6 border-2 border-primary border-t-transparent animate-spin" />
+                                            </div>
+                                        }>
+                                            <PDFThumbnail pdfUrl={cert.pdfUrl} />
+                                        </Suspense>
                                     </div>
                                     <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-all duration-500 flex items-center justify-center z-10">
                                         <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-black/80 dark:bg-white/90 text-white dark:text-black px-5 py-3 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
@@ -396,34 +402,38 @@ function CertificationsPage() {
                 )}
 
                 {/* Mobile Filter Modal */}
-                <div
-                    className={`fixed inset-0 z-[100] bg-stone-50 dark:bg-black p-6 flex flex-col transition-opacity duration-300 ${showMobileFilters ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                    aria-hidden={!showMobileFilters}
-                >
-                    <div className="flex justify-between items-center mb-12">
-                        <span className="text-xs font-black uppercase tracking-[0.4em]">Filtri</span>
-                        <button onClick={() => setShowMobileFilters(false)}>
-                            <XMarkIcon className="w-8 h-8" />
-                        </button>
-                    </div>
-                    <div className="flex-grow flex flex-col gap-8">
-                        <button
-                            onClick={() => { setActiveCategory('all'); setShowMobileFilters(false); }}
-                            className={`text-xl font-black uppercase tracking-wider text-left pb-6 border-b border-black/10 dark:border-white/10 ${activeCategory === 'all' ? 'text-accent' : 'text-black/50 dark:text-white/20'}`}
-                        >
-                            Tutte le Certificazioni
-                        </button>
-                        {categories.filter(cat => cat !== 'all').map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => { setActiveCategory(cat); setShowMobileFilters(false); }}
-                                className={`text-3xl font-black tracking-tighter text-left ${activeCategory === cat ? 'text-primary' : 'text-black/50 dark:text-white/10'}`}
-                            >
-                                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {showMobileFilters ? (
+                    <div
+                        className="fixed inset-0 z-[100] flex flex-col bg-stone-50 p-6 dark:bg-black"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Filtri certificazioni"
+                    >
+                        <div className="flex justify-between items-center mb-12">
+                            <span className="text-xs font-black uppercase tracking-[0.4em]">Filtri</span>
+                            <button onClick={() => setShowMobileFilters(false)} aria-label="Chiudi filtri">
+                                <XMarkIcon className="w-8 h-8" />
                             </button>
-                        ))}
+                        </div>
+                        <div className="flex-grow flex flex-col gap-8">
+                            <button
+                                onClick={() => { setActiveCategory('all'); setShowMobileFilters(false); }}
+                                className={`text-xl font-black uppercase tracking-wider text-left pb-6 border-b border-black/10 dark:border-white/10 ${activeCategory === 'all' ? 'text-accent' : 'text-black/50 dark:text-white/20'}`}
+                            >
+                                Tutte le Certificazioni
+                            </button>
+                            {categories.filter(cat => cat !== 'all').map((cat) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => { setActiveCategory(cat); setShowMobileFilters(false); }}
+                                    className={`text-3xl font-black tracking-tighter text-left ${activeCategory === cat ? 'text-primary' : 'text-black/50 dark:text-white/10'}`}
+                                >
+                                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                ) : null}
             </div>
         </Layout>
     );

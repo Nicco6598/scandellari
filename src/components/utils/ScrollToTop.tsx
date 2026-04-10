@@ -12,9 +12,7 @@ const ScrollToTop: React.FC = () => {
       window.scrollTo(0, 0);
       
       // 2. Reset di Lenis (se presente)
-      // @ts-ignore
       if (window.lenis) {
-        // @ts-ignore
         window.lenis.scrollTo(0, { immediate: true });
       }
 

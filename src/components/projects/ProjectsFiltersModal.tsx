@@ -18,14 +18,18 @@ function ProjectsFiltersModal({
   onClose,
   onSelectCategory,
 }: ProjectsFiltersModalProps) {
+  if (!isOpen) return null;
+
   return (
     <div
-      className={`fixed inset-0 z-[100] bg-white dark:bg-black p-6 flex flex-col transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-      aria-hidden={!isOpen}
+      className="fixed inset-0 z-[100] flex flex-col bg-white p-6 dark:bg-black"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Filtri progetti"
     >
       <div className="flex justify-between items-center mb-12">
         <span className="text-xs font-black uppercase tracking-[0.4em]">Filtri</span>
-        <button onClick={onClose}>
+        <button onClick={onClose} aria-label="Chiudi filtri">
           <XMarkIcon className="w-8 h-8" />
         </button>
       </div>

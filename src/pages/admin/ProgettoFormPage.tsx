@@ -689,6 +689,9 @@ const ProgettoFormPage: React.FC = () => {
                     {MAX_IMAGES - (existingImages.length + selectedFiles.length)} rimanenti
                   </span>
                 </div>
+                <p className="mt-4 text-[11px] leading-relaxed text-black/55 dark:text-white/55">
+                  Le nuove immagini vengono ottimizzate automaticamente prima dell&apos;upload per alleggerire card, detail page e LCP.
+                </p>
               </div>
             </div>
           </div>

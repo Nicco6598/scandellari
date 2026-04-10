@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import Layout from '../components/layout/Layout';
 import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
-import { competenzeService, progettiService } from '../supabase/services';
+import { publicCompetenzeService, publicProgettiService } from '../supabase/publicData';
 import { CompetenzaData, ProgettoData } from '../types/supabaseTypes';
 import SEO from '../components/utils/SEO';
 import LoadingState from '../components/utils/LoadingState';
@@ -18,6 +18,7 @@ import {
     primaryTextClasses,
     secondaryTextClasses,
 } from '../components/utils/ColorStyles';
+import { getOptimizedImageUrl, getResponsiveImageProps } from '../utils/imageTransforms';
 
 const categoryLabels = {
     segnalamento: 'Segnalamento',
@@ -41,7 +42,7 @@ const CompetenzePage: React.FC = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const compRes = await competenzeService.getAllCompetenze();
+                const compRes = await publicCompetenzeService.getAllCompetenze();
                 setCompetenze(compRes);
             } catch (_err) {
                 // silently fail
@@ -57,7 +58,7 @@ const CompetenzePage: React.FC = () => {
 
         const fetchRelatedProjects = async () => {
             try {
-                const related = await progettiService.getProjectsByCategory(activeCategory, 2);
+                const related = await publicProgettiService.getProjectsByCategory(activeCategory, 2);
                 if (isMounted) {
                     setProgetti(related);
                 }
@@ -104,6 +105,12 @@ const CompetenzePage: React.FC = () => {
     const fallbackCompetenza = categoryCompetences[0] ?? null;
     const activeCompetenzaId = location.hash.substring(1) || fallbackCompetenza?.id || null;
     const activeCompetenza = (activeCompetenzaId ? competenzaById.get(activeCompetenzaId) : null) ?? fallbackCompetenza;
+    const activeCompetenzaImage = activeCompetenza?.immagini?.[0] ?? activeCompetenza?.immagine ?? null;
+    const activeCompetenzaImageProps = getResponsiveImageProps(activeCompetenzaImage, {
+        widths: [640, 960, 1280, 1600],
+        sizes: '(min-width: 1280px) 70vw, 100vw',
+        quality: 66,
+    });
 
     const handleSelect = (cat: string, id?: string) => {
         navigate(`/competenze/${cat}${id ? `#${id}` : ''}`);
@@ -216,8 +223,13 @@ const CompetenzePage: React.FC = () => {
                                                 {(activeCompetenza.immagini?.[0]?.url || activeCompetenza.immagine?.url) ? (
                                                     <>
                                                         <img
-                                                            src={activeCompetenza.immagini?.[0]?.url || activeCompetenza.immagine?.url}
+                                                            src={activeCompetenzaImageProps.src}
+                                                            srcSet={activeCompetenzaImageProps.srcSet}
+                                                            sizes={activeCompetenzaImageProps.sizes}
                                                             alt={activeCompetenza.titolo}
+                                                            loading="eager"
+                                                            decoding="async"
+                                                            fetchPriority="high"
                                                             className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-primary/5 mix-blend-multiply opacity-40 group-hover:opacity-0 transition-opacity duration-500" />
@@ -282,9 +294,17 @@ const CompetenzePage: React.FC = () => {
                                                         className="aspect-square bg-gray-100 dark:bg-dark-surface cursor-crosshair overflow-hidden group relative border border-black/5 dark:border-white/5 hover:border-primary/30 transition-all"
                                                     >
                                                         <img
-                                                            src={img.url}
+                                                            src={getOptimizedImageUrl(img, { width: 720, quality: 62 })}
+                                                            srcSet={getResponsiveImageProps(img, {
+                                                                widths: [320, 480, 720],
+                                                                sizes: '(min-width: 768px) 22vw, 50vw',
+                                                                quality: 62,
+                                                            }).srcSet}
+                                                            sizes="(min-width: 768px) 22vw, 50vw"
                                                             className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-700"
                                                             alt="Gallery image"
+                                                            loading="lazy"
+                                                            decoding="async"
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-primary/5 mix-blend-multiply opacity-30 group-hover:opacity-0 transition-opacity" />
                                                     </div>
@@ -324,45 +344,49 @@ const CompetenzePage: React.FC = () => {
                     </div>
                 </section>
 
-                <div
-                    className={`fixed inset-0 z-[100] bg-stone-50 dark:bg-black p-6 flex flex-col transition-opacity duration-300 ${showMobileFilters ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                    aria-hidden={!showMobileFilters}
-                >
-                    <div className="flex justify-between items-center mb-12">
-                        <span className="text-xs font-black uppercase tracking-[0.4em]">Filtri</span>
-                        <button onClick={() => setShowMobileFilters(false)}>
-                            <XMarkIcon className="w-8 h-8" />
-                        </button>
+                {showMobileFilters ? (
+                    <div
+                        className="fixed inset-0 z-[100] flex flex-col bg-stone-50 p-6 dark:bg-black"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Filtri competenze"
+                    >
+                        <div className="flex justify-between items-center mb-12">
+                            <span className="text-xs font-black uppercase tracking-[0.4em]">Filtri</span>
+                            <button onClick={() => setShowMobileFilters(false)} aria-label="Chiudi filtri">
+                                <XMarkIcon className="w-8 h-8" />
+                            </button>
+                        </div>
+                        <div className="flex-grow overflow-y-auto space-y-12">
+                            {Object.entries(categoryLabels).map(([key, label]) => (
+                                <div key={key} className="space-y-6">
+                                    <button
+                                        onClick={() => handleSelect(key)}
+                                        className={`text-2xl font-black tracking-tighter text-left w-full transition-colors ${activeCategory === key ? 'text-primary' : `${metaTextClasses} hover:text-primary dark:hover:text-white`
+                                            }`}
+                                    >
+                                        {label}
+                                    </button>
+                                    {activeCategory === key && (
+                                        <div className="flex flex-col gap-4 pl-4 border-l-2 border-primary/30">
+                                            {(competenzeByCategory.get(key) ?? [])
+                                                .map(c => (
+                                                    <button
+                                                        key={c.id}
+                                                        onClick={() => handleSelect(key, c.id)}
+                                                        className={`text-left text-sm font-bold transition-colors ${activeCompetenzaId === c.id ? 'text-primary dark:text-white' : `${metaTextClasses} hover:text-primary dark:hover:text-white`
+                                                            }`}
+                                                    >
+                                                        {c.titolo}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex-grow overflow-y-auto space-y-12">
-                        {Object.entries(categoryLabels).map(([key, label]) => (
-                            <div key={key} className="space-y-6">
-                                <button
-                                    onClick={() => handleSelect(key)}
-                                    className={`text-2xl font-black tracking-tighter text-left w-full transition-colors ${activeCategory === key ? 'text-primary' : `${metaTextClasses} hover:text-primary dark:hover:text-white`
-                                        }`}
-                                >
-                                    {label}
-                                </button>
-                                {activeCategory === key && (
-                                    <div className="flex flex-col gap-4 pl-4 border-l-2 border-primary/30">
-                                        {(competenzeByCategory.get(key) ?? [])
-                                            .map(c => (
-                                                <button
-                                                    key={c.id}
-                                                    onClick={() => handleSelect(key, c.id)}
-                                                    className={`text-left text-sm font-bold transition-colors ${activeCompetenzaId === c.id ? 'text-primary dark:text-white' : `${metaTextClasses} hover:text-primary dark:hover:text-white`
-                                                        }`}
-                                                >
-                                                    {c.titolo}
-                                                </button>
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                ) : null}
 
                 {/* Lightbox */}
                 <DeferredLightbox

@@ -50,7 +50,11 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
     }, [to, duration]);
 
     return (
-        <span ref={ref} className={className}>
+        <span
+            ref={ref}
+            className={`inline-block ${className}`.trim()}
+            style={{ minWidth: `${Math.max(String(to).length, 1)}ch` }}
+        >
             {prefix}{value}{suffix}
         </span>
     );

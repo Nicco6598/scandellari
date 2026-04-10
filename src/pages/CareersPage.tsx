@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { logger } from '../utils/logger';
-import { offerteService } from '../supabase/services';
+import { publicOfferteService } from '../supabase/publicData';
 import { OffertaLavoroData } from '../types/supabaseTypes';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -181,7 +181,7 @@ function CareersPage() {
   useEffect(() => {
     const fetchOfferte = async () => {
       try {
-        const data = await offerteService.getAllOfferte();
+        const data = await publicOfferteService.getAllOfferte();
         setOfferte(data);
       } catch (err) {
         logger.error('Fetch error', err);
@@ -491,9 +491,12 @@ function CareersPage() {
         </section>
 
         {/* Application Modal (Full Screen) */}
+        {isModalOpen ? (
         <div
-          className={`fixed inset-0 z-[100] bg-white dark:bg-black overflow-hidden transform transition-all duration-500 ease-out ${isModalOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'}`}
-          aria-hidden={!isModalOpen}
+          className="fixed inset-0 z-[100] overflow-hidden bg-white dark:bg-black"
+          role="dialog"
+          aria-modal="true"
+          aria-label={selectedJob ? `Candidatura per ${selectedJob.titolo}` : 'Candidatura spontanea'}
         >
           <div className="container mx-auto max-w-5xl h-full flex flex-col relative">
             <div className="flex justify-between items-center p-6 md:p-12 border-b border-black/10 dark:border-white/5">
@@ -506,6 +509,7 @@ function CareersPage() {
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-4 hover:bg-black/10 dark:hover:bg-white/5 transition-colors group rounded-full"
+                aria-label="Chiudi candidatura"
               >
                 <XMarkIcon className="w-8 h-8 md:w-10 md:h-10 transition-transform group-hover:rotate-90" />
               </button>
@@ -662,6 +666,7 @@ function CareersPage() {
             )}
           </div>
         </div>
+        ) : null}
       </div>
     </Layout>
   );

@@ -1,11 +1,7 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './context/AuthContext';
 import { MobileMenuProvider } from './context/MobileMenuContext';
-import Lenis from 'lenis';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 import ScrollToTop from './components/utils/ScrollToTop';
 import PageLoader from './components/utils/PageLoader';
@@ -13,10 +9,7 @@ import ErrorBoundary from './components/utils/ErrorBoundary';
 import Analytics from './components/utils/Analytics';
 import ScrollProgress from './components/utils/ScrollProgress';
 import PageTransition from './components/utils/PageTransition';
-import LoadingState from './components/utils/LoadingState';
 import RouteLoadingFallback from './components/utils/RouteLoadingFallback';
-
-const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const CompetenzePage = lazy(() => import('./pages/CompetenzePage'));
@@ -31,7 +24,44 @@ const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage'));
 const CompanyPolicyPage = lazy(() => import('./pages/CompanyPolicyPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
-const LoginPage = lazy(() => import('./pages/admin/LoginPage'));
+const AdminLoginRoute = lazy(async () => {
+  const [{ AuthProvider }, { default: LoginPage }] = await Promise.all([
+    import('./context/AuthContext'),
+    import('./pages/admin/LoginPage'),
+  ]);
+
+  function AdminLoginRouteComponent() {
+    return (
+      <AuthProvider>
+        <LoginPage />
+      </AuthProvider>
+    );
+  }
+
+  return {
+    default: AdminLoginRouteComponent,
+  };
+});
+
+const AdminAppRoute = lazy(async () => {
+  const [{ AuthProvider }, { default: AdminLayout }] = await Promise.all([
+    import('./context/AuthContext'),
+    import('./components/admin/AdminLayout'),
+  ]);
+
+  function AdminAppRouteComponent() {
+    return (
+      <AuthProvider>
+        <AdminLayout />
+      </AuthProvider>
+    );
+  }
+
+  return {
+    default: AdminAppRouteComponent,
+  };
+});
+
 const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
 const ProgettiPage = lazy(() => import('./pages/admin/ProgettiPage'));
 const ProgettoFormPage = lazy(() => import('./pages/admin/ProgettoFormPage'));
@@ -40,7 +70,6 @@ const CompetenzaFormPage = lazy(() => import('./pages/admin/CompetenzaFormPage')
 const OfferteLavoroPage = lazy(() => import('./pages/admin/OfferteLavoroPage'));
 const OffertaLavoroFormPage = lazy(() => import('./pages/admin/OffertaLavoroFormPage'));
 
-type LenisWindow = Window & { lenis?: Lenis };
 type RuntimePreferences = {
   allowDecorativeRuntime: boolean;
   allowSmoothScrolling: boolean;
@@ -52,7 +81,26 @@ const STATIC_ROUTES = [
   '/policy-aziendale',
 ];
 
-function useRuntimePreferences(pathname: string): RuntimePreferences {
+const DECORATIVE_RUNTIME_DISABLED_PREFIXES = [
+  '/progetti',
+  '/competenze',
+  '/certificazioni',
+  '/lavora-con-noi',
+] as const;
+
+const SMOOTH_SCROLL_DISABLED_PREFIXES = [
+  '/progetti',
+  '/competenze',
+  '/certificazioni',
+  '/lavora-con-noi',
+  '/contatti',
+] as const;
+
+function matchesRoutePrefix(pathname: string, prefixes: readonly string[]) {
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+function useRuntimePreferences(pathname: string, search: string): RuntimePreferences {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -73,38 +121,65 @@ function useRuntimePreferences(pathname: string): RuntimePreferences {
   }, []);
 
   return useMemo(() => {
+    const smoothOverride = new URLSearchParams(search).get('smooth');
+    const forceSmoothScrolling = smoothOverride === '1' || smoothOverride === 'true';
+    const disableSmoothScrolling = smoothOverride === '0' || smoothOverride === 'false';
     const isAdminRoute = pathname.startsWith('/admin');
     const isStaticRoute = STATIC_ROUTES.includes(pathname);
-    const allowDecorativeRuntime = !prefersReducedMotion && !isAdminRoute && !isStaticRoute;
+    const disableDecorativeRuntimeForRoute = matchesRoutePrefix(pathname, DECORATIVE_RUNTIME_DISABLED_PREFIXES);
+    const disableSmoothScrollingForRoute = matchesRoutePrefix(pathname, SMOOTH_SCROLL_DISABLED_PREFIXES);
+    const allowDecorativeRuntime = (
+      !prefersReducedMotion &&
+      !isAdminRoute &&
+      !isStaticRoute &&
+      !disableDecorativeRuntimeForRoute
+    );
+    const allowSmoothScrolling = disableSmoothScrolling
+      ? false
+      : forceSmoothScrolling
+        ? true
+        : !prefersReducedMotion && !disableSmoothScrollingForRoute;
 
     return {
       allowDecorativeRuntime,
-      allowSmoothScrolling: !prefersReducedMotion && !isAdminRoute && !isStaticRoute,
+      allowSmoothScrolling,
     };
-  }, [pathname, prefersReducedMotion]);
+  }, [pathname, prefersReducedMotion, search]);
 }
 
 function AnimationController({ enabled }: { enabled: boolean }) {
   const location = useLocation();
 
-  useLayoutEffect(() => {
-    if (!enabled) {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-      ScrollTrigger.clearMatchMedia();
+  useEffect(() => {
+    if (!enabled || typeof window === 'undefined') {
       return;
     }
 
-    gsap.registerPlugin(ScrollTrigger);
-
+    let cancelled = false;
     let idleHandle: number | undefined;
-    let refreshTimeoutId: ReturnType<typeof setTimeout> | undefined;
+    let rafId: number | undefined;
+    let refreshTimeoutId: number | undefined;
+    let cleanupAnimations: (() => void) | undefined;
 
-    ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-    ScrollTrigger.clearMatchMedia();
+    const initializeAnimations = async () => {
+      const hasAnimatedElements = Boolean(
+        document.querySelector('[data-animate], [data-animate-stagger], [data-parallax]')
+      );
+      if (!hasAnimatedElements) return;
 
-    const setupAnimations = () => {
-      refreshTimeoutId = setTimeout(() => ScrollTrigger.refresh(), 50);
-      
+      const [{ default: gsap }, { ScrollTrigger }] = await Promise.all([
+        import('gsap'),
+        import('gsap/ScrollTrigger'),
+      ]);
+
+      if (cancelled) return;
+
+      gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      ScrollTrigger.clearMatchMedia();
+
+      refreshTimeoutId = window.setTimeout(() => ScrollTrigger.refresh(), 50);
+
       const elements = gsap.utils.toArray<HTMLElement>('[data-animate]');
       elements.forEach((element) => {
         const type = element.dataset.animate ?? 'fade-up';
@@ -176,23 +251,32 @@ function AnimationController({ enabled }: { enabled: boolean }) {
           },
         });
       });
+
+      cleanupAnimations = () => {
+        if (refreshTimeoutId !== undefined) window.clearTimeout(refreshTimeoutId);
+        ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+        ScrollTrigger.clearMatchMedia();
+      };
+    };
+
+    const scheduleInitialization = () => {
+      void initializeAnimations();
     };
 
     if (typeof window.requestIdleCallback === 'function') {
-      idleHandle = window.requestIdleCallback(setupAnimations, { timeout: 300 });
+      idleHandle = window.requestIdleCallback(scheduleInitialization, { timeout: 300 });
     } else {
-      const raf = requestAnimationFrame(() => { requestAnimationFrame(setupAnimations); });
-      return () => {
-        cancelAnimationFrame(raf);
-        if (refreshTimeoutId) clearTimeout(refreshTimeoutId);
-        ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-      };
+      rafId = window.requestAnimationFrame(() => {
+        rafId = window.requestAnimationFrame(scheduleInitialization);
+      });
     }
 
     return () => {
+      cancelled = true;
       if (idleHandle !== undefined) window.cancelIdleCallback(idleHandle);
-      if (refreshTimeoutId) clearTimeout(refreshTimeoutId);
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      if (rafId !== undefined) window.cancelAnimationFrame(rafId);
+      if (refreshTimeoutId !== undefined) window.clearTimeout(refreshTimeoutId);
+      cleanupAnimations?.();
     };
   }, [enabled, location.pathname]);
 
@@ -201,38 +285,84 @@ function AnimationController({ enabled }: { enabled: boolean }) {
 
 function AppShell() {
   const location = useLocation();
-  const runtimePreferences = useRuntimePreferences(location.pathname);
+  const runtimePreferences = useRuntimePreferences(location.pathname, location.search);
 
   useEffect(() => {
-    if (!runtimePreferences.allowSmoothScrolling) {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-      delete (window as LenisWindow).lenis;
+    if (!runtimePreferences.allowSmoothScrolling || typeof window === 'undefined') {
+      window.lenis?.destroy();
+      delete window.lenis;
       return;
     }
 
-    const lenis = new Lenis({
-      lerp: 0.08,
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 2,
-      infinite: false,
-    });
+    let cancelled = false;
+    let lenisInstance: Window['lenis'];
+    let removeTicker: (() => void) | undefined;
 
-    (window as LenisWindow).lenis = lenis;
+    const initializeSmoothScroll = async () => {
+      const [{ default: Lenis }, gsapModule, scrollTriggerModule] = await Promise.all([
+        import('lenis'),
+        runtimePreferences.allowDecorativeRuntime ? import('gsap') : Promise.resolve(null),
+        runtimePreferences.allowDecorativeRuntime ? import('gsap/ScrollTrigger') : Promise.resolve(null),
+      ]);
 
-    lenis.on('scroll', ScrollTrigger.update);
+      if (cancelled) return;
 
-    const lenisTicker = (time: number) => {
-      lenis.raf(time * 1000);
+      const lenis = new Lenis({
+        lerp: 0.1,
+        smoothWheel: true,
+        syncTouch: true,
+        syncTouchLerp: 0.08,
+        touchInertiaExponent: 1.1,
+        wheelMultiplier: 1,
+        touchMultiplier: 1,
+        infinite: false,
+      });
+
+      lenisInstance = lenis;
+      window.lenis = lenis;
+
+      const gsap = gsapModule?.default;
+      const ScrollTrigger = scrollTriggerModule?.ScrollTrigger;
+
+      if (gsap && ScrollTrigger) {
+        gsap.registerPlugin(ScrollTrigger);
+        lenis.on('scroll', ScrollTrigger.update);
+
+        const lenisTicker = (time: number) => {
+          lenis.raf(time * 1000);
+        };
+
+        gsap.ticker.add(lenisTicker);
+        gsap.ticker.lagSmoothing(0);
+
+        removeTicker = () => {
+          gsap.ticker.remove(lenisTicker);
+        };
+
+        return;
+      }
+
+      let frameId = 0;
+      const tick = (time: number) => {
+        lenis.raf(time);
+        frameId = window.requestAnimationFrame(tick);
+      };
+
+      frameId = window.requestAnimationFrame(tick);
+      removeTicker = () => {
+        window.cancelAnimationFrame(frameId);
+      };
     };
 
-    gsap.ticker.add(lenisTicker);
-    gsap.ticker.lagSmoothing(0);
+    void initializeSmoothScroll();
 
     return () => {
-      gsap.ticker.remove(lenisTicker);
-      lenis.destroy();
-      delete (window as LenisWindow).lenis;
+      cancelled = true;
+      removeTicker?.();
+      lenisInstance?.destroy();
+      if (window.lenis === lenisInstance) {
+        delete window.lenis;
+      }
     };
   }, [runtimePreferences.allowSmoothScrolling]);
 
@@ -260,8 +390,14 @@ function AppShell() {
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/cookie-policy" element={<CookiePolicyPage />} />
             <Route path="/policy-aziendale" element={<CompanyPolicyPage />} />
-            <Route path="/admin/login" element={<LoginPage />} />
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route
+              path="/admin/login"
+              element={<AdminLoginRoute />}
+            />
+            <Route
+              path="/admin"
+              element={<AdminAppRoute />}
+            >
               <Route index element={<DashboardPage />} />
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="progetti" element={<ProgettiPage />} />
@@ -286,13 +422,11 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <AuthProvider>
-          <MobileMenuProvider>
-            <Router>
-              <AppShell />
-            </Router>
-          </MobileMenuProvider>
-        </AuthProvider>
+        <MobileMenuProvider>
+          <Router>
+            <AppShell />
+          </Router>
+        </MobileMenuProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
