@@ -25,10 +25,11 @@ function CookieBanner() {
     writeCookieConsent('minimal');
   };
 
+  if (!showBanner) return null;
+
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 transition-all duration-300 ${showBanner ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'}`}
-      aria-hidden={!showBanner}
+      className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6"
     >
       <div className="container mx-auto max-w-7xl">
         <div className="bg-white dark:bg-dark-surface border border-black/10 dark:border-white/10 shadow-2xl shadow-black/10 dark:shadow-primary/5 backdrop-blur-sm relative overflow-hidden">
