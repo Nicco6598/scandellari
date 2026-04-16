@@ -7,10 +7,46 @@
 @layer base {
   html {
     scroll-behavior: auto;
+    --scrollbar-track: rgba(148, 163, 184, 0.18);
+    --scrollbar-thumb: #2563EB;
+    --scrollbar-thumb-hover: #1D4ED8;
+    --scrollbar-thumb-border: #F8FAFC;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
+  }
+
+  html.dark {
+    --scrollbar-track: rgba(37, 37, 72, 0.72);
+    --scrollbar-thumb: #60A5FA;
+    --scrollbar-thumb-hover: #93C5FD;
+    --scrollbar-thumb-border: #0E0E1A;
   }
 
   body {
     @apply bg-stone-50 text-text-primary font-sans dark:bg-dark dark:text-white transition-colors duration-300 overflow-x-hidden;
+  }
+
+  *::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--scrollbar-thumb) 0%, var(--scrollbar-thumb-hover) 100%);
+    border: 3px solid var(--scrollbar-thumb-border);
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--scrollbar-thumb-hover) 0%, var(--scrollbar-thumb) 100%);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track);
   }
 
   h1,

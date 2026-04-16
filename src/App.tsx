@@ -71,6 +71,7 @@ const OfferteLavoroPage = lazy(() => import('./pages/admin/OfferteLavoroPage'));
 const OffertaLavoroFormPage = lazy(() => import('./pages/admin/OffertaLavoroFormPage'));
 
 type RuntimePreferences = {
+  allowScrollProgress: boolean;
   allowDecorativeRuntime: boolean;
   allowSmoothScrolling: boolean;
 };
@@ -128,6 +129,7 @@ function useRuntimePreferences(pathname: string, search: string): RuntimePrefere
     const isStaticRoute = STATIC_ROUTES.includes(pathname);
     const disableDecorativeRuntimeForRoute = matchesRoutePrefix(pathname, DECORATIVE_RUNTIME_DISABLED_PREFIXES);
     const disableSmoothScrollingForRoute = matchesRoutePrefix(pathname, SMOOTH_SCROLL_DISABLED_PREFIXES);
+    const allowScrollProgress = !prefersReducedMotion && !isAdminRoute;
     const allowDecorativeRuntime = (
       !prefersReducedMotion &&
       !isAdminRoute &&
@@ -141,6 +143,7 @@ function useRuntimePreferences(pathname: string, search: string): RuntimePrefere
         : !prefersReducedMotion && !disableSmoothScrollingForRoute;
 
     return {
+      allowScrollProgress,
       allowDecorativeRuntime,
       allowSmoothScrolling,
     };
