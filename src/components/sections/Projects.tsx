@@ -1,90 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { publicProgettiService } from '../../supabase/publicData';
 import { logger } from '../../utils/logger';
 import { ProgettoData } from '../../types/supabaseTypes';
 import LoadingState from '../utils/LoadingState';
-import ProjectImagePlaceholder, { getPrimaryProjectImage } from '../utils/ProjectImagePlaceholder';
-import { metaTextClasses, primaryTextClasses, secondaryTextClasses } from '../utils/ColorStyles';
-import { useCardParallaxHover } from '../../hooks/useCardParallaxHover';
-import { getResponsiveImageProps } from '../../utils/imageTransforms';
+import ProjectItemCard from '../projects/ProjectItemCard';
+import { metaTextClasses, secondaryTextClasses } from '../utils/ColorStyles';
 
-type ProjectCardProps = {
-  project: ProgettoData;
-  index: number;
-};
-
-function ProjectCard({ project, index }: ProjectCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
-  const primaryImage = getPrimaryProjectImage(project);
-  const imageProps = getResponsiveImageProps(primaryImage, {
-    widths: [480, 720, 960, 1280],
-    sizes: '(min-width: 768px) 40vw, 100vw',
-    quality: 68,
-  });
-
-  useCardParallaxHover(cardRef, {
-    childRef: imageRef,
-    childMoveDuration: 0.5,
-    childResetDuration: 0.6,
-    childX: 15,
-    childY: 15,
-    liftY: 20,
-    moveDuration: 0.4,
-    resetDuration: 0.6,
-  });
-
-  return (
-    <div
-      ref={cardRef}
-      className="group h-full"
-    >
-      <Link to={`/progetti/${project.id}`} className="flex h-full flex-col justify-between space-y-10">
-        <div ref={imageRef} className="aspect-[4/5] md:aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-dark-surface relative border border-black/5 dark:border-white/5 group-hover:border-primary/30 transition-all duration-700" data-animate="scale">
-          {primaryImage?.url ? (
-            <img
-              src={imageProps.src}
-              srcSet={imageProps.srcSet}
-              sizes={imageProps.sizes}
-              alt={project.titolo ?? ''}
-              width="800"
-              height="500"
-              loading="lazy"
-              decoding="async"
-              data-parallax="0.1"
-              className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110"
-            />
-          ) : (
-            <ProjectImagePlaceholder project={project} />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-primary/5 opacity-60 group-hover:opacity-0 transition-opacity duration-700" />
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <span className="text-xs font-black text-primary-dark dark:text-primary-medium uppercase tracking-[0.3em]">{project.anno}</span>
-            <div className="w-8 h-[1px] bg-black/10 dark:bg-white/10" />
-            <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${metaTextClasses}`}>{project.localita}</span>
-          </div>
-          <h3 className={`text-4xl lg:text-5xl font-black tracking-tighter leading-none font-heading group-hover:text-primary transition-colors duration-300 ${primaryTextClasses}`}>
-            {project.titolo}
-          </h3>
-          <p className={`text-base font-medium leading-relaxed line-clamp-2 max-w-xl ${secondaryTextClasses}`}>
-            {project.descrizione}
-          </p>
-          <div className="flex items-center gap-3 pt-2">
-            <span className={`text-[10px] font-black uppercase tracking-[0.3em] group-hover:text-primary transition-colors ${metaTextClasses}`}>
-              Scopri Progetto
-            </span>
-            <ArrowRightIcon className="w-5 h-5 text-primary group-hover:translate-x-2 transition-all duration-300" />
-          </div>
-        </div>
-      </Link>
-    </div>
-  );
-}
+const FEATURED_PROJECT_LIMIT = 4;
 
 function Projects() {
   const [projects, setProjects] = useState<ProgettoData[]>([]);
@@ -92,21 +16,32 @@ function Projects() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isActive = true;
+
     const fetchProjects = async () => {
       try {
         const [featuredProjects, projectsCount] = await Promise.all([
-          publicProgettiService.getFeaturedProjects(4),
+          publicProgettiService.getFeaturedProjects(FEATURED_PROJECT_LIMIT),
           publicProgettiService.getProjectsCount(),
         ]);
+
+        if (!isActive) return;
         setProjects(featuredProjects);
         setTotalProjects(projectsCount);
       } catch (err) {
         logger.error('Fetch error', err);
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
-    fetchProjects();
+
+    void fetchProjects();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   if (loading) {
@@ -120,46 +55,52 @@ function Projects() {
   }
 
   return (
-    <section id="projects" className="py-24 md:py-48 bg-stone-50 dark:bg-black overflow-hidden">
-      <div className="container mx-auto px-6 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-32 border-b border-black/5 dark:border-white/5 pb-20">
+    <section id="projects" className="overflow-hidden bg-stone-50 py-24 dark:bg-black md:py-48">
+      <div className="container mx-auto max-w-7xl px-6">
+        <div className="mb-20 flex flex-col justify-between gap-12 border-b border-black/5 pb-20 dark:border-white/5 md:mb-24 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <div className="space-y-8" data-animate="fade-up" data-animate-distance="20">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-[1px] bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
+                <div className="h-[1px] w-12 bg-primary shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
                 <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${metaTextClasses}`}>
                   Portfolio & Expertise
                 </span>
               </div>
-              <h2 className="text-6xl md:text-8xl lg:text-9xl font-black text-black dark:text-white tracking-tighter leading-[0.8] font-heading">
+              <h2 className="font-heading text-6xl font-black leading-[0.8] tracking-tighter text-black dark:text-white md:text-8xl lg:text-9xl">
                 Progetti
               </h2>
             </div>
           </div>
-          <Link
-            to="/progetti"
-            className={`text-[10px] font-black uppercase tracking-[0.3em] hover:text-black dark:hover:text-white transition-colors group flex items-center gap-4 ${metaTextClasses}`}
-          >
-            Tutti i Progetti{totalProjects > 0 ? ` (${totalProjects})` : ''}
-            <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-2 text-primary" />
-          </Link>
+          <div className="flex flex-col gap-8 md:text-right">
+            <p className={`max-w-xs text-base font-medium leading-relaxed md:ml-auto md:text-lg ${secondaryTextClasses}`}>
+              Una selezione di cantieri e installazioni che sintetizza il nostro approccio operativo su reti, stazioni e sistemi ferroviari.
+            </p>
+            <Link
+              to="/progetti"
+              className={`group flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] transition-colors hover:text-black dark:hover:text-white md:justify-end ${metaTextClasses}`}
+            >
+              Tutti i Progetti{totalProjects > 0 ? ` (${totalProjects})` : ''}
+              <ArrowRightIcon className="h-5 w-5 text-primary transition-transform group-hover:translate-x-2" />
+            </Link>
+          </div>
         </div>
 
-        {/* Projects Grid */}
-        <div 
-          data-animate-stagger
-          className="grid md:grid-cols-2 gap-px border border-black/8 dark:border-white/6 bg-black/8 dark:bg-white/6"
-        >
-          {projects.map((project, index) => (
-            <div
-              key={project.id}
-              className="bg-stone-50 dark:bg-black px-6 py-10 md:px-8 md:py-12 lg:px-10 lg:py-14"
-            >
-              <ProjectCard project={project} index={index} />
-            </div>
-          ))}
-        </div>
+        {projects.length > 0 ? (
+          <div aria-label="Progetti in evidenza" className="space-y-6 md:space-y-8">
+            {projects.map((project, index) => (
+              <ProjectItemCard key={project.id} index={index} project={project} />
+            ))}
+          </div>
+        ) : (
+          <div className="border border-black/8 px-8 py-16 text-center dark:border-white/6">
+            <p className={`text-[10px] font-black uppercase tracking-[0.35em] ${metaTextClasses}`}>
+              Portfolio in aggiornamento
+            </p>
+            <p className={`mx-auto mt-4 max-w-xl text-sm font-medium leading-relaxed md:text-base ${secondaryTextClasses}`}>
+              Nessun progetto in evidenza disponibile in questo momento.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -46,7 +46,7 @@ function ProjectsToolbar({
 
       <button
         onClick={onOpenMobileFilters}
-        className="sm:hidden flex items-center justify-center gap-2 px-6 py-3 border border-black/20 dark:border-white/20 text-[10px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-all"
+        className="sm:hidden flex items-center justify-center gap-3 px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-[11px] font-black uppercase tracking-widest"
       >
         <FunnelIcon className="w-4 h-4" />
         {activeCategory === 'tutti' ? 'Filtri' : activeCategory}

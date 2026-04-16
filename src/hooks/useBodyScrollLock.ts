@@ -1,26 +1,54 @@
 import { useEffect } from 'react';
 
+type ScrollLockSnapshot = {
+  bodyOverflow: string;
+  bodyPaddingRight: string;
+  htmlOverflow: string;
+  htmlOverscrollBehavior: string;
+};
+
+let activeLocks = 0;
+let snapshot: ScrollLockSnapshot | null = null;
+
 export function useBodyScrollLock(locked: boolean) {
   useEffect(() => {
-    if (!locked) return;
+    if (!locked || typeof window === 'undefined') return;
 
-    const scrollY = window.scrollY;
-    const { position, top, width, overflow } = document.body.style;
+    const html = document.documentElement;
+    const body = document.body;
 
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
+    activeLocks += 1;
+
+    if (activeLocks === 1) {
+      snapshot = {
+        bodyOverflow: body.style.overflow,
+        bodyPaddingRight: body.style.paddingRight,
+        htmlOverflow: html.style.overflow,
+        htmlOverscrollBehavior: html.style.overscrollBehavior,
+      };
+
+      const scrollbarWidth = Math.max(0, window.innerWidth - html.clientWidth);
+
+      html.style.overflow = 'hidden';
+      html.style.overscrollBehavior = 'none';
+      body.style.overflow = 'hidden';
+
+      if (scrollbarWidth > 0) {
+        body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+    }
 
     return () => {
-      document.body.style.position = position;
-      document.body.style.top = top;
-      document.body.style.width = width;
-      document.body.style.overflow = overflow;
+      activeLocks = Math.max(0, activeLocks - 1);
 
-      if (scrollY > 0) {
-        window.scrollTo(0, scrollY);
-      }
+      if (activeLocks > 0 || !snapshot) return;
+
+      html.style.overflow = snapshot.htmlOverflow;
+      html.style.overscrollBehavior = snapshot.htmlOverscrollBehavior;
+      body.style.overflow = snapshot.bodyOverflow;
+      body.style.paddingRight = snapshot.bodyPaddingRight;
+
+      snapshot = null;
     };
   }, [locked]);
 }

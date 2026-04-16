@@ -71,6 +71,7 @@ const OfferteLavoroPage = lazy(() => import('./pages/admin/OfferteLavoroPage'));
 const OffertaLavoroFormPage = lazy(() => import('./pages/admin/OffertaLavoroFormPage'));
 
 type RuntimePreferences = {
+  allowScrollProgress: boolean;
   allowDecorativeRuntime: boolean;
   allowSmoothScrolling: boolean;
 };
@@ -88,13 +89,7 @@ const DECORATIVE_RUNTIME_DISABLED_PREFIXES = [
   '/lavora-con-noi',
 ] as const;
 
-const SMOOTH_SCROLL_DISABLED_PREFIXES = [
-  '/progetti',
-  '/competenze',
-  '/certificazioni',
-  '/lavora-con-noi',
-  '/contatti',
-] as const;
+const SMOOTH_SCROLL_DISABLED_PREFIXES: readonly string[] = [];
 
 function matchesRoutePrefix(pathname: string, prefixes: readonly string[]) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -128,6 +123,7 @@ function useRuntimePreferences(pathname: string, search: string): RuntimePrefere
     const isStaticRoute = STATIC_ROUTES.includes(pathname);
     const disableDecorativeRuntimeForRoute = matchesRoutePrefix(pathname, DECORATIVE_RUNTIME_DISABLED_PREFIXES);
     const disableSmoothScrollingForRoute = matchesRoutePrefix(pathname, SMOOTH_SCROLL_DISABLED_PREFIXES);
+    const allowScrollProgress = !prefersReducedMotion && !isAdminRoute;
     const allowDecorativeRuntime = (
       !prefersReducedMotion &&
       !isAdminRoute &&
@@ -141,6 +137,7 @@ function useRuntimePreferences(pathname: string, search: string): RuntimePrefere
         : !prefersReducedMotion && !disableSmoothScrollingForRoute;
 
     return {
+      allowScrollProgress,
       allowDecorativeRuntime,
       allowSmoothScrolling,
     };
@@ -371,7 +368,7 @@ function AppShell() {
       <Analytics />
       <ScrollToTop />
       <AnimationController enabled={runtimePreferences.allowDecorativeRuntime} />
-      {runtimePreferences.allowDecorativeRuntime ? <ScrollProgress /> : null}
+      {runtimePreferences.allowScrollProgress ? <ScrollProgress /> : null}
       {runtimePreferences.allowDecorativeRuntime ? <PageTransition /> : null}
       <Suspense
         fallback={<RouteLoadingFallback />}

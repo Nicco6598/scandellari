@@ -18,10 +18,10 @@ const ScrollProgress: React.FC = () => {
     }, []);
 
     return (
-        <div className="fixed top-0 left-0 right-0 z-[200] h-[2px] bg-transparent pointer-events-none">
+        <div className="fixed top-0 left-0 right-0 z-[200] h-[2px] bg-black/10 dark:bg-white/10 pointer-events-none backdrop-blur-sm">
             <div
                 ref={barRef}
-                className="h-full bg-primary origin-left"
+                className="h-full bg-primary dark:bg-primary-light origin-left shadow-[0_0_10px_rgba(37,99,235,0.25)] dark:shadow-[0_0_12px_rgba(96,165,250,0.35)]"
                 style={{ transform: 'scaleX(0)', willChange: 'transform' }}
             />
         </div>

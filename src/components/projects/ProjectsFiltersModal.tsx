@@ -1,5 +1,4 @@
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { metaTextClasses } from '../utils/ColorStyles';
+import FullscreenFiltersModal from '../filters/FullscreenFiltersModal';
 
 type ProjectsFiltersModalProps = {
   activeCategory: string;
@@ -18,39 +17,25 @@ function ProjectsFiltersModal({
   onClose,
   onSelectCategory,
 }: ProjectsFiltersModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[100] flex flex-col bg-white p-6 dark:bg-black"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Filtri progetti"
-    >
-      <div className="flex justify-between items-center mb-12">
-        <span className="text-xs font-black uppercase tracking-[0.4em]">Filtri</span>
-        <button onClick={onClose} aria-label="Chiudi filtri">
-          <XMarkIcon className="w-8 h-8" />
-        </button>
-      </div>
-      <div className="flex-grow flex flex-col gap-8">
-        {categories.map((category) => (
-          <button
-            key={category}
-            onClick={() => {
-              onSelectCategory(category);
-              onClose();
-            }}
-            className={`text-3xl font-black tracking-tighter text-left flex items-center gap-4 ${activeCategory === category ? 'text-primary' : metaTextClasses}`}
-          >
-            {category === 'tutti' ? 'Tutti i Progetti' : category}
-            <span className="text-base font-black opacity-50 tabular-nums">
-              {categoryCounts[category] ?? 0}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
+    <FullscreenFiltersModal
+      ariaLabel="Filtri progetti"
+      isOpen={isOpen}
+      onClose={onClose}
+      onSelect={(category) => onSelectCategory(category)}
+      sections={[
+        {
+          title: 'Categorie',
+          options: categories.map((category) => ({
+            count: categoryCounts[category] ?? 0,
+            id: category,
+            isActive: activeCategory === category,
+            label: category === 'tutti' ? 'Tutti i Progetti' : category,
+          })),
+        },
+      ]}
+      title="Filtri"
+    />
   );
 }
 

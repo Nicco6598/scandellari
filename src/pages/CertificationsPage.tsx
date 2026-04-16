@@ -20,6 +20,7 @@ import {
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import FullscreenFiltersModal from '../components/filters/FullscreenFiltersModal';
 import {
     inverseSecondaryTextClasses,
     metaTextClasses,
@@ -401,39 +402,28 @@ function CertificationsPage() {
                     </div>
                 )}
 
-                {/* Mobile Filter Modal */}
-                {showMobileFilters ? (
-                    <div
-                        className="fixed inset-0 z-[100] flex flex-col bg-stone-50 p-6 dark:bg-black"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="Filtri certificazioni"
-                    >
-                        <div className="flex justify-between items-center mb-12">
-                            <span className="text-xs font-black uppercase tracking-[0.4em]">Filtri</span>
-                            <button onClick={() => setShowMobileFilters(false)} aria-label="Chiudi filtri">
-                                <XMarkIcon className="w-8 h-8" />
-                            </button>
-                        </div>
-                        <div className="flex-grow flex flex-col gap-8">
-                            <button
-                                onClick={() => { setActiveCategory('all'); setShowMobileFilters(false); }}
-                                className={`text-xl font-black uppercase tracking-wider text-left pb-6 border-b border-black/10 dark:border-white/10 ${activeCategory === 'all' ? 'text-accent' : 'text-black/50 dark:text-white/20'}`}
-                            >
-                                Tutte le Certificazioni
-                            </button>
-                            {categories.filter(cat => cat !== 'all').map((cat) => (
-                                <button
-                                    key={cat}
-                                    onClick={() => { setActiveCategory(cat); setShowMobileFilters(false); }}
-                                    className={`text-3xl font-black tracking-tighter text-left ${activeCategory === cat ? 'text-primary' : 'text-black/50 dark:text-white/10'}`}
-                                >
-                                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                ) : null}
+                <FullscreenFiltersModal
+                    ariaLabel="Filtri certificazioni"
+                    isOpen={showMobileFilters}
+                    onClose={() => setShowMobileFilters(false)}
+                    onSelect={(category) => setActiveCategory(category)}
+                    sections={[
+                        {
+                            title: 'Categorie',
+                            options: categories.map((cat) => ({
+                                count: cat === 'all'
+                                    ? certifications.length
+                                    : certifications.filter((certification) => certification.category === cat).length,
+                                id: cat,
+                                isActive: activeCategory === cat,
+                                label: cat === 'all'
+                                    ? 'Tutte le Certificazioni'
+                                    : cat.charAt(0).toUpperCase() + cat.slice(1),
+                            })),
+                        },
+                    ]}
+                    title="Filtri"
+                />
             </div>
         </Layout>
     );

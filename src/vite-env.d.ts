@@ -8,6 +8,8 @@ interface LenisInstance {
       immediate?: boolean;
     }
   ) => void;
+  start: () => void;
+  stop: () => void;
   destroy: () => void;
 }
 

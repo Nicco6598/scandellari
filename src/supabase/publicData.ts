@@ -57,6 +57,10 @@ function buildQueryString(params: Record<string, QueryValue>) {
   return searchParams.toString();
 }
 
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${restBaseUrl}${path}`, {
     ...init,
@@ -125,15 +129,19 @@ const PUBLIC_COMPETENZE_SELECT = '*';
 const PUBLIC_OFFER_SELECT = '*';
 
 export const publicOfferteService = {
-  async getAllOfferte(): Promise<OffertaLavoroData[]> {
+  async getAllOfferte(signal?: AbortSignal): Promise<OffertaLavoroData[]> {
     try {
       const query = buildQueryString({
         select: PUBLIC_OFFER_SELECT,
         order: 'created_at.desc',
       });
-      const data = await requestJson<OffertaLavoroData[]>(`/offerte_lavoro?${query}`);
+      const data = await requestJson<OffertaLavoroData[]>(`/offerte_lavoro?${query}`, { signal });
       return (data ?? []).map((item) => convertTimestampToDate(item)) as OffertaLavoroData[];
     } catch (error) {
+      if (signal?.aborted || isAbortError(error)) {
+        throw error;
+      }
+
       logger.error('Errore public getAllOfferte:', error);
       throw error;
     }
