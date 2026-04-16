@@ -350,18 +350,6 @@ header .relative {
 
 /* Prevenire scroll in elementi specifici che potrebbero causare problemi */
 
-
-/* PERMETTI scroll nei modal delle candidature */
-.candidatura-scroll {
-  overflow-y: auto !important;
-  max-height: 60vh !important;
-}
-
-/* Assicura che i modal di candidatura possano scrollare */
-[role="dialog"] .overflow-y-auto {
-  overflow-y: auto !important;
-}
-
 /* PERMETTI overflow SOLO per header e suoi dropdown specifici */
 header {
   overflow: visible !important;

@@ -89,13 +89,7 @@ const DECORATIVE_RUNTIME_DISABLED_PREFIXES = [
   '/lavora-con-noi',
 ] as const;
 
-const SMOOTH_SCROLL_DISABLED_PREFIXES = [
-  '/progetti',
-  '/competenze',
-  '/certificazioni',
-  '/lavora-con-noi',
-  '/contatti',
-] as const;
+const SMOOTH_SCROLL_DISABLED_PREFIXES: readonly string[] = [];
 
 function matchesRoutePrefix(pathname: string, prefixes: readonly string[]) {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -374,7 +368,7 @@ function AppShell() {
       <Analytics />
       <ScrollToTop />
       <AnimationController enabled={runtimePreferences.allowDecorativeRuntime} />
-      {runtimePreferences.allowDecorativeRuntime ? <ScrollProgress /> : null}
+      {runtimePreferences.allowScrollProgress ? <ScrollProgress /> : null}
       {runtimePreferences.allowDecorativeRuntime ? <PageTransition /> : null}
       <Suspense
         fallback={<RouteLoadingFallback />}
