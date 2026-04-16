@@ -8,7 +8,6 @@ import PageLoader from './components/utils/PageLoader';
 import ErrorBoundary from './components/utils/ErrorBoundary';
 import Analytics from './components/utils/Analytics';
 import ScrollProgress from './components/utils/ScrollProgress';
-import PageTransition from './components/utils/PageTransition';
 import RouteLoadingFallback from './components/utils/RouteLoadingFallback';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -368,8 +367,7 @@ function AppShell() {
       <Analytics />
       <ScrollToTop />
       <AnimationController enabled={runtimePreferences.allowDecorativeRuntime} />
-      {runtimePreferences.allowScrollProgress ? <ScrollProgress /> : null}
-      {runtimePreferences.allowDecorativeRuntime ? <PageTransition /> : null}
+{runtimePreferences.allowScrollProgress ? <ScrollProgress /> : null}
       <Suspense
         fallback={<RouteLoadingFallback />}
       >
