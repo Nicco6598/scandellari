@@ -20,25 +20,53 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
     const [value, setValue] = useState(0);
     const ref = useRef<HTMLSpanElement>(null);
     const started = useRef(false);
+    const frameRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (frameRef.current !== null) {
+                cancelAnimationFrame(frameRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         const el = ref.current;
         if (!el) return;
 
+        const animateValue = (from: number, target: number) => {
+            if (frameRef.current !== null) {
+                cancelAnimationFrame(frameRef.current);
+            }
+
+            const start = performance.now();
+
+            const tick = (now: number) => {
+                const elapsed = now - start;
+                const progress = Math.min(elapsed / duration, 1);
+                const nextValue = Math.round(from + ((target - from) * easeOutQuart(progress)));
+                setValue(nextValue);
+
+                if (progress < 1) {
+                    frameRef.current = requestAnimationFrame(tick);
+                } else {
+                    frameRef.current = null;
+                }
+            };
+
+            frameRef.current = requestAnimationFrame(tick);
+        };
+
+        if (started.current) {
+            animateValue(value, to);
+            return;
+        }
+
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting && !started.current) {
                     started.current = true;
-                    const start = performance.now();
-
-                    const tick = (now: number) => {
-                        const elapsed = now - start;
-                        const progress = Math.min(elapsed / duration, 1);
-                        setValue(Math.round(easeOutQuart(progress) * to));
-                        if (progress < 1) requestAnimationFrame(tick);
-                    };
-
-                    requestAnimationFrame(tick);
+                    animateValue(0, to);
                     observer.disconnect();
                 }
             },

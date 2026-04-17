@@ -17,6 +17,7 @@ import {
   Squares2X2Icon,
   ShieldCheckIcon,
   UserGroupIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
 import LoadingState from '../components/utils/LoadingState';
@@ -112,6 +113,8 @@ function CareersPage() {
   const [isJobDescriptionTruncated, setIsJobDescriptionTruncated] = useState<Record<string, boolean>>({});
   const [listMode, setListMode] = useState<ListMode>('detailed');
   const [filters, setFilters] = useState<CareersFilters>(EMPTY_FILTERS);
+  const [draftListMode, setDraftListMode] = useState<ListMode>('detailed');
+  const [draftFilters, setDraftFilters] = useState<CareersFilters>(EMPTY_FILTERS);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isFilterPending, startFilterTransition] = useTransition();
   const jobDescriptionRefs = useRef<Record<string, HTMLParagraphElement | null>>({});
@@ -168,26 +171,43 @@ function CareersPage() {
   ]), [careersCatalog.dipartimentoOptions, careersCatalog.sedeOptions, careersCatalog.tipoOptions]);
 
   const mobileFilterSections = useMemo(() => (
-    filterSections
-      .filter((section) => section.options.length > 0)
-      .map((section) => ({
-        title: section.label,
+    [
+      {
+        title: 'Vista',
         options: [
           {
-            count: careersCatalog.stats.positions,
-            id: `${section.key}::`,
-            isActive: !filters[section.key],
-            label: 'Tutti',
+            id: 'view::detailed',
+            isActive: draftListMode === 'detailed',
+            label: 'Estesa',
           },
-          ...section.options.map((option) => ({
-            count: option.count,
-            id: `${section.key}::${option.value}`,
-            isActive: filters[section.key] === option.value,
-            label: option.value,
-          })),
+          {
+            id: 'view::compact',
+            isActive: draftListMode === 'compact',
+            label: 'Compatta',
+          },
         ],
-      }))
-  ), [careersCatalog.stats.positions, filterSections, filters]);
+      },
+      ...filterSections
+        .filter((section) => section.options.length > 0)
+        .map((section) => ({
+          title: section.label,
+          options: [
+            {
+              count: careersCatalog.stats.positions,
+              id: `${section.key}::`,
+              isActive: !draftFilters[section.key],
+              label: 'Mostra tutto',
+            },
+            ...section.options.map((option) => ({
+              count: option.count,
+              id: `${section.key}::${option.value}`,
+              isActive: draftFilters[section.key] === option.value,
+              label: option.value,
+            })),
+          ],
+        })),
+    ]
+  ), [careersCatalog.stats.positions, draftFilters, draftListMode, filterSections]);
 
   const filteredOfferte = useMemo(() => {
     const nextJobs: PreparedJob[] = [];
@@ -211,6 +231,36 @@ function CareersPage() {
   const activeFiltersCount = Number(Boolean(filters.dipartimento))
     + Number(Boolean(filters.tipo))
     + Number(Boolean(filters.sede));
+
+  const draftActiveFiltersCount = Number(Boolean(draftFilters.dipartimento))
+    + Number(Boolean(draftFilters.tipo))
+    + Number(Boolean(draftFilters.sede));
+
+  const activeFilterEntries = useMemo(() => (
+    filterSections.reduce<Array<{ key: FilterKey; label: string; value: string }>>((entries, section) => {
+      const value = filters[section.key];
+      if (!value) return entries;
+      entries.push({
+        key: section.key,
+        label: section.label,
+        value,
+      });
+      return entries;
+    }, [])
+  ), [filterSections, filters]);
+
+  const draftActiveFilterEntries = useMemo(() => (
+    filterSections.reduce<Array<{ key: FilterKey; label: string; value: string }>>((entries, section) => {
+      const value = draftFilters[section.key];
+      if (!value) return entries;
+      entries.push({
+        key: section.key,
+        label: section.label,
+        value,
+      });
+      return entries;
+    }, [])
+  ), [draftFilters, filterSections]);
 
   const syncTruncatedDescriptions = () => {
     setIsJobDescriptionTruncated((prev) => {
@@ -315,6 +365,12 @@ function CareersPage() {
     setExpandedJobId(null);
   }, [filters.dipartimento, filters.sede, filters.tipo]);
 
+  useEffect(() => {
+    if (!showMobileFilters) return;
+    setDraftFilters(filters);
+    setDraftListMode(listMode);
+  }, [filters, listMode, showMobileFilters]);
+
   const openApplication = (job: PreparedJob | null) => {
     setSelectedJob(job);
     setIsModalOpen(true);
@@ -335,16 +391,29 @@ function CareersPage() {
     });
   };
 
-  const toggleListMode = () => {
-    startFilterTransition(() => {
-      setListMode((current) => (current === 'detailed' ? 'compact' : 'detailed'));
-    });
+  const clearDraftFilters = () => {
+    setDraftFilters(EMPTY_FILTERS);
   };
 
   const handleMobileFilterSelect = (selection: string) => {
     const [key, value = ''] = selection.split('::');
+    if (key === 'view' && (value === 'detailed' || value === 'compact')) {
+      setDraftListMode(value);
+      return;
+    }
     if (!key || !['dipartimento', 'tipo', 'sede'].includes(key)) return;
-    updateFilter(key as FilterKey, value);
+    setDraftFilters((current) => ({
+      ...current,
+      [key]: current[key as FilterKey] === value ? '' : value,
+    }));
+  };
+
+  const applyMobileFilters = () => {
+    startFilterTransition(() => {
+      setFilters(draftFilters);
+      setListMode(draftListMode);
+    });
+    setShowMobileFilters(false);
   };
 
   const trackApplicationSubmit = (success: boolean) => {
@@ -548,29 +617,14 @@ function CareersPage() {
               </p>
             </div>
             <div className="shrink-0 md:text-right flex flex-col items-start md:items-end gap-4">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={toggleListMode}
-                  aria-label={listMode === 'detailed' ? 'Passa alla vista compatta' : 'Passa alla vista espansa'}
-                  title={listMode === 'detailed' ? 'Passa alla vista compatta' : 'Passa alla vista espansa'}
-                  className="inline-flex h-12 w-12 items-center justify-center border border-black/10 dark:border-white/10 bg-white dark:bg-white/5 text-black dark:text-white hover:border-primary hover:text-primary transition-colors"
-                >
-                  {listMode === 'detailed' ? (
-                    <ListBulletIcon className="w-5 h-5" />
-                  ) : (
-                    <Squares2X2Icon className="w-5 h-5" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowMobileFilters(true)}
-                  className="lg:hidden flex items-center justify-center gap-3 px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-[11px] font-black uppercase tracking-widest"
-                >
-                  <FunnelIcon className="w-4 h-4" />
-                  {activeFiltersCount > 0 ? `Filtri (${activeFiltersCount})` : 'Filtri'}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(true)}
+                className="lg:hidden flex items-center justify-center gap-3 px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-[11px] font-black uppercase tracking-widest"
+              >
+                <FunnelIcon className="w-4 h-4" />
+                {activeFiltersCount > 0 ? `Filtri (${activeFiltersCount})` : 'Filtri'}
+              </button>
               <div>
                 <div className={`text-6xl md:text-7xl font-black text-black/5 dark:text-white/5 leading-none font-heading tabular-nums ${isFilterPending ? 'opacity-50' : ''}`}>
                   <AnimatedCounter to={filteredOfferte.length} duration={900} />
@@ -583,77 +637,148 @@ function CareersPage() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-16 items-start">
-            <aside className="hidden lg:block w-72 shrink-0">
+            <aside className="hidden lg:block w-[22rem] shrink-0">
               <div className="sticky top-32 space-y-10">
-                <div className="space-y-8 border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/[0.03] p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className={`text-[10px] font-black uppercase tracking-[0.35em] mb-2 ${metaTextClasses}`}>
-                        Filtra le posizioni
-                      </p>
-                      <p className={`text-sm font-medium leading-relaxed ${secondaryTextClasses}`}>
-                        Restringi l'elenco per reparto, contratto e sede.
-                      </p>
+                <div className="border border-black/10 dark:border-white/10 bg-white dark:bg-black">
+                  <div className="border-b border-black/10 dark:border-white/10 px-6 py-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className={`text-[10px] font-black uppercase tracking-[0.35em] mb-2 ${metaTextClasses}`}>
+                          Filtri e vista
+                        </p>
+                        <p className={`text-sm font-medium leading-relaxed ${secondaryTextClasses}`}>
+                          Gestisci la lettura delle posizioni da un unico pannello: vista, filtri attivi e reset nello stesso punto.
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                      {activeFiltersCount > 0 ? (
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary tabular-nums">
-                          {activeFiltersCount} attivi
-                        </span>
-                      ) : (
-                        <span className={`text-[10px] font-black uppercase tracking-[0.25em] ${metaTextClasses}`}>
-                          Nessun filtro
-                        </span>
-                      )}
-                      {activeFiltersCount > 0 ? (
-                        <button
-                          type="button"
-                          onClick={clearFilters}
-                          className="text-[10px] font-black uppercase tracking-[0.25em] text-primary hover:opacity-70 transition-opacity"
-                        >
-                          Reset
-                        </button>
-                      ) : null}
+
+                    <div className="mt-6 grid grid-cols-2 gap-px border border-black/10 dark:border-white/10 bg-black/8 dark:bg-white/10">
+                      <button
+                        type="button"
+                        onClick={() => startFilterTransition(() => setListMode('detailed'))}
+                        className={`flex items-center justify-center gap-3 px-4 py-4 text-[11px] font-black uppercase tracking-[0.28em] transition-colors ${
+                          listMode === 'detailed'
+                            ? 'bg-black dark:bg-white text-white dark:text-black'
+                            : 'bg-white dark:bg-black text-black dark:text-white hover:text-primary'
+                        }`}
+                      >
+                        <ListBulletIcon className="h-4 w-4" />
+                        Estesa
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startFilterTransition(() => setListMode('compact'))}
+                        className={`flex items-center justify-center gap-3 px-4 py-4 text-[11px] font-black uppercase tracking-[0.28em] transition-colors ${
+                          listMode === 'compact'
+                            ? 'bg-black dark:bg-white text-white dark:text-black'
+                            : 'bg-white dark:bg-black text-black dark:text-white hover:text-primary'
+                        }`}
+                      >
+                        <Squares2X2Icon className="h-4 w-4" />
+                        Compatta
+                      </button>
                     </div>
+
+                    <div className="mt-6 flex items-center justify-between gap-4">
+                      <div>
+                        <p className={`text-[10px] font-black uppercase tracking-[0.28em] ${activeFiltersCount > 0 ? 'text-primary' : metaTextClasses}`}>
+                          {activeFiltersCount > 0 ? `${activeFiltersCount} filtri attivi` : 'Nessun filtro attivo'}
+                        </p>
+                        <p className={`text-xs font-medium mt-2 ${secondaryTextClasses}`}>
+                          {activeFiltersCount > 0
+                            ? 'Puoi rimuovere i filtri singolarmente oppure ripristinare l’elenco completo.'
+                            : 'Seleziona reparto, contratto o sede per restringere l’elenco.'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        disabled={activeFiltersCount === 0}
+                        className="shrink-0 border border-red-500/30 bg-red-500/8 px-4 py-3 text-[10px] font-black uppercase tracking-[0.28em] text-red-600 transition-colors hover:border-red-500 hover:bg-red-500 hover:text-white disabled:opacity-40 disabled:hover:border-red-500/30 disabled:hover:bg-red-500/8 disabled:hover:text-red-600 dark:text-red-400 dark:hover:text-white"
+                      >
+                        Reset
+                      </button>
+                    </div>
+
+                    {activeFilterEntries.length > 0 ? (
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {activeFilterEntries.map((entry) => (
+                          <button
+                            key={`${entry.key}-${entry.value}`}
+                            type="button"
+                            onClick={() => updateFilter(entry.key, '')}
+                            className="inline-flex items-center gap-2 border border-primary/20 bg-primary/10 px-3 py-2 text-primary transition-colors hover:border-primary hover:bg-primary hover:text-white dark:hover:text-black"
+                          >
+                            <span className="text-[10px] font-black uppercase tracking-[0.22em]">
+                              {entry.label}
+                            </span>
+                            <span className="text-[11px] font-black">
+                              {entry.value}
+                            </span>
+                            <XMarkIcon className="h-3.5 w-3.5" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
 
-                  {filterSections
-                    .filter((section) => section.options.length > 0)
-                    .map((section) => (
-                      <div key={section.key} className="space-y-4">
-                        <button
-                          type="button"
-                          onClick={() => updateFilter(section.key, '')}
-                          className={`text-base font-black uppercase tracking-[0.2em] transition-colors ${
-                            !filters[section.key]
-                              ? 'text-primary'
-                              : `${metaTextClasses} hover:text-primary dark:hover:text-white`
-                          }`}
-                        >
-                          {section.label}
-                        </button>
+                  <div className="space-y-8 px-6 py-6">
+                    {filterSections
+                      .filter((section) => section.options.length > 0)
+                      .map((section) => (
+                        <div key={section.key} className="space-y-4 border-t border-black/8 pt-6 first:border-t-0 first:pt-0 dark:border-white/10">
+                          <div className="flex items-center justify-between gap-4">
+                            <p className={`text-base font-black uppercase tracking-[0.2em] ${primaryTextClasses}`}>
+                              {section.label}
+                            </p>
+                            {filters[section.key] ? (
+                              <button
+                                type="button"
+                                onClick={() => updateFilter(section.key, '')}
+                                className="text-[10px] font-black uppercase tracking-[0.25em] text-primary transition-colors hover:opacity-70"
+                              >
+                                Cancella
+                              </button>
+                            ) : null}
+                          </div>
 
-                        <div className="flex flex-col gap-3 pl-4 border-l border-black/5 dark:border-white/5">
-                          {section.options.map((option) => (
+                          <div className="flex flex-col gap-3 pl-4 border-l border-black/5 dark:border-white/10">
                             <button
-                              key={option.value}
                               type="button"
-                              onClick={() => updateFilter(section.key, option.value)}
+                              onClick={() => updateFilter(section.key, '')}
                               className={`flex items-center justify-between gap-3 text-left text-sm font-bold py-1 transition-all ${
-                                filters[section.key] === option.value
-                                  ? 'text-primary dark:text-white translate-x-2'
+                                !filters[section.key]
+                                  ? 'text-primary dark:text-white translate-x-1'
                                   : `${metaTextClasses} hover:text-primary dark:hover:text-white`
                               }`}
                             >
-                              <span>{option.value}</span>
+                              <span>Mostra tutto</span>
                               <span className="text-[10px] tabular-nums opacity-60">
-                                {option.count}
+                                {careersCatalog.stats.positions}
                               </span>
                             </button>
-                          ))}
+
+                            {section.options.map((option) => (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => updateFilter(section.key, option.value)}
+                                className={`flex items-center justify-between gap-3 text-left text-sm font-bold py-1 transition-all ${
+                                  filters[section.key] === option.value
+                                    ? 'text-primary dark:text-white translate-x-1'
+                                    : `${metaTextClasses} hover:text-primary dark:hover:text-white`
+                                }`}
+                              >
+                                <span>{option.value}</span>
+                                <span className="text-[10px] tabular-nums opacity-60">
+                                  {option.count}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                  </div>
                 </div>
 
                 <div className="space-y-5 pt-2 border-t border-black/8 dark:border-white/10">
@@ -918,11 +1043,19 @@ function CareersPage() {
 
         <FullscreenFiltersModal
           ariaLabel="Filtri posizioni aperte"
+          actionDisabled={draftActiveFiltersCount === 0}
+          actionLabel="Reset"
+          description="Gestisci la vista dell’elenco e restringi le posizioni per reparto, contratto o sede."
           isOpen={showMobileFilters}
+          onAction={clearDraftFilters}
           onClose={() => setShowMobileFilters(false)}
+          onPrimaryAction={applyMobileFilters}
           onSelect={handleMobileFilterSelect}
+          primaryActionLabel="Applica"
           sections={mobileFilterSections}
-          title="Filtri"
+          statusLabel={draftActiveFiltersCount > 0 ? `${draftActiveFiltersCount} filtri attivi` : 'Nessun filtro attivo'}
+          summaryTags={draftActiveFilterEntries.map((entry) => `${entry.label}: ${entry.value}`)}
+          title="Filtri e vista"
         />
         <CareersApplicationModal
           isOpen={isModalOpen}

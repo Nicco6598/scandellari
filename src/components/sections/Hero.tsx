@@ -106,7 +106,7 @@ const Hero: React.FC = () => {
     };
   }, []);
 
-  const titleLines = ["Ingegneria", "Ferroviaria"];
+  const titleLines = ["Segnalamento", "Ferroviario"];
   const currentImage = heroImages[currentImageIndex];
   const isInitialImage = currentImageIndex === 0;
 
@@ -127,14 +127,14 @@ const Hero: React.FC = () => {
             loading={isInitialImage ? 'eager' : 'lazy'}
             fetchPriority={isInitialImage ? 'high' : 'low'}
             decoding={isInitialImage ? 'sync' : 'async'}
-            className="absolute inset-0 h-full w-full object-cover grayscale brightness-[0.4] transition-opacity duration-700 ease-out"
+            className="absolute inset-0 h-full w-full object-cover brightness-[0.36] contrast-105 saturate-88 transition-opacity duration-700 ease-out"
           />
         </div>
 
         {/* Protection Overlays for Text & Header with subtle accent */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-primary/5" /> {/* Subtle primary tint */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/90" /> {/* Top and bottom protection */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" /> {/* Left side protection for text */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/44 via-black/32 to-primary/4" /> {/* Subtle primary tint */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/86 via-black/24 to-black/90" /> {/* Top and bottom protection */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/68 via-black/22 to-transparent" /> {/* Left side protection for text */}
       </div>
 
       <div className="container relative z-10 mx-auto h-full max-w-7xl px-6 flex flex-col justify-between py-24 md:py-32">
@@ -150,7 +150,7 @@ const Hero: React.FC = () => {
         <div className="max-w-4xl">
           <h1
             ref={titleRef}
-            className={`text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black tracking-tighter leading-[0.8] mb-12 font-heading ${inversePrimaryTextClasses}`}
+            className={`text-[2.7rem] sm:text-6xl md:text-8xl lg:text-[8.5rem] font-black tracking-[-0.04em] leading-[0.88] sm:leading-[0.84] mb-12 font-heading ${inversePrimaryTextClasses}`}
           >
             {titleLines.map((line, i) => (
               <div key={i} className="line-container overflow-hidden">

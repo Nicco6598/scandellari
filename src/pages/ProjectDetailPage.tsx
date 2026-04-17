@@ -276,19 +276,6 @@ function ProjectDetailPage() {
                                             ) : null}
                                         </dl>
                                     </div>
-
-                                    <div className="pt-10 border-t border-black/10 dark:border-white/5">
-                                        <Link
-                                            to="/contatti"
-                                            className="group flex items-center justify-between w-full text-left"
-                                        >
-                                            <div>
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-primary block mb-1">Richiedi Informazioni</span>
-                                                <span className="text-sm font-black text-black dark:text-white">Parla con un esperto</span>
-                                            </div>
-                                            <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-2" />
-                                        </Link>
-                                    </div>
                                 </div>
                             </div>
                         </aside>

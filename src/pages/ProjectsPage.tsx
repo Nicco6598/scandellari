@@ -1,4 +1,4 @@
-import { lazy, startTransition, Suspense, useState } from 'react';
+import { lazy, startTransition, Suspense, useEffect, useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useTheme } from '../context/ThemeContext';
 import AnimatedCounter from '../components/utils/AnimatedCounter';
@@ -29,6 +29,7 @@ function ProjectsPage() {
   } = useProjectsCatalog();
   const [view, setView] = useState<'lista' | 'mappa'>('lista');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [draftCategory, setDraftCategory] = useState('tutti');
   const {
     activeProjectIndex,
     geocodingPhase,
@@ -45,6 +46,18 @@ function ProjectsPage() {
     enabled: view === 'mappa',
     projects: filteredProjects,
   });
+
+  useEffect(() => {
+    if (!showMobileFilters) return;
+    setDraftCategory(activeCategory);
+  }, [activeCategory, showMobileFilters]);
+
+  const applyMobileCategory = () => {
+    startTransition(() => {
+      setActiveCategory(draftCategory);
+    });
+    setShowMobileFilters(false);
+  };
 
   if (loading) {
     return (
@@ -165,12 +178,13 @@ function ProjectsPage() {
         </main>
 
         <ProjectsFiltersModal
-          activeCategory={activeCategory}
+          activeCategory={draftCategory}
           categories={categories}
           categoryCounts={categoryCounts}
           isOpen={showMobileFilters}
+          onApply={applyMobileCategory}
           onClose={() => setShowMobileFilters(false)}
-          onSelectCategory={setActiveCategory}
+          onSelectCategory={setDraftCategory}
         />
       </div>
     </Layout>

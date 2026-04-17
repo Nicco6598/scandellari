@@ -50,6 +50,7 @@ function CertificationsPage() {
     const [pageNumber, setPageNumber] = useState<number>(1);
     const [pdfScale, setPdfScale] = useState<number>(1.0);
     const [activeCategory, setActiveCategory] = useState<string>('all');
+    const [draftActiveCategory, setDraftActiveCategory] = useState<string>('all');
     const [loading, setLoading] = useState<boolean>(true);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     useBodyScrollLock(Boolean(selectedCertification));
@@ -58,6 +59,11 @@ function CertificationsPage() {
         const timer = setTimeout(() => setLoading(false), 500);
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        if (!showMobileFilters) return;
+        setDraftActiveCategory(activeCategory);
+    }, [activeCategory, showMobileFilters]);
 
     // Scala 1.2 su desktop, 1.0 su mobile
     useEffect(() => {
@@ -89,6 +95,11 @@ function CertificationsPage() {
         if (page < 1 || page > numPages) return;
         setPageNumber(page);
     }, [numPages]);
+
+    const applyMobileCategory = () => {
+        setActiveCategory(draftActiveCategory);
+        setShowMobileFilters(false);
+    };
 
     const isPolitica = selectedCertification?.id === POLITICA_ID;
     const isMultiPage = numPages !== null && numPages > 1;
@@ -404,9 +415,12 @@ function CertificationsPage() {
 
                 <FullscreenFiltersModal
                     ariaLabel="Filtri certificazioni"
+                    description="Seleziona la categoria da visualizzare e conferma per aggiornare la documentazione mostrata."
                     isOpen={showMobileFilters}
                     onClose={() => setShowMobileFilters(false)}
-                    onSelect={(category) => setActiveCategory(category)}
+                    onPrimaryAction={applyMobileCategory}
+                    onSelect={(category) => setDraftActiveCategory(category)}
+                    primaryActionLabel="Applica"
                     sections={[
                         {
                             title: 'Categorie',
@@ -415,7 +429,7 @@ function CertificationsPage() {
                                     ? certifications.length
                                     : certifications.filter((certification) => certification.category === cat).length,
                                 id: cat,
-                                isActive: activeCategory === cat,
+                                isActive: draftActiveCategory === cat,
                                 label: cat === 'all'
                                     ? 'Tutte le Certificazioni'
                                     : cat.charAt(0).toUpperCase() + cat.slice(1),

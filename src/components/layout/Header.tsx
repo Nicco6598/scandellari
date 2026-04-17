@@ -108,7 +108,7 @@ function Header() {
               alt="Scandellari Giacinto s.n.c."
               width="160"
               height="40"
-              className="h-8 md:h-10 w-auto transition-all"
+              className="h-10 md:h-12 lg:h-[3.25rem] w-auto transition-all"
             />
           </Link>
 

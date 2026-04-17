@@ -1,6 +1,13 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
+const CANONICAL_SITE_URL = 'https://scandellarigiacintosnc.it';
+
+function toAbsoluteUrl(value: string) {
+    if (value.startsWith('http')) return value;
+    return `${CANONICAL_SITE_URL}${value.startsWith('/') ? value : `/${value}`}`;
+}
+
 interface SEOProps {
     title?: string;
     description?: string;
@@ -24,9 +31,8 @@ const SEO: React.FC<SEOProps> = ({
     publishedTime,
     modifiedTime
 }) => {
-    const siteUrl = 'https://www.scandellarigiacintosnc.it';
-    const fullUrl = url.startsWith('http') ? url : `${siteUrl}${url}`;
-    const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
+    const fullUrl = toAbsoluteUrl(url);
+    const fullImage = toAbsoluteUrl(image);
 
     return (
         <Helmet>
