@@ -96,6 +96,7 @@ function matchesRoutePrefix(pathname: string, prefixes: readonly string[]) {
 
 function useRuntimePreferences(pathname: string, search: string): RuntimePreferences {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isTouchNavigationDevice, setIsTouchNavigationDevice] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -111,6 +112,29 @@ function useRuntimePreferences(pathname: string, search: string): RuntimePrefere
 
     return () => {
       motionQuery.removeEventListener('change', updatePreferences);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const touchQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
+    const updateInputMode = () => {
+      setIsTouchNavigationDevice(touchQuery.matches);
+    };
+
+    updateInputMode();
+
+    if (typeof touchQuery.addEventListener === 'function') {
+      touchQuery.addEventListener('change', updateInputMode);
+      return () => {
+        touchQuery.removeEventListener('change', updateInputMode);
+      };
+    }
+
+    touchQuery.addListener(updateInputMode);
+    return () => {
+      touchQuery.removeListener(updateInputMode);
     };
   }, []);
 
@@ -133,14 +157,14 @@ function useRuntimePreferences(pathname: string, search: string): RuntimePrefere
       ? false
       : forceSmoothScrolling
         ? true
-        : !prefersReducedMotion && !disableSmoothScrollingForRoute;
+        : !prefersReducedMotion && !disableSmoothScrollingForRoute && !isTouchNavigationDevice;
 
     return {
       allowScrollProgress,
       allowDecorativeRuntime,
       allowSmoothScrolling,
     };
-  }, [pathname, prefersReducedMotion, search]);
+  }, [pathname, prefersReducedMotion, search, isTouchNavigationDevice]);
 }
 
 function AnimationController({ enabled }: { enabled: boolean }) {

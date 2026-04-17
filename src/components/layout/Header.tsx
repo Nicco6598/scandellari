@@ -165,22 +165,22 @@ function Header() {
                 type="button"
                 role="switch"
                 aria-checked={theme === 'dark'}
-                className={`relative h-9 w-[72px] border overflow-hidden transition-colors focus:outline-none ${forceLightText
+                className={`relative flex h-10 w-[88px] items-center rounded-full border p-1 transition-colors focus:outline-none ${forceLightText
                   ? 'border-white/30 bg-white/15 hover:bg-white/20'
                   : 'border-black/20 dark:border-white/20 bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/15'
                 }`}
               >
                 <span className="sr-only">Cambia tema</span>
-                <span className={`absolute inset-y-0 left-0 w-1/2 transition-[transform,background-color] duration-300 ease-out ${theme === 'dark'
-                  ? forceLightText ? 'translate-x-full bg-white/20' : 'translate-x-full bg-white/15'
-                  : forceLightText ? 'translate-x-0 bg-amber-400/30' : 'translate-x-0 bg-amber-400/25'
+                <span className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full will-change-transform transition-transform duration-300 ease-out transform-gpu motion-reduce:transition-none ${theme === 'dark'
+                  ? forceLightText ? 'translate-x-full bg-white/20 shadow-[0_8px_20px_rgba(255,255,255,0.08)]' : 'translate-x-full bg-white/15 shadow-[0_8px_20px_rgba(255,255,255,0.06)]'
+                  : forceLightText ? 'translate-x-0 bg-amber-400/30 shadow-[0_8px_20px_rgba(251,191,36,0.18)]' : 'translate-x-0 bg-amber-400/25 shadow-[0_8px_20px_rgba(251,191,36,0.16)]'
                 }`} />
-                <span className="absolute inset-0 grid grid-cols-2 pointer-events-none">
-                  <span className="flex items-center justify-center">
-                    <SunIcon className={`w-4 h-4 text-amber-600 transition-opacity ${theme === 'dark' ? 'opacity-45' : 'opacity-100'}`} />
+                <span className="grid h-full w-full grid-cols-2 pointer-events-none">
+                  <span className="relative z-10 flex items-center justify-center">
+                    <SunIcon className={`h-4 w-4 text-amber-600 transition-opacity ${theme === 'dark' ? 'opacity-45' : 'opacity-100'}`} />
                   </span>
-                  <span className="flex items-center justify-center">
-                    <MoonIcon className={`w-4 h-4 transition-opacity ${theme === 'dark' ? 'text-zinc-200 opacity-100' : 'text-zinc-700 opacity-80'}`} />
+                  <span className="relative z-10 flex items-center justify-center">
+                    <MoonIcon className={`h-4 w-4 transition-opacity ${theme === 'dark' ? 'text-zinc-200 opacity-100' : 'text-zinc-700 opacity-80'}`} />
                   </span>
                 </span>
               </button>

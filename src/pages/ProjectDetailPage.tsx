@@ -165,7 +165,7 @@ function ProjectDetailPage() {
                 <main className="container mx-auto max-w-7xl px-6">
                     <div className="grid lg:grid-cols-12 gap-16">
                         <div className="lg:col-span-8 space-y-20">
-                            <div className="aspect-[21/9] bg-gray-100 dark:bg-dark-elevated overflow-hidden">
+                            <div className="aspect-[5/4] sm:aspect-[21/9] bg-gray-100 dark:bg-dark-elevated overflow-hidden">
                                 {primaryImage?.url ? (
                                     <img
                                         src={primaryImageProps.src}

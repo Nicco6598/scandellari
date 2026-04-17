@@ -220,9 +220,9 @@ function StatCard({ icon: Icon, label, value, suffix = '', delay = 0 }: StatCard
     const [ref, inView] = useInView(0.3);
     const count = useCountUp(value, 1800, inView);
     return (
-        <FadeIn delay={delay}>
-            <MagneticCard>
-                <div ref={ref} className="bg-white dark:bg-black p-8 group hover:bg-stone-50 dark:hover:bg-dark-surface transition-all duration-300 border border-black/10 dark:border-white/5 hover:border-primary/30">
+        <FadeIn delay={delay} className="h-full">
+            <MagneticCard className="h-full">
+                <div ref={ref} className="flex h-full min-h-[10.5rem] flex-col justify-between bg-white p-6 transition-all duration-300 group hover:bg-stone-50 border border-black/10 hover:border-primary/30 dark:bg-black dark:border-white/5 dark:hover:bg-dark-surface sm:p-8">
                     <Icon className="w-6 h-6 mb-4 text-primary group-hover:scale-110 transition-transform duration-300" />
                     <div className={`text-xs font-black uppercase tracking-widest mb-2 ${metaTextClasses}`}>{label}</div>
                     <div className={`text-4xl font-black font-heading tabular-nums ${primaryTextClasses}`}>
